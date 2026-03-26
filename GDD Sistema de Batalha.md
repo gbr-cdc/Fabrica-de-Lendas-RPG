@@ -83,10 +83,25 @@ As colunas Diff X desta tabela mostram a quantidade de ataques necessária antes
 ---
 
 ## 5. Economia de Recursos
-*Como os personagens pagam por suas habilidades.*
+Existem dois recursos de combate especiais no Fábrica de Lendas: Mana e Foco.
 
-***/TO DO/***
-- [ ] Escrever
+* **Mana:**
+  * Personagens possuem um valor máximo de Mana definido pelo seu valor de MEN.
+  * Para usar magias é preciso primeiro manifestar a Mana necessária.
+  * **Manifestar Mana:** Ação que gera uma quantidade de Mana igual ao valor de MEN do personagem. Se, ao realizar essa ação, o personagem possuir mana o suficiente para usar uma magia, ele pode fazê-lo. Se não, ele precisa aguardar seu próximo turno para gerar mais mana. Esta ação tem o custo de uma ação padrão, independentemente de uma magia ter sido utilizada ou não.
+  * Se o personagem receber dano, ele precisa fazer um teste de MEN com dificuldade igual a 5 + o atributo principal da fonte de dano para não perder a mana manifestada. Se a fonte de dano não for um personagem, o mestre estipula a dificuldade.
+
+* **Foco:** 
+  * Foco é gerado quando o personagem ataca. Alternativamente, ele pode gastar uma ação de movimento para gerar o seu valor de Foco.
+  * O valor gerado é igual a MEN e o máximo que pode ser acumulado é igual a 3 * MEN.
+  * Foco é usado para ativar habilidades do personagem.
+
+* **Especial:** Para personagens com um Estilo de Combate marcial que ganhem acesso a magias, é possível gastar uma ação de movimento para transformar seu Foco em Mana. 
+
+> **Notas de Design:** Com magos precisando manifestar a mana antes de usar suas magias e correndo o risco de perder essa mana ao tomar dano, a minha intenção é fazer com que eles funcionem a partir de uma mecânica de risco e recompensa. Se eles conseguirem ficar seguros, conseguem dar muito dano. Por outro lado, se os inimigos os alcançarem, eles ficam em perigo. Isso faz com que atrapalhar a concentração dos conjuradores do oponente enquanto protege a concentração de seus aliados seja um objetivo tático importante. Entretanto, nem o dano das magias nem o tempo necessário para usá-las deve ser tão alto assim para que o combate não gire só em torno disso. Um mago vai precisar de dois turnos (um juntando mana e outro completando a mana e usando a magia) para usar uma magia de seu nível, e três turnos para usar uma magia mais forte. Quatro turnos seria para tentar usar uma magia muito avançada para o seu nível. O dano deve ser o suficiente para machucar, mas não para virar o rumo da batalha, a menos que seja uma magia de nível muito alto. Eu estou revendo minhas tabelas de dano, mas a base que eu estava usando em quantidade de ataques para derrubar um alvo, também conhecido como TTK (Time to Kill), seria 5 acertos para golpes normais e 3 acertos para magias. Além disso, nada impede que através de habilidades e magias específicas um mago consiga entrar no calor da batalha. 
+> 
+> Quanto ao Foco, é a mana dos guerreiros. A vantagem do Foco é que ele pode ser gerado enquanto se ataca, diferente dos magos que precisam ficar parados. Por outro lado, habilidades são menos poderosas do que magias. Isso gera uma dualidade: guerreiros querem ficar no calor do combate, onde conseguem atacar constantemente, e magos querem ficar seguros enquanto carregam suas magias. Quanto a converter Foco em Mana, isso é para personagens híbridos. Existe um Estilo de Combate chamado Conjurador, que é para quem quer usar magia. Mas personagens que não pegaram esse estilo ainda podem ter acesso a magias através de Especializações. Entretanto, estes personagens não vão ter MEN como atributo principal, o que quer dizer que o Foco gerado vai ser menor, e eles não vão ter as habilidades de um Conjurador, que auxiliam bastante no uso de magias. Além de tudo, eles precisam gastar uma ação de movimento. Desta forma, não acho que a conversão seja desequilibrada. Outro ponto sobre esse sistema de recursos é que ele também é focado no gerenciamento. Guardar alguns pontos de Mana/Foco para um momento crítico, assim como para usar magias/habilidades de reação, faz parte da estratégia.
+
 ---
 
 ## 6. Estilos de Combate
