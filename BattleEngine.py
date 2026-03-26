@@ -15,7 +15,7 @@ class CombatStyle:
 
 combat_styles = {
     "Destruidor": CombatStyle(name="Destruidor", atq_die=12, def_die=8, main="FIS", second="HAB", third="MEN"),
-    "Duelista": CombatStyle(name="Duelista", atq_die=8, def_die=10, main="HAB", second="FIS", third="MEN"),
+    "Duelista": CombatStyle(name="Duelista", atq_die=10, def_die=10, main="HAB", second="FIS", third="MEN"),
 }
 
 class Ability:
@@ -676,10 +676,22 @@ class PvPSimulator:
 
     def single_battle_verbose(self):
         turn_count = 0
-        max_turns = 100
-        self.battle_manager.add_character(self.character1, start_tick=self.character1.action_cost_base)
-        self.battle_manager.add_character(self.character2, start_tick=self.character2.action_cost_base)
-        
+        max_turns = 1000
+        if(self.character1.action_cost_base != self.character2.action_cost_base):
+            self.battle_manager.add_character(self.character1, start_tick=self.character1.action_cost_base)
+            self.battle_manager.add_character(self.character2, start_tick=self.character2.action_cost_base)
+        else:
+            while True:
+                roll1 = random.randint(1, 10)
+                roll2 = random.randint(1, 10)
+                if roll1 != roll2:
+                    break
+            if roll1 > roll2:
+                self.battle_manager.add_character(self.character1, start_tick=self.character1.action_cost_base)
+                self.battle_manager.add_character(self.character2, start_tick=self.character2.action_cost_base + 1)
+            elif roll2 > roll1:
+                self.battle_manager.add_character(self.character2, start_tick=self.character2.action_cost_base)
+                self.battle_manager.add_character(self.character1, start_tick=self.character1.action_cost_base + 1)
         while turn_count < max_turns and self.character1.is_alive() and self.character2.is_alive():
             actor = self.battle_manager.get_next_actor()
             self.battle_manager.emit('on_turn_start', {'character': actor})
@@ -719,10 +731,22 @@ class PvPSimulator:
     def single_battle_summary(self):
         # Método para simular uma batalha e retornar apenas o resultado final (sem prints detalhados)
         turn_count = 0
-        max_turns = 100
-        self.battle_manager.add_character(self.character1, start_tick=self.character1.action_cost_base)
-        self.battle_manager.add_character(self.character2, start_tick=self.character2.action_cost_base)
-        
+        max_turns = 1000
+        if(self.character1.action_cost_base != self.character2.action_cost_base):
+            self.battle_manager.add_character(self.character1, start_tick=self.character1.action_cost_base)
+            self.battle_manager.add_character(self.character2, start_tick=self.character2.action_cost_base)
+        else:
+            while True:
+                roll1 = random.randint(1, 10)
+                roll2 = random.randint(1, 10)
+                if roll1 != roll2:
+                    break
+            if roll1 > roll2:
+                self.battle_manager.add_character(self.character1, start_tick=self.character1.action_cost_base)
+                self.battle_manager.add_character(self.character2, start_tick=self.character2.action_cost_base + 1)
+            elif roll2 > roll1:
+                self.battle_manager.add_character(self.character2, start_tick=self.character2.action_cost_base)
+                self.battle_manager.add_character(self.character1, start_tick=self.character1.action_cost_base + 1)        
         while turn_count < max_turns and self.character1.is_alive() and self.character2.is_alive():
             actor = self.battle_manager.get_next_actor()
             if actor is None:
@@ -772,7 +796,7 @@ def simulate_multiple_battles(num_simulations: int, char1_data: Dict[str, Any], 
             char_id="hero_1",
             name=char1_data["Nome"],
             attributes=[char1_data["FIS"], char1_data["HAB"], char1_data["MEN"]],
-            combat_style = char1_data["CombatStyle"],
+            combat_style = char1_data["CombatStyle"]
             )       
 
             heroi1.equip_weapon(char1_data["Weapon"])
@@ -783,7 +807,8 @@ def simulate_multiple_battles(num_simulations: int, char1_data: Dict[str, Any], 
             char_id="hero_2",
             name=char2_data["Nome"],
             attributes=[char2_data["FIS"], char2_data["HAB"], char2_data["MEN"]],
-            combat_style = char2_data["CombatStyle"]
+            combat_style = char2_data["CombatStyle"],
+            bda=2
             )
 
             heroi2.equip_weapon(char2_data["Weapon"])
@@ -814,14 +839,14 @@ Char1 = {"Nome": "Destruidor",
          "FIS": 5, "HAB": 3, "MEN": 2,
          "Weapon": Weapon(name="Espada Larga", pda=15, mda=1), 
          "Armor": Armor(name="Armadura Pesada", hp_bonus=25),
-         "Abilities": lambda: [BasicAttack(), SkillNivelUm(), GenerateManaAction(), GenerateFocusAction(), ForcaBruta()],
-         "CombatStyle": combat_styles["Destruidor"]}
+         "Abilities": lambda: [BasicAttack(), SkillNivelUm(), GenerateManaAction(), GenerateFocusAction(),],
+         "CombatStyle": combat_styles["Duelista"]}
 
-Char2 = {"Nome": "Duelista", 
-         "FIS": 3, "HAB": 5, "MEN": 2,
-         "Weapon": Weapon(name="Florete", pda=15, mda=1), 
-         "Armor": Armor(name="Armadura Leve", hp_bonus=15),
-         "Abilities": lambda:[BasicAttack(), SkillNivelUm(), GenerateManaAction(), GenerateFocusAction(), Letalidade(), Evasão()],
+Char2 = {"Nome": "Cavaleiro", 
+         "FIS": 5, "HAB": 3, "MEN": 2,
+         "Weapon": Weapon(name="Espada Larga", pda=15, mda=1), 
+         "Armor": Armor(name="Armadura Pesada", hp_bonus=25),
+         "Abilities": lambda: [BasicAttack(), SkillNivelUm(), GenerateManaAction(), GenerateFocusAction()],
          "CombatStyle": combat_styles["Duelista"]}
 
 def mult():
@@ -849,7 +874,8 @@ def mono():
             char_id="hero_2",
             name=Char2["Nome"],
             attributes=[Char2["FIS"], Char2["HAB"], Char2["MEN"]],
-            combat_style = Char2["CombatStyle"]
+            combat_style = Char2["CombatStyle"],
+            bda=1
             )
     heroi2.equip_weapon(Char2["Weapon"])
     heroi2.equip_armor(Char2["Armor"])
