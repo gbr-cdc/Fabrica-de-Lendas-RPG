@@ -178,9 +178,46 @@ Existem dois recursos de combate especiais no Fábrica de Lendas: Mana e Foco.
 > 
 > Quanto ao Foco, ele é a mana dos guerreiros. A vantagem do Foco é que ele pode ser gerado enquanto se ataca, diferente dos magos que precisam ficar parados. Por outro lado, habilidades são menos poderosas do que magias. Isso gera uma dualidade: guerreiros querem ficar no calor do combate, onde conseguem atacar constantemente, e magos querem ficar seguros enquanto carregam suas magias. Quanto a converter Foco em Mana, isso é para personagens híbridos. Existe um Estilo de Combate chamado Conjurador, que é para quem quer usar magia. Mas personagens que não pegaram esse estilo ainda podem ter acesso a magias através de Especializações. Entretanto, estes personagens não vão ter MEN como atributo principal, o que quer dizer que o Foco gerado vai ser menor, e eles não vão ter as habilidades de um Conjurador, que auxiliam bastante no uso de magias. Além de tudo, eles precisam gastar uma ação de movimento. Desta forma, não acho que a conversão seja desequilibrada. Outro ponto sobre esse sistema de recursos é que ele também é focado no gerenciamento. Guardar alguns pontos de Mana/Foco para um momento crítico, assim como para usar magias/habilidades de reação, faz parte da estratégia.
 
----
+## 6. Equipamentos e Status
 
-## 6. Estilos de Combate
+### Armas
+***Tabela de Dano***
+
+| Tier | Db | MdA |
+| :--- | :--- | :--- |
+| 1 | 3 | 1 |
+| 2 | 5 | 1 |
+| 3 | 7 | 2 |
+| 4 | 10 | 2 |
+| 5 | 15 | 3 |
+
+> ***Notas de Design:*** Para começar, eu tomei a decisão de padronizar o dano das armas de acordo com os tiers. Então uma adaga, uma espada longa e um martelo de guerra dão o mesmo dano. A diferença entre as armas é representada no sistema a partir dos Estilos de Combate que as utilizam, com suas diferentes habilidades. Os atributos usados como base para os tiers são: 3, 5, 8, 11 e 13. Essa sequência tem a ver com os tiers na escala de poder. A curva de PdA foi calculada de forma que um personagem usando uma arma de tier adequado tenha PdA igual ao dobro do seu atributo principal. Assim, o atributo se mantém impactante no cálculo do dano. O MdA é calculado para ser aproximadamente 10% do PdA, de maneira a evitar que valores altos de GdA façam com que o dano exploda.
+
+### Armaduras
+
+***Tabela de Bônus de PVs***
+
+| Tier | Manto | Leve | Pesada |
+| :---: | :---: | :---: | :---: |
+| **1** | 10 | 15 | 25 |
+| **2** | 15 | 25 | 40 |
+| **3** | 25 | 45 | 70 |
+| **4** | 35 | 70 | 110 |
+| **5** | 55 | 110 | 160 |
+
+> ***Notas de Design:*** Para simplificar as coisas, e como não existe um conceito de classe de armadura nesse sistema, armaduras concedem um bônus de HP. Matematicamente isso vai funcionar de maneira análoga a "armaduras absorvem parte do dano", mas sem precisar calcular essa redução toda vez que o dano for calculado. A armadura que um personagem utiliza é determinada pelo Estilo de Combate. O cálculo utilizado para definir os bônus foi feito a partir da referência dos mesmos atributos usados para as armas, de maneira que mantos aumentem os PVs em 20%, armaduras leves em 40% e armaduras pesadas em 60%. Quanto a escudos, eles não possuem uma progressão separada. Existe um Estilo de Combate que usa escudos e concede habilidades defensivas. Para esse RPG, os equipamentos arma e escudo são tratados como um elemento só. Então, quando receber uma recompensa por derrotar um inimigo ou encontrar um baú de tesouro, você pode encontrar um conjunto de arma e escudo tier X, e nunca um escudo separado. Isso é um elemento de jogo que pode ser meio estranho do ponto de vista interpretativo, mas não imagino que vá ser estranho ao ponto de quebrar a suspensão de descrença.
+
+### Propriedades Especiais
+
+* Itens podem ter propriedades especiais. 
+* A quantidade máxima de propriedades é definida pelo tier do item.
+
+***TO DO***
+- [ ] Criar uma lista de propriedades
+
+> ***Notas de Design:*** Eu quero fazer um sistema de loot parecido com Diablo, eventualmente com uma tabela para rolar as propriedades de acordo com o tier e o tipo do equipamento. Essa seria mais uma forma de dar elementos únicos para classes de armas e armaduras com, por exemplo, armaduras pesadas tendo maior chance de possuir propriedades defensivas enquanto mantos dão propriedades relacionadas a magia e armaduras leves dão propriedades de precisão ou mobilidade. Mas isso deve ficar para uma próxima atualização do sistema.
+
+## 7. Estilos de Combate
 * O Estilo de Combate determina como o personagem luta, as armas e armaduras que utiliza e concede a ele habilidades de combate.
 * O estilo também determina quais dados são utilizados para ataque e defesa e qual é o seu atributo principal, que aumenta o dano de seus ataques.
 * Ao escolher um Estilo de Combate o personagem começar com a sua habilidade principal, que é a primeira habilidade da lista.
@@ -202,7 +239,7 @@ Existem dois recursos de combate especiais no Fábrica de Lendas: Mana e Foco.
 * **Mãos Pesadas:** Toda vez que atacar com uma arma pesada, se o GdA for maior que 3, o alvo é atordoado.
   > **Atordoado:** Some metade do tempo de ação do personagem ao seu contador. Até o fim do seu próximo turno, ele recebe -1 de Defesa.
 * **Alcance:** Enquanto usar uma arma pesada, pode gastar 2 de foco para realizar um ataque contra todos os alvos que estiverem ao seu alcance em combate corpo a corpo.
-* **Postura Defensiva:** Em postura defensiva os dados de ataque e defesa passam a ser d10/d10 e o personagem +1 de Guarda. Nesta postura, a habilidade Alcance passa a custar 1 de Foco.
+* **Postura Defensiva:** Em postura defensiva os dados de ataque e defesa passam a ser d10/d10. Nesta postura, a habilidade Alcance passa a custar 1 de Foco. Toda vez que você acertar um oponente, aquele oponente ganha uma penalidade de Precisão contra você.
 
 ---
 
@@ -222,7 +259,7 @@ Existem dois recursos de combate especiais no Fábrica de Lendas: Mana e Foco.
 ---
 
 #### Duelista
-* **Atributos:** HAB -> MEN -> FIS
+* **Atributos:** HAB
 * **Ataque:** d8
 * **Defesa:** d10
 * **Armadura:** Leve
@@ -245,7 +282,7 @@ Existem dois recursos de combate especiais no Fábrica de Lendas: Mana e Foco.
 * **Armas:** Espadas Longas, Lanças, Machados, Katanas
 
 ##### Habilidades
-* **Postura de Batalha:** No início do seu turno, voc* **Pressionar:** Pode gastar 2 de foco para jogar testes para deter o oponente com vantagem. Toda vez que um teste para deter o oponente for um sucesso, você ataca aquele oponente com vantagem.ê pode escolher uma postura:
+* **Postura de Batalha:** No início do seu turno, você pode escolher uma postura:
   * Postura Ofensiva: Recebe uma penalidade de guarda para ganhar um bônus de precisão e +2 GdA em seus ataques. Esse bônus dobra se o resultado do dado de ataque for maior que 7.
   * Postura Defensiva: Recebe uma penalidade de Precisão para ganhar um bônus de Guarda. Enquanto estiver nesta postura, pode gastar 2 pontos de Foco para rolar sua defesa novamente. Se o fizer, deve usar o novo resultado.
 * **Proteger Pontos Vitais:** Pode gastar 2 de foco para reduzir um dano tomado pela metade (arredondado para baixo).
@@ -266,7 +303,7 @@ Existem dois recursos de combate especiais no Fábrica de Lendas: Mana e Foco.
 * **Ritmo Acelerado:** Toda vez que você atacar um mesmo alvo pela segunda vez consecutiva, você pode gastar o tempo de uma Ação de Movimento para realizar um ataque bônus imediato. Após realizar este ataque, a contagem de ataques contra o alvo é zerada.
 * **Ritmo Crescente:** Ganha +1 de Precisão toda vez que acertar o alvo, até um máximo de +2. Perde esse bônus se errar um ataque.
 * **Pressionar:** Pode gastar 2 de foco para jogar testes para deter o oponente com vantagem. Toda vez que um teste para deter o oponente for um sucesso, você ataca aquele oponente com vantagem.
-* **Barreira de Lâminas:** Toda vez que atacar um oponente, ele ganha uma penalidade de Precisão contra você. O efeito não acumula.
+* **Barreira de Lâminas:** Toda vez que atacar um oponente, ele ganha uma penalidade de Precisão contra você. O efeito não acumula. A penalidade dobra se você acertar o ataque.
 
 ---
 
@@ -279,9 +316,9 @@ Existem dois recursos de combate especiais no Fábrica de Lendas: Mana e Foco.
 
 ##### Habilidades
 * **Combo:** Toda vez que você realizar uma ação de ataque, você pode atacar duas vezes. Isto conta como apenas uma ação de ataque. Se os dois ataques acertarem, você pode atacar uma terceira vez. Este terceiro ataque atordoa o alvo.
-* **Investida:** Contanto que exista um espaço em linha reta entre você e o alvo, pode realizar uma investida. Você gasta 2 de Foco e uma ação d ataque para mover até o seu valor de deslocamento em linha reta e realizar um ataque contra o alvo. Este ataque recebe +2 GdA.
+* **Investida:** Contanto que exista um espaço em linha reta entre você e o alvo, pode realizar uma investida. Você gasta 2 de Foco e uma ação de ataque para mover até o seu valor de deslocamento em linha reta e realizar um ataque contra o alvo. Este ataque recebe +2 GdA.
 * **Balão:** Você pode substituir uma ação de ataque por uma tentativa de derrubar o oponente. Faça uma rolagem de ataque para tentar agarrar. Se acertar, faça um teste resistido de FIS para arremessar. O oponente arremessado é derrubado e toma dano igual ao seu PdA.
-  > **Derrubado:** Some o valor total do tempo de ação do personagem ao seu contador. Até o próximo turno aquele personagem rola sua defesa em desvantagem (rola o dado duas vezes e escolhe o valor menor).
+  > **Derrubado:** Some metade do valor de tempo de ação do personagem ao seu contador. Até o próximo turno aquele personagem rola sua defesa em desvantagem (rola o dado duas vezes e escolhe o valor menor).
 * **Evasão:** Toda vez que um ataque for acertá-lo, pode gastar 2 de Foco para adicionar 1d4 na sua defesa.
 
 ---
@@ -315,13 +352,6 @@ Existem dois recursos de combate especiais no Fábrica de Lendas: Mana e Foco.
 * **Bateria de Mana:** Você consegue manter uma quantidade de mana armazenada igual ao seu valor de MEN mesmo fora de combate. Você precisa declarar que vai gerar e guardar essa mana antes do combate começar.
 * **Resoluto:** Ao receber dano, contanto que você tenha mais de 50% do seu HP, você joga o teste para não perder sua mana acumulada com vantagem (jogue o dado duas vezes e escolha o melhor resultado).
 
----
-
-## 7. Equipamentos e Status
-*Como os itens e condições modificam a matemática base.*
-
-***/TO DO/***
-- [ ] Escrever
 ---
 
 ## 8. Filosofia de Balanceamento
