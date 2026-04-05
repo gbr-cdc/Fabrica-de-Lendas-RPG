@@ -1,0 +1,58 @@
+{
+  "Destruidor": {
+    "name": "Destruidor",
+    "atq_die": 12,
+    "def_die": 8,
+    "main_stat": "FIS",
+    "armor_type": "heavy"
+  },
+  "Duelista": {
+    "name": "Duelista",
+    "atq_die": 10,
+    "def_die": 10,
+    "main_stat": "HAB",
+    "armor_type": "light"
+  },
+  "Defensor": {
+    "name": "Defensor",
+    "atq_die": 8,
+    "def_die": 12,
+    "main_stat": "FIS",
+    "armor_type": "heavy"
+  },
+  "Cavaleiro": {
+    "name": "Cavaleiro",
+    "atq_die": 10,
+    "def_die": 10,
+    "main_stat": "FIS",
+    "armor_type": "heavy"
+  },
+  "Retalhador": {
+    "name": "Retalhador",
+    "atq_die": 10,
+    "def_die": 8,
+    "main_stat": "HAB",
+    "armor_type": "light"
+  },
+  "Lutador": {
+    "name": "Lutador",
+    "atq_die": 10,
+    "def_die": 10,
+    "main_stat": "FIS",
+    "armor_type": "light"
+  },
+  "Atirador": {
+    "name": "Atirador",
+    "atq_die": 10,
+    "def_die": 8,
+    "main_stat": "HAB",
+    "armor_type": "light"
+  },
+  "Conjurador": {
+    "name": "Conjurador",
+    "atq_die": 8,
+    "def_die": 8,
+    "main_stat": "MEN",
+    "armor_type": "robe"
+  }
+}

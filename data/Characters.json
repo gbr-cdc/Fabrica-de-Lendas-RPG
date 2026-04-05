@@ -1,0 +1,50 @@
+{
+  "Destruidor": {
+    "Nome": "Destruidor",
+    "FIS": 5,
+    "HAB": 3,
+    "MEN": 2,
+    "Weapon": {
+      "name": "Espada Larga",
+      "db": 3,
+      "mda": 1,
+      "type": "great_weapon"
+    },
+    "Armor": {
+      "name": "Armadura Pesada",
+      "hp_bonus": 25,
+      "type": "heavy"
+    },
+    "Abilities": [
+      "BasicAttack",
+      "SkillNivelUm",
+      "GenerateManaAction",
+      "GenerateFocusAction"
+    ],
+    "CombatStyle": "Destruidor"
+  },
+  "Cavaleiro": {
+    "Nome": "Cavaleiro",
+    "FIS": 5,
+    "HAB": 3,
+    "MEN": 2,
+    "Weapon": {
+      "name": "Espada Longa",
+      "db": 3,
+      "mda": 1,
+      "type": "medium_weapon"
+    },
+    "Armor": {
+      "name": "Armadura Pesada",
+      "hp_bonus": 25,
+      "type": "heavy"
+    },
+    "Abilities": [
+      "BasicAttack",
+      "SkillNivelUm",
+      "GenerateManaAction",
+      "GenerateFocusAction"
+    ],
+    "CombatStyle": "Cavaleiro"
+  }
+}
