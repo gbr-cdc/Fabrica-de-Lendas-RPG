@@ -7,7 +7,7 @@ from Simulator import mono, multy
 
 def main():
     if len(sys.argv) != 4:
-        print("Usage: python BattleEngine.py <mono|multi> <character1_id> <character2_id>")
+        print("Usage: python BattleManager.py <mono|multi> <character1_id> <character2_id>")
         return
     mode = sys.argv[1]
     char1_id = sys.argv[2]

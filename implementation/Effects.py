@@ -1,5 +1,5 @@
 from core.Models import StatusEffect, Character
-from core.BattleEngine import BattleManager
+from core.BattleManager import BattleManager
 
 
 class Atordoado(StatusEffect):

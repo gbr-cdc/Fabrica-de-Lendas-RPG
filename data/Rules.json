@@ -1,4 +1,6 @@
 {
+  "limite_foco": 5,
+  "limite_mana": 5,
   "regras_progressao": {
     "tabela_hp": {
       "0": 10,

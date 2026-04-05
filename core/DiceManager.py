@@ -3,7 +3,7 @@ import random
 from collections import deque
 from core.Models import RollState
 
-class DiceService:
+class DiceManager:
     def __init__(self, seed: int | None = None):
         self.random = random.Random(seed)
         self.queue = deque()

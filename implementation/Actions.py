@@ -1,6 +1,6 @@
 from typing import Dict, Any
 from core.Models import Ability, Character, RollState
-from core.BattleEngine import BattleManager
+from core.BattleManager import BattleManager
 
 class BasicAttack(Ability):
     
@@ -169,7 +169,7 @@ class Evasão(Ability):
                 can_use, msg = self.can_execute(self.caster, event_data['caster'])
                 if can_use:
                     self.caster.spend_focus(self.focus_cost)
-                    roll = random.randint(1, 4)
+                    roll = event_data['battle_manager'].dice_service.roll_dice(4) # Rola 1d4
                     event_data['gda'] -= roll # Reduz o GdA com um rolamento de 1d4
                     event_data['history'].append(f"[SKILL] {self.caster.name} usou Evasão! GdA reduzido em {roll} para {event_data['gda']}!")
         

@@ -40,7 +40,9 @@ def load_game_rules(filepath: str) -> GameRules:
     return GameRules(
         hp_table=regras["tabela_hp"],
         mp_table=regras["tabela_mp"],
-        action_cost_table=regras["tabela_custos"]
+        action_cost_table=regras["tabela_custos"],
+        limite_foco=data["limite_foco"],
+        limite_mana=data["limite_mana"]
     )
 
 def load_characters(filepath: str, combat_styles: dict[str, CombatStyle], rules: GameRules) -> dict[str, Character]:

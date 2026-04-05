@@ -1,5 +1,5 @@
 from core.Models import Ability, Character
-from core.BattleEngine import BattleManager
+from core.BattleManager import BattleManager
 from Effects import Atordoado
 from Actions import BasicAttack
 

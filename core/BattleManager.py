@@ -1,14 +1,14 @@
 import heapq
 from Models import Character
 from typing import List, Callable, Dict, Any
-from core.DiceService import DiceService
+from core.DiceManager import DiceManager
 
 
 class BattleManager:
     """
     O Gerenciador Central. Controla o Relógio de Ticks e o Event Bus (Observer Pattern).
     """
-    def __init__(self, dice_service: 'DiceService'):
+    def __init__(self, dice_service: 'DiceManager'):
         # Min-Heap para o Relógio de Ticks: (tick_number, char_id, character_object)
         self.timeline = []
         self.current_tick = 0
@@ -19,17 +19,17 @@ class BattleManager:
         #Lista de personagens na batalha, acessível por char_id
         self.characters: Dict[str, Character] = {}
         
-        # Event Bus (Observer Pattern) para passivas e aprimoramentos
+        # Event Bus (Observer Pattern) para comandos de habilidades
         self.listeners: Dict[str, List[Callable]] = {
-            'on_turn_start': [],
-            'on_roll_modify': [],
-            'on_defense_reaction': [],
-            'on_hit_check': [],
-            'on_gda_modify': [],
-            'on_damage_calculation': [],
-            'on_damage_taken': [],
-            'on_attack_end': [],
-            'on_turn_end': []
+            'on_turn_start': [], # Início do turno
+            'on_roll_modify': [], # Para modificar rolagens com vantagem e desvantagem
+            'on_defense_reaction': [], # Para reações defensivas (podem transformar um acerto em erro)
+            'on_hit_check': [], # Após verificação de acerto para disparar o gatilho de certas passivas
+            'on_gda_modify': [], # Modificação do GdA antes de calcular o dano final
+            'on_damage_calculation': [], # Adição do dano de skills e magias
+            'on_damage_taken': [], # Após o alvo efetivamente tomar dano
+            'on_attack_end': [], # Fim do ataque
+            'on_turn_end': [] # Fim do turno
         }
 
     def add_character(self, character: 'Character', start_tick: int = 0):
@@ -89,13 +89,13 @@ class BattleManager:
             tick, char_id, char = entry 
             
             if char_id == character.char_id:
-                # 1. Remove a "senha" antiga da fila
+                # Remove a "senha" antiga da fila
                 self.timeline.pop(i)
                 
-                # 2. Calcula o novo tempo (empurrando pro futuro)
+                # Calcula o novo tempo (empurrando pro futuro)
                 novo_tick = tick + extra_ticks
                 
-                # 3. Insere a nova "senha" usando heappush para manter a propriedade de heap
+                # Insere a nova "senha" usando heappush para manter a propriedade de heap
                 heapq.heappush(self.timeline, (novo_tick, char_id, char))
                 
                 break # Achou o personagem, não precisa continuar procurando

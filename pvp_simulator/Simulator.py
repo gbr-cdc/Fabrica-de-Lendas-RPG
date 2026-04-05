@@ -1,8 +1,8 @@
 from typing import Dict, Any
 import copy
 from core.Models import Character
-from core.BattleEngine import BattleManager
-from core.DiceService import DiceService
+from core.BattleManager import BattleManager
+from core.DiceManager import DiceManager
 from core.DataManager import load_combat_styles, load_game_rules, load_characters
 
 CHARACTERS_FILE = "data/Characters.json"
@@ -33,7 +33,7 @@ class PvPSimulator:
         characters = load_characters(characters_filepath, combat_styles, rules)
 
         return cls(
-            battle_manager=BattleManager(DiceService(seed=dice_seed)),
+            battle_manager=BattleManager(DiceManager(seed=dice_seed)),
             character1=characters[char1_id],
             character2=characters[char2_id]
         )
@@ -238,7 +238,7 @@ def simulate_multiple_battles(
 
         # Cria um novo simulador para cada batalha, garantindo que o estado seja limpo
         simulator = PvPSimulator(
-            BattleManager(DiceService()),
+            BattleManager(DiceManager()),
             heroi1,
             heroi2
         )

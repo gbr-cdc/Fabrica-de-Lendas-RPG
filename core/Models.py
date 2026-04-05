@@ -3,13 +3,15 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Dict, List, Any
-from BattleEngine import BattleManager
+from BattleManager import BattleManager
 
+# Enum para estado de rolagem (vantagem, desvantagem, neutro)
 class RollState(Enum):
     ADVANTAGE = "advantage"
     DISADVANTAGE = "disavantage"
     NEUTRAL = "neutral"
 
+# Enums para tipos de armadura, armas, atributos e status
 class ArmorType(Enum):
     ROBE = "robe"
     LIGHT = "light"
@@ -34,12 +36,17 @@ class StatusEffectType(Enum):
     ENVENENADO = "Envenenado"
     QUEIMADO = "Queimado"
 
+# --- MODELOS DE DADOS ---
+# GameRules representa parâmetros de configuração do jogo (Atualmente apenas as tabelas de progressão)
 @dataclass
 class GameRules:
     hp_table: Dict[str, int]
     mp_table: Dict[str, int]
     action_cost_table: Dict[str, int]
+    limite_foco: int  # Limite máximo de foco = limite_foco * MEN
+    limite_mana: int  # Limite máximo de mana = limite_mana * MEN
 
+# Estilos de Combate, Armas e Armaduras com seus parâmetros de acordo com as regras
 @dataclass
 class CombatStyle:
     name: str
@@ -63,6 +70,7 @@ class Armor:
     type: ArmorType
     hp_bonus: int
     properties: List[Ability] = field(default_factory=list)
+
 
 class Ability:
     """
@@ -90,9 +98,24 @@ class Ability:
     def execute(self, caster: 'Character', target: 'Character', battle_manager: 'BattleManager') -> Dict[str, Any]:
         """
         Executa a lógica da habilidade e retorna um dicionário de resultados para a View ler.
-        Deve ser sobrescrito por subclasses (ex: BasicAttack, Fireball).
+        Deve ser sobrescrito por subclasses.
         """
-        raise NotImplementedError("A habilidade deve implementar o método execute.")
+        # O campo history no dicionário retornado é usado por padrão para mostrar o histórico de execução
+        # Se execute for chamado sem implementação, retorna uma mensagem de erro
+        return {
+            "history": f"Habilidade {self.name} não pode ser executada!",
+            "executed": False
+        }
+    
+    def execute_if_possible(self, caster: 'Character', target: 'Character', battle_manager: 'BattleManager') -> Dict[str, Any]:
+        """
+        Wrapper que garante que can_execute seja chamado antes de execute.
+        Retorna o resultado de execute se permitido, ou um dicionário de erro se não.
+        """
+        can_use, msg = self.can_execute(caster, target)
+        if not can_use:
+            return {"history": msg, "executed": False}
+        return self.execute(caster, target, battle_manager)
 
 class Character:
     """
@@ -127,11 +150,15 @@ class Character:
         self.atk_die = combat_style.atq_die
         self.def_die = combat_style.def_die
         self.combat_style = combat_style
+        # Bônus de Rank
         self.rank = 0
+        # Bônus de Ataque e Defesa
         self.bda = 0
         self.bdd = 0
+        # Bônus de Precisão e Guarda
         self.pre = 0
         self.grd = 0
+        # Dano
         self.pda = self.attribute_map[combat_style.main_stat]
         self.mda = 1
         
@@ -141,14 +168,17 @@ class Character:
     
     def generate_focus(self) -> int:
 
-        max_focus = 5 * self.men
+        # Limite máximo de foco
+        max_focus = self.rules.limite_foco * self.men
     
         self.floating_focus = min(self.floating_focus + self.men, max_focus)
     
         return self.floating_focus
     
     def generate_mana(self) -> int:
-        max_floating = 5 * self.men
+
+        # Limite máximo de mana engatilhada
+        max_floating = self.rules.limite_mana * self.men
         
         space_available = max_floating - self.floating_mp
         
