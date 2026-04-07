@@ -1,7 +1,8 @@
 
 import random
 from collections import deque
-from core.Models import RollResult, RollState
+from core.Structs import RollResult
+from core.Enums import RollState
 
 class DiceManager:
     def __init__(self, seed: int | None = None):

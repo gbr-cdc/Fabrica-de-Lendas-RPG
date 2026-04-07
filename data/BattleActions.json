@@ -1,27 +1,27 @@
 {
     "BasicAttack": {
-        "id" : "BasicAttack",
         "nome": "Ataque Básico",
         "action_type": "standard_action",
-        "focus_cost": 0
+        "focus_cost": 0,
+        "controller": "Auto"
     },
     "GenerateMana": {
-        "id": "GenerateManaAction",
         "nome": "Gerar Mana",
         "action_type": "Move_action",
-        "focus_cost": 0
+        "focus_cost": 0,
+        "controller": "Auto"
     },
     "GenerateFocus": {
-        "id": "GenerateFocusAction",
         "nome": "Gerar Foco",
         "action_type": "Move_action",
-        "focus_cost": 0
+        "focus_cost": 0,
+        "controller": "Auto"
     },
     "TemplateSkillN1": {
-        "id" : "SkillNivelUm",
         "nome": "Habilidade Nível 1",
         "action_type": "standard_action",
-        "focus_cost": 4
+        "focus_cost": 4,
+        "controller": "Auto"
     }
 
 }

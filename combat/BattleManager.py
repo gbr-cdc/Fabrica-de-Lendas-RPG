@@ -1,0 +1,194 @@
+import heapq
+from typing import List, Callable, Dict
+from core.Enums import BattleState, BattleActionType
+from core.Structs import BattleResult
+from core.Events import ActionLoad
+from core.DataManager import DataManager
+from combat.Judges import BattleJudge
+from combat.PassiveAbilities import registry
+from core.DiceManager import DiceManager
+from entities.Characters import Character
+
+class BattleManager:
+    """
+    O Gerenciador Central. Controla o Relógio de Ticks e o Event Bus (Observer Pattern).
+    """
+    def __init__(self, dice_service: 'DiceManager', data_service: 'DataManager', judge: 'BattleJudge'):
+        # Min-Heap para o Relógio de Ticks: (tick_number, char_id, character_object)
+        self.timeline = []
+        self.current_tick = 0
+
+        # Injeção do serviço de dados
+        self.dice_service = dice_service
+        self.data_service = data_service
+        self.judge = judge
+        #Lista de personagens na batalha, acessível por char_id
+        self.characters: Dict[str, Character] = {}
+        self.graveyard: Dict[str, Character] = {}
+
+        self.battle_result = BattleResult()
+        self.battle_state = BattleState.RUNNING
+        
+        # Event Bus (Observer Pattern) para comandos de habilidades
+        self.listeners: Dict[str, List[Callable]] = {
+            'on_turn_start': [], # Início do turno
+            'on_roll_modify': [], # Para modificar rolagens com vantagem e desvantagem
+            'on_defense_reaction': [], # Para reações defensivas (podem transformar um acerto em erro)
+            'on_hit_check': [], # Após verificação de acerto para disparar o gatilho de certas passivas
+            'on_gda_modify': [], # Modificação do GdA antes de calcular o dano final
+            'on_damage_calculation': [], # Adição do dano de skills e magias
+            'on_damage_taken': [], # Após o alvo efetivamente tomar dano
+            'on_attack_end': [], # Fim do ataque
+            'on_turn_end': [], # Fim do turno
+            'on_character_death': [] # Quando um personagem morre
+        }
+
+    def add_character(self, character: 'Character', start_tick: int = 0):
+        """
+        Adiciona um personagem à batalha e o agenda na fila de ação.
+        """
+        self.characters[character.char_id] = character
+        # heapq.heappush adiciona a tupla (start_tick, char_id, character) mantendo a propriedade de Min-Heap
+        heapq.heappush(self.timeline, (start_tick, character.char_id, character))
+
+        character.active_passives = []
+        
+        # Permite que as habilidades inscrevam seus comandos no Event Bus
+        for passive in character.passive_abilities:
+            if passive in registry:
+                passive_instance = registry[passive](character, self)
+                passive_instance.register_listeners()
+                character.active_passives.append(passive_instance)
+    
+    def remove_character(self, char_id: str):
+        character = self.characters.pop(char_id)
+        for passive in character.active_passives:
+            passive.unregister_listeners()
+        character.active_passives = []
+
+    def subscribe(self, event_name: str, callback: Callable):
+        """
+        Inscreve um callback como listener de um event
+        """
+        if event_name in self.listeners:
+            self.listeners[event_name].append(callback)
+    
+    def unsubscribe(self, event_name: str, callback: Callable):
+        """
+        Desinscreve um callback como listener de um event
+        """
+        if event_name in self.listeners:
+            self.listeners[event_name].remove(callback)
+
+    def emit(self, event_name: str, payload: 'ActionLoad'):
+        """
+        Avisa os ouvintes que o evento ocorreu. 
+        Os ouvintes modificam o payload original por referência.
+        """
+        if event_name in self.listeners:
+            for callback in self.listeners[event_name]:
+                callback(payload)
+
+    def get_next_actor(self) -> 'Character | None':
+        """
+        Avança o tempo para o próximo personagem na fila.
+        Ignora personagens mortos ou que foram removidos da batalha.
+        """
+        while self.timeline:
+            tick, char_id, character = heapq.heappop(self.timeline)
+            
+            if char_id in self.characters and character.is_alive():
+                self.current_tick = tick
+                return character
+                
+        return None
+
+    def schedule_next_action(self, character: Character, action_cost: int):
+        """
+        Reinsere o personagem na fila de tempo após ele agir.
+        """
+        next_tick = self.current_tick + action_cost
+        heapq.heappush(self.timeline, (next_tick, character.char_id, character))
+    
+    def delay_character(self, character: 'Character', extra_ticks: int | float):
+        """
+        Encontra o personagem na linha do tempo e empurra a ação dele mais para o futuro.
+        """
+        for i, entry in enumerate(self.timeline):
+            tick, char_id, char = entry 
+            
+            if char_id == character.char_id:
+                # 1. Calcula o novo tempo
+                novo_tick = tick + extra_ticks
+                
+                # 2. Sobrescreve a tupla na mesma posição do vetor (Evita o shift de memória do pop)
+                self.timeline[i] = (novo_tick, char_id, char)
+                
+                # 3. Reconstrói a árvore de prioridades com o novo valor
+                heapq.heapify(self.timeline)
+                
+                break # Achou e atualizou, pode sair do laço
+  
+    def resolve_deaths(self):
+        """Varre o campo de batalha em busca de personagens caídos e os move para o cemitério."""
+        mortos_neste_turno = []
+        
+        # Iteramos sobre uma cópia das chaves (list) porque vamos deletar itens do dicionário original
+        for char_id in list(self.characters.keys()):
+            personagem = self.characters[char_id]
+            
+            if not personagem.is_alive():
+                mortos_neste_turno.append(personagem)
+                # Remove do dicionário de vivos
+                self.remove_character(char_id)
+                # Salva no cemitério
+                self.graveyard[char_id] = personagem
+                
+                # Dispara o evento de morte (útil para passivas como "Ganhe +10 de Ataque quando um aliado morrer")
+                self.emit("on_character_death", ActionLoad(character=personagem))
+                
+                # Registra no histórico global
+                self.battle_result.history.append(f"[MORTE] {personagem.name} foi derrotado!")
+
+    def run_battle(self):
+        while True:
+            self.battle_state = self.judge.rule(self)
+            if self.battle_state is not BattleState.RUNNING:
+                break
+            actor = self.get_next_actor()
+            if actor is None:
+                self.battle_state = BattleState.ERROR
+                self.battle_result.history.append("[ERRO] Timeline se tornou vazia antes da batalha acabar")
+                break
+            
+            self.emit("on_turn_start", ActionLoad(character = actor))
+            self.resolve_deaths()
+
+            action = actor.controller.choose_action(actor, self)
+            action_load = action.execute_if_possible()
+
+            decision_attempts = 0
+            max_attempts = 1000
+
+            while not action_load.success:
+                decision_attempts += 1
+                if decision_attempts >= max_attempts:
+                    self.battle_state = BattleState.ERROR
+                    self.battle_result.history.append(f"[ERRO CRÍTICO] Controller de {actor.name} entrou em decision loop!")
+                    break # Quebra o while interno
+                action = actor.controller.choose_action(actor, self, action_load)
+                action_load = action.execute_if_possible()
+            
+            if self.battle_state == BattleState.ERROR:
+                break
+            
+            self.emit("on_turn_end", action_load)
+            self.resolve_deaths()
+            self.battle_result.history.extend(action_load.history)
+            action_cost = actor.action_cost_base
+            if action.action_type == BattleActionType.MOVE_ACTION:
+                action_cost = action_cost//2
+            self.schedule_next_action(actor, action_cost)
+            self.battle_result.duration += 1
+            self.battle_result.action_per_character[actor.char_id] += 1
+

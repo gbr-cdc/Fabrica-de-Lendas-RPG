@@ -1,7 +1,34 @@
-from core.Models import PassiveAbility, Character, AttackLoad, RollState
-from core.BattleManager import BattleManager
-from Effects import Atordoado
-from Actions import BasicAttack
+from combat.PassiveAbilities import PassiveAbility
+from entities.Characters import Character
+from core.Enums import RollState, BattleInteractionType
+from core.Events import AttackLoad
+from combat.BattleManager import BattleManager
+from combat.StatusEffects import Atordoado
+from combat.BattleActions import BasicAttack
+
+
+class PassiveAbility:
+    """
+    Representa características estáticas ou passivas que não podem ser conjuradas.
+    Elas apenas alteram regras do motor através do Event Bus.
+    """
+    def __init__(self, name: str, owner: 'Character', battle_manager: 'BattleManager'):
+        self.name = name
+        self.owner = owner
+        self.battle_manager = battle_manager
+        self.active_hooks = [] # Guarda os recibos para limpar automaticamente depois!
+
+    def register_listeners(self):
+        """Deve ser implementado pelas classes filhas para criar e inscrever os hooks."""
+        raise NotImplementedError
+
+    def unregister_listeners(self):
+        """
+        Limpa todos os hooks automaticamente.
+        """
+        for event_name, hook in self.active_hooks:
+            self.battle_manager.unsubscribe(event_name, hook)
+        self.active_hooks.clear()
 
 
 class GracaDoDuelista(PassiveAbility):
@@ -85,7 +112,7 @@ class Combo(PassiveAbility):
                 if attack_load.hit:
                     self.hit = True
 
-                response = BasicAttack(basic_attack_template, attack_load.character, attack_load.target, self.battle_manager).execute_if_possible()
+                response = BasicAttack(basic_attack_template, attack_load.character, attack_load.target, self.battle_manager,BattleInteractionType.EXTRA_ATTACK).execute_if_possible()
 
                 self.stage = 0
                 self.hit = False
@@ -101,7 +128,7 @@ class Combo(PassiveAbility):
                     return
                 
                 self.stage += 1
-                response = BasicAttack(basic_attack_template, attack_load.character, attack_load.target, self.battle_manager).execute_if_possible()
+                response = BasicAttack(basic_attack_template, attack_load.character, attack_load.target, self.battle_manager, BattleInteractionType.EXTRA_ATTACK).execute_if_possible()
                 
                 if response.success:
                     attack_load.history.append(f"[PASSIVA] Combo! {self.owner.name} ataca novamente (Estágio {self.stage})!")

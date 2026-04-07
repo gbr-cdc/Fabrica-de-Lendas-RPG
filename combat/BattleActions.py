@@ -1,6 +1,38 @@
-from typing import Dict, Any
-from core.Models import BattleAction, ActionLoad, AttackLoad, AttackType, Character, RollState, BattleActionType, BattleActionTemplate
-from core.BattleManager import BattleManager
+
+from __future__ import annotations
+from dataclasses import dataclass
+from core.Bases import GameAction
+from core.Events import ActionLoad, AttackLoad
+from core.Enums import BattleInteractionType, BattleActionType, RollState
+from combat.BattleManager import BattleManager
+from entities.Characters import Character
+
+class BattleAction(GameAction):
+    """
+    Comandos executados no contexto de batalha.
+    """
+    # Parâmetros relevantes recebidos através do construtor, de forma que os métodos não possuam parâmetros em conformidade com o Command Pattern
+    def __init__(self, template: 'BattleActionTemplate', actor: 'Character', target: 'Character', battle_manager: 'BattleManager'):
+        super().__init__(name=template.nome, actor=actor)
+        self.action_type = template.action_type
+        self.focus_cost = template.focus_cost
+        self.target = target
+        self.battle_manager = battle_manager
+
+    def can_execute(self) -> tuple[bool, str]:
+        """
+        Valida se a ação pode ser usada, retorna uma tupla (Sucesso?, "Mensagem de Erro ou Sucesso").
+        Por padrão, retorna true, mas habilidades ativas devem sobrescrever para validar custo de foco, alcance, etc.
+        """        
+        return True, ""
+
+    def execute(self) -> ActionLoad:
+        """
+        Executa a lógica da ação e retorna um ActionLoad com um histórico do resultado.
+        Por padrão, retorna um ActionLoad indicando que a habilidade não pode ser executada, mas habilidades ativas devem sobrescrever para implementar sua lógica.
+        """
+        return ActionLoad(character=self.actor, history=[f"A abilidade {self.name} não pode ser executada!"], success=False)
+
 
 class BasicAttack(BattleAction):
     """
@@ -9,9 +41,9 @@ class BasicAttack(BattleAction):
     Ações não ofensivas (que não rolam um ataque) são uma excessão e imprementam lógicas próprias
     """
     
-    def __init__(self, template: 'BattleActionTemplate', actor: 'Character', target: 'Character', battle_manager: 'BattleManager', attack_type: AttackType = AttackType.BASIC_ATTACK):
+    def __init__(self, template: 'BattleActionTemplate', actor: 'Character', target: 'Character', battle_manager: 'BattleManager', interaction_type: BattleInteractionType = BattleInteractionType.BASIC_ATTACK):
         super().__init__(template=template, actor=actor, target=target, battle_manager=battle_manager)
-        self.attack_type = attack_type
+        self.interaction_type = interaction_type
 
     def can_execute(self) -> tuple[bool, str]:
         # Regra 1: O alvo está vivo?
@@ -25,7 +57,7 @@ class BasicAttack(BattleAction):
             character=self.actor,
             target=self.target,
             battle_manager=self.battle_manager,
-            attack_type=self.attack_type,
+            interaction_type=self.interaction_type,
             attack_state=RollState.NEUTRAL,
             defense_state=RollState.NEUTRAL,
             gda = 0,
@@ -88,8 +120,18 @@ class BasicAttack(BattleAction):
 
         # Sexto sinal: informa o fim do ataque
         self.battle_manager.emit('on_attack_end', attack_load)
+        if(self.interaction_type == BattleInteractionType.BASIC_ATTACK):
+            self.actor.generate_focus()
 
         return attack_load
+
+@dataclass
+class BattleActionTemplate:
+    id: str
+    nome: str
+    action_type: BattleActionType
+    focus_cost: int
+    command: type[BattleAction]
 
 class GenerateManaAction(BattleAction):
     """
@@ -186,7 +228,7 @@ class SkillNivelUm(BattleAction):
         basic_attack_template = self.battle_manager.data_service.get_action_template("basic_attack_template")
 
         # Executa o ataque
-        ataque = BasicAttack(template = basic_attack_template, actor = self.actor, target=self.target, battle_manager=self.battle_manager, attack_type=AttackType.SKILL)
+        ataque = BasicAttack(template = basic_attack_template, actor = self.actor, target=self.target, battle_manager=self.battle_manager, interaction_type=BattleInteractionType.SKILL)
         action_load = ataque.execute()
         
         # Desinscreve o callback
@@ -198,5 +240,5 @@ registry = {
     "BasicAttack": BasicAttack,
     "GenerateManaAction": GenerateManaAction,
     "GenerateFocusAction": GenerateFocusAction,
-    "SkillNivelUm": SkillNivelUm
+    "TemplateSkillN1": SkillNivelUm
 }

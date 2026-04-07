@@ -1,8 +1,12 @@
 import json
-
-from core.Models import BattleActionType, Armor, ArmorType, AttributeType, BattleActionTemplate, CombatStyle, Character, GameRules, Weapon, WeaponType
-from implementation.Actions import registry as actions_registry
-from implementation.Passives import registry as passives_registry
+from core.Enums import BattleActionType, ArmorType, AttributeType, WeaponType
+from core.Structs import CombatStyle, GameRules
+from combat.BattleActions import BattleActionTemplate
+from entities.Itens import Armor, Weapon
+from entities.Characters import Character
+from combat.BattleActions import registry as actions_registry
+from combat.PassiveAbilities import registry as passives_registry
+from controllers.CharacterController import registry as controllers_registry
 
 class DataManager:
     def __init__(self):
@@ -80,13 +84,19 @@ class DataManager:
             if combat_style_key not in self._combat_styles:
                 raise KeyError(f"CombatStyle '{combat_style_key}' não encontrado para personagem '{key}'")
             
+            try:
+                controller = controllers_registry[char_data["controller"]]()
+            except KeyError as exc:
+                raise KeyError(f"[ERRO FATAL] Controller {char_data["controller"]} de {key} não foi encontrado") from exc
+            
             # Cria o personagem a partir de char_data
             char = Character(
                 char_id=key,
                 name=char_data["Nome"],
                 attributes=[char_data["FIS"], char_data["HAB"], char_data["MEN"]],
                 combat_style=self._combat_styles[combat_style_key],
-                rules=self._game_rules
+                rules=self._game_rules,
+                controller = controller
             )
 
             # Cria a arma e armadura a partir de char_data e equipa o personagem
@@ -124,7 +134,7 @@ class DataManager:
 
         templates = {}
         for key, template_data in data.items():
-            action_id = template_data["id"]
+            action_id = key
             if action_id not in actions_registry:
                 raise KeyError(f"Template '{key}' referencia action_id '{action_id}' não registrado no actions_registry.")
 
