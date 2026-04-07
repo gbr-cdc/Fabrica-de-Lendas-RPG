@@ -3,13 +3,11 @@ from implementation.Actions import (
     GenerateManaAction,
     GenerateFocusAction,
     SkillNivelUm,
-    Evasão,
 )
 from implementation.Passives import (
-    Letalidade,
+    ForçaBruta,
+    GracaDoDuelista,
     MãosPesadas,
-    ForcaBruta,
-    RitmoAcelerado,
     Combo,
 )
 
@@ -18,10 +16,8 @@ ability_registry = {
     "GenerateManaAction": GenerateManaAction,
     "GenerateFocusAction": GenerateFocusAction,
     "SkillNivelUm": SkillNivelUm,
-    "Evasão": Evasão,
-    "Letalidade": Letalidade,
     "MãosPesadas": MãosPesadas,
-    "ForcaBruta": ForcaBruta,
-    "RitmoAcelerado": RitmoAcelerado,
+    "ForçaBruta": ForçaBruta,
     "Combo": Combo,
+    "GraçaDoDuelista": GracaDoDuelista
 }

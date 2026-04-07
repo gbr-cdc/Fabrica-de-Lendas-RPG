@@ -1,21 +1,23 @@
 import heapq
-from Models import Character
+from Models import ActionLoad, Character
+from implementation.Passives import registry
 from typing import List, Callable, Dict, Any
 from core.DiceManager import DiceManager
+from DataManager import DataManager
 
 
 class BattleManager:
     """
     O Gerenciador Central. Controla o Relógio de Ticks e o Event Bus (Observer Pattern).
     """
-    def __init__(self, dice_service: 'DiceManager'):
+    def __init__(self, dice_service: 'DiceManager', data_service: 'DataManager'):
         # Min-Heap para o Relógio de Ticks: (tick_number, char_id, character_object)
         self.timeline = []
         self.current_tick = 0
 
         # Injeção do serviço de dados
         self.dice_service = dice_service
-        
+        self.data_service = data_service
         #Lista de personagens na batalha, acessível por char_id
         self.characters: Dict[str, Character] = {}
         
@@ -39,29 +41,40 @@ class BattleManager:
         self.characters[character.char_id] = character
         # heapq.heappush adiciona a tupla (start_tick, char_id, character) mantendo a propriedade de Min-Heap
         heapq.heappush(self.timeline, (start_tick, character.char_id, character))
+
+        character.active_passives = []
         
         # Permite que as habilidades inscrevam seus comandos no Event Bus
-        for ability in character.abilities:
-            ability.register_listeners(character, self)
+        for passive in character.passive_abilities:
+            if passive in registry:
+                passive_instance = registry[passive](character, self)
+                passive_instance.register_listeners()
+                character.active_passives.append(passive_instance)
 
     # Métodos para manipular o Event Bus
     def subscribe(self, event_name: str, callback: Callable):
+        """
+        Inscreve um callback como listener de um event
+        """
         if event_name in self.listeners:
             self.listeners[event_name].append(callback)
     
     def unsubscribe(self, event_name: str, callback: Callable):
+        """
+        Desinscreve um callback como listener de um event
+        """
         if event_name in self.listeners:
             self.listeners[event_name].remove(callback)
     
 
-    def emit(self, event_name: str, event_data: Dict[str, Any]) -> Dict[str, Any]:
+    def emit(self, event_name: str, payload: 'ActionLoad'):
         """
-        Dispara um evento para todos os ouvintes. Os ouvintes podem modificar o event_data (ex: dobrar GdA).
+        Avisa os ouvintes que o evento ocorreu. 
+        Os ouvintes modificam o payload original por referência.
         """
         if event_name in self.listeners:
             for callback in self.listeners[event_name]:
-                callback(event_data)
-        return event_data
+                callback(payload)
 
     def get_next_actor(self) -> 'None | Character':
         """

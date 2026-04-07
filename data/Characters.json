@@ -21,6 +21,8 @@
       "GenerateManaAction",
       "GenerateFocusAction"
     ],
+    "Passives": [],
+
     "CombatStyle": "Destruidor"
   },
   "Cavaleiro": {
@@ -45,6 +47,7 @@
       "GenerateManaAction",
       "GenerateFocusAction"
     ],
+    "Passives":[],
     "CombatStyle": "Cavaleiro"
   }
 }

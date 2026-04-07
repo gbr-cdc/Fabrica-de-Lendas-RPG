@@ -1,141 +1,131 @@
-from core.Models import Ability, Character
+from core.Models import PassiveAbility, Character, AttackLoad, RollState
 from core.BattleManager import BattleManager
 from Effects import Atordoado
 from Actions import BasicAttack
 
-class Letalidade(Ability):
-    def __init__(self):
-        super().__init__(name="Letalidade", focus_cost=0, action_cost=0)
 
-    def register_listeners(self, caster: 'Character', battle_manager: 'BattleManager'):
-        battle_manager.subscribe('on_gda_modify', self.apply_passive)
-        self.caster = caster
+class GracaDoDuelista(PassiveAbility):
+    def __init__(self, actor: 'Character', battle_manager: 'BattleManager'):
+        super().__init__(name="Graça do Duelista", owner=actor, battle_manager=battle_manager)
 
-    def apply_passive(self, event_data: dict) -> dict:
-        if event_data['caster'].char_id == self.caster.char_id:
-            if event_data['gda'] > 0:
-                roll = event_data['battle_manager'].dice_service.roll_dice(6)
-                event_data['gda'] += roll
-                event_data['history'].append(f"[PASSIVA] {self.caster.name} ativou Letalidade! GdA aumentado em {roll} para {event_data['gda']}!")
+    # O motor chama isso uma vez para cada personagem quando o combate começa
+    def register_listeners(self):
         
-        return event_data
+        # 1. Criamos a Passiva de Acerto. 
+        # Ela "prende" as variáveis 'owner' e 'battle_manager' deste escopo específico.
+        def passiva_acerto_hook(attack_load: 'AttackLoad') -> None:
+            # Note que não usamos 'self.owner', usamos direto a variável local 'owner'
+            if attack_load.character.char_id == self.owner.char_id:
+                roll = self.battle_manager.dice_service.roll_dice(6, RollState.NEUTRAL)
+                attack_load.gda += roll.final_roll
+                attack_load.history.append(f"[PASSIVA] Graça do Duelista adicionou +{roll.final_roll} de GdA!")
 
-class MãosPesadas(Ability):
-    def __init__(self):
-        super().__init__(name="Mãos Pesadas", focus_cost=0, action_cost=0)
+        # 2. Criamos a Reação de Evasão.
+        def reacao_evasao_hook(attack_load: 'AttackLoad') -> None:
+            if attack_load.target.char_id == self.owner.char_id:
+                if attack_load.gda > (0 + self.owner.grd - attack_load.character.pre):
+                    custo_evasao = 2
+                    if self.owner.floating_focus >= custo_evasao:
+                        if self.owner.controller.choose_reaction(self.owner, self.name, attack_load, self.battle_manager):
+                            self.owner.spend_focus(custo_evasao)
+                            roll = self.battle_manager.dice_service.roll_dice(4, RollState.NEUTRAL)
+                            attack_load.gda -= roll.final_roll
+
+                            attack_load.history.append(f"[REAÇÃO] {self.owner.name} gastou 2 de Foco e usou Evasão!")
+                            attack_load.history.append(f"Rolou +{roll.final_roll} na Defesa. O GdA caiu para {attack_load.gda}.")
+
+        # 3. Inscrevemos os "hooks" independentes que acabamos de criar.
+        self.battle_manager.subscribe('on_gda_modify', passiva_acerto_hook)
+        self.battle_manager.subscribe('on_defense_reaction', reacao_evasao_hook)
+
+class ForçaBruta(PassiveAbility):
+    def __init__(self, actor: 'Character', battle_manager: 'BattleManager'):
+        super().__init__(name="Força Bruta", owner=actor, battle_manager=battle_manager)
+
+    def register_listeners(self):
+        def multiply_hook(self, attack_load: 'AttackLoad'):
+            if attack_load.character.char_id == self.owner.char_id:
+                if attack_load.hit:
+                    attack_load.gda += attack_load.gda
+                    attack_load.history.append(f"[PASSIVA] Força Bruta dobrou o GdA para {attack_load.gda}!")
+        self.battle_manager.subscribe('on_gda_modify', multiply_hook)
+        self.active_hooks.append(multiply_hook)
     
-    def register_listeners(self, caster: 'Character', battle_manager: 'BattleManager'):
-        battle_manager.subscribe('on_hit_check', self.apply_passive)
-        self.caster = caster
     
-    def apply_passive(self, event_data: dict) -> dict:
-        if event_data['caster'].char_id == self.caster.char_id:
-            if event_data['gda'] > 3:
-                atordoamento = Atordoado(duration=0, target=event_data['target'])
-                atordoamento.apply(event_data['battle_manager'])
-        return event_data
+
+class MãosPesadas(PassiveAbility):
+    def __init__(self, actor: 'Character', battle_manager: 'BattleManager'):
+        super().__init__(name="Mãos Pesadas", owner=actor, battle_manager=battle_manager)
+
+    def register_listeners(self):
+        def effect_hook(self, attack_load: 'AttackLoad'):
+            if attack_load.character.char_id == self.owner.char_id:
+                if attack_load.hit:
+                    if attack_load.gda > 3:
+                        Atordoado(duration=0, target=attack_load.target, battle_manager=self.battle_manager)
+                    attack_load.history.append(f"[PASSIVA] Mãos Pesadas dobrada o GdA para {attack_load.gda}!")
+        self.battle_manager.subscribe('on_gda_modify', effect_hook)
 
 
-class ForcaBruta(Ability):
-    def __init__(self):
-        # É uma passiva, não gasta recursos nem tempo
-        super().__init__(name="Força Bruta", focus_cost=0, action_cost=0)
-
-    def register_listeners(self, caster: 'Character', battle_manager: 'BattleManager'):
-        # Aqui ela avisa o BattleManager: "Me chame quando o GdA for calculado!"
-        battle_manager.subscribe('on_gda_modify', self.apply_passive)
-
-        # Guardamos a referência do dono para saber se o evento é nosso
-        self.caster = caster
-
-    def apply_passive(self, event_data: dict) -> dict:
-        # Verifica se quem está atacando é o dono desta habilidade
-        if event_data['caster'].char_id == self.caster.char_id:
-            if event_data['gda'] > 0:
-                # Dobra o GdA silenciosamente
-                event_data['gda'] *= 2 
-                event_data['history'].append(f"[PASSIVA] {self.caster.name} ativou Força Bruta! GdA dobrado para {event_data['gda']}!")
-        
-        return event_data
-
-    # can_execute e execute podem simplesmente retornar False ou pass, 
-    # pois o jogador nunca seleciona essa habilidade ativamente no menu.
-    def can_execute(self, caster: 'Character', target: 'Character') -> tuple[bool, str]:
-        return False, "Esta é uma habilidade passiva."
-    
-class RitmoAcelerado(Ability):
-    def __init__(self):
-        super().__init__(name="Ritmo Acelerado", focus_cost=0, action_cost=0)
-        self.current_target_id = None
-        
-        # O nosso Mutex / Guarda de Reentrada
-        self.is_busy = False
-    
-    def register_listeners(self, caster: 'Character', battle_manager: 'BattleManager'):
-        # Aqui ela avisa o BattleManager: "Me chame quando o ataque terminar!"
-        battle_manager.subscribe('on_attack_end', self.checar_ataque_bonus)
-
-        # Guardamos a referência do dono para saber se o evento é nosso
-        self.caster = caster
-
-    def checar_ataque_bonus(self, event_data: dict) -> dict:
-        # 1. A trava de segurança! Se já estamos processando um ataque bônus, ignora.
-        if self.is_busy:
-            return event_data
-        
-        if event_data.get('is_skill', False): 
-            return event_data
-
-        if event_data['caster'].char_id == self.caster.char_id:
-            
-            if self.current_target_id == event_data['target'].char_id:
-                event_data['history'].append(f"[PASSIVA] Ritmo Acelerado! Ataque extra em {event_data['target'].name}!")
-                
-                ataque_bonus = BasicAttack()
-                self.current_target_id = None
-                
-                # 2. Tranca o Mutex
-                self.is_busy = True 
-                
-                try:
-                    # 3. Executa o ataque. Qualquer evento que ele gerar vai bater no 'if self.is_busy' ali em cima e ser ignorado por esta passiva.
-                    extra_data = ataque_bonus.execute(self.caster, event_data['target'], event_data['battle_manager'])
-                    event_data['history'].extend(extra_data['history'])
-                finally:
-                    # 4. Libera o Mutex, INDEPENDENTEMENTE de o ataque ter dado certo ou lançado uma exceção/erro.
-                    self.is_busy = False
-            else:
-                # Se o ataque foi para um alvo diferente, atualiza o alvo monitorado por esta passiva.
-                self.current_target_id = event_data['target'].char_id
-                
-        return event_data
-
-class Combo(Ability):
-    
-    def __init__(self, name = "Combo", focus_cost = 0, action_cost = 0):
-        super().__init__(name, focus_cost, action_cost)
+class Combo(PassiveAbility):
+    def __init__(self, owner: 'Character', battle_manager: 'BattleManager'):
+        super().__init__(name="Combo", owner=owner, battle_manager=battle_manager)
         self.stage = 0
+        self.hit = False
     
-    def register_listeners(self, caster: 'Character', battle_manager: 'BattleManager'):
-        # Aqui ela avisa o BattleManager: "Me chame quando o ataque terminar!"
-        battle_manager.subscribe('on_attack_end', self.checar_ataque_bonus)
+    def register_listeners(self):
+        def checar_ataque_bonus(attack_load: 'AttackLoad'):
+            if attack_load.character.char_id != self.owner.char_id:
+                return
 
-        # Guardamos a referência do dono para saber se o evento é nosso
-        self.caster = caster
-    
-    def checar_ataque_bonus(self, event_data: dict) -> dict:
-        if event_data.get('is_skill', False): 
-            return event_data
-        if event_data['caster'].char_id == self.caster.char_id:
-            if self.stage == 0 or self.stage == 1:
-                if event_data['gda'] > 0:
-                    event_data['history'].append(f"[PASSIVA] Combo! {self.caster.name} ataca novamente!")
-                    ataque_bonus = BasicAttack()
-                    self.stage += 1
-                    extra_data = ataque_bonus.execute(self.caster, event_data['target'], event_data['battle_manager'])
-                    event_data['history'].extend(extra_data['history'])
+            basic_attack_template = self.battle_manager.data_service.get_action_template("BasicAttack")
+            
+            if self.stage == 0:
+                self.stage += 1
+                if attack_load.hit:
+                    self.hit = True
+
+                response = BasicAttack(basic_attack_template, attack_load.character, attack_load.target, self.battle_manager).execute_if_possible()
+
+                self.stage = 0
+                self.hit = False
+                
+                if response.success:
+                    attack_load.history.append(f"[PASSIVA] Combo! {self.owner.name} ataca novamente (Estágio {self.stage})!")
+                    attack_load.history.extend(response.history)
+
+            elif self.stage == 1:
+                if not self.hit or not attack_load.hit:
+                    self.hit = False
+                    self.stage = 0
+                    return
+                
+                self.stage += 1
+                response = BasicAttack(basic_attack_template, attack_load.character, attack_load.target, self.battle_manager).execute_if_possible()
+                
+                if response.success:
+                    attack_load.history.append(f"[PASSIVA] Combo! {self.owner.name} ataca novamente (Estágio {self.stage})!")
+                    attack_load.history.extend(response.history)
                 else:
-                    self.stage = 0 # Reseta o combo se errar o ataque
-            else:
-                self.stage = 0 # Reseta o combo se chegar no estágio 3 (ou seja, após 3 ataques)
-        return event_data
+                    self.stage = 0
+                    self.hit = False
+
+            elif self.stage > 1:
+                if attack_load.hit:
+                    Atordoado(0, attack_load.target, attack_load.battle_manager)
+                    attack_load.history.append(f"[PASSIVA] Combo! {self.owner.name} ataca novamente (Estágio {self.stage})!")
+                
+
+
+        # Inscreve no motor
+        self.battle_manager.subscribe('on_attack_end', checar_ataque_bonus)
+        
+        # Lembra que tem que ser uma Tupla para o unregister_listeners saber qual evento limpar!
+        self.active_hooks.append(('on_attack_end', checar_ataque_bonus))
+
+registry = {
+    "MãosPesadas": MãosPesadas,
+    "ForçaBruta": ForçaBruta,
+    "Combo": Combo,
+    "GraçaDoDuelista": GracaDoDuelista
+}

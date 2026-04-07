@@ -1,176 +1,202 @@
 from typing import Dict, Any
-from core.Models import Ability, Character, RollState
+from core.Models import BattleAction, ActionLoad, AttackLoad, AttackType, Character, RollState, BattleActionType, BattleActionTemplate
 from core.BattleManager import BattleManager
 
-class BasicAttack(Ability):
+class BasicAttack(BattleAction):
+    """
+    Possui a lógica completa de uma ação de ataque. Dispara eventos de acordo com seu estado de resolução.
+    Outras habilidades utilizam estes eventos para funcionar ou usam essa classe para criar uma instância de ataque.
+    Ações não ofensivas (que não rolam um ataque) são uma excessão e imprementam lógicas próprias
+    """
     
-    def __init__(self):
-        # O Ataque Básico custa 0 de foco e seu tempo de ação é dinâmico (vem da HAB)
-        super().__init__(name="Ataque Básico", focus_cost=0, action_cost=0)
-    
-    def can_execute(self, caster: 'Character', target: 'Character') -> tuple[bool, str]:
+    def __init__(self, template: 'BattleActionTemplate', actor: 'Character', target: 'Character', battle_manager: 'BattleManager', attack_type: AttackType = AttackType.BASIC_ATTACK):
+        super().__init__(template=template, actor=actor, target=target, battle_manager=battle_manager)
+        self.attack_type = attack_type
+
+    def can_execute(self) -> tuple[bool, str]:
         # Regra 1: O alvo está vivo?
-        if not target.is_alive():
+        if not self.target.is_alive():
             return False, "O alvo já está derrotado!"
-        
         return True, ""
 
-    def execute(self, caster: 'Character', target: 'Character', battle_manager: 'BattleManager', **kwargs) -> Dict[str, Any]:
-        event_data = {'caster': caster, 'target': target, 'battle_manager': battle_manager, 'is_skill': kwargs.get('is_skill', False), 'attack_state': RollState.NEUTRAL, 'defense_state': RollState.NEUTRAL}
-        event_data = battle_manager.emit('on_roll_modify', event_data) # Permite que passivas modifiquem os dados antes do rolamento (ex: Inspiração)
-        # 1. Rola os dados
-        atk_roll = battle_manager.dice_service.roll_dice(caster.atk_die, event_data['attack_state'])
-        mod_atk_roll = atk_roll + caster.rank + caster.bda
-        event_data["history"] = [f"{caster.name} rolou {atk_roll} para atacar!"]
-        event_data["history"].append(f"Bônus de Rank do atacante: {caster.rank} | Bônus de Ataque: {caster.bda} | Total modificado: {mod_atk_roll}")
-        def_roll = battle_manager.dice_service.roll_dice(target.def_die, event_data['defense_state'])
-        mod_def_roll = def_roll + target.rank + target.bdd
-        event_data["history"].append(f"{target.name} rolou {def_roll} para defender!")
-        event_data["history"].append(f"Bônus de Rank do defensor: {target.rank} | Bônus de Defesa: {target.bdd} | Total modificado: {mod_def_roll}")
+    def execute(self) -> ActionLoad:
+        # Cria o ActionLoad específico para ataques, que será passado por referência em todos os eventos relacionados a este ataque
+        attack_load = AttackLoad(
+            character=self.actor,
+            target=self.target,
+            battle_manager=self.battle_manager,
+            attack_type=self.attack_type,
+            attack_state=RollState.NEUTRAL,
+            defense_state=RollState.NEUTRAL,
+            gda = 0,
+            damage = 0
+        )
+
+        # Primeiro sinal: permite que habilidades modifiquem o estado do ataque (vantagem, desvantagem, neutro)
+        self.battle_manager.emit('on_roll_modify', attack_load)
         
-        # 2. Calcula o GdA base
-        gda = mod_atk_roll - mod_def_roll
-        event_data['gda'] = gda
-        event_data["history"].append(f"GdA base é {gda} ({mod_atk_roll} - {mod_def_roll})")
-        event_data = battle_manager.emit('on_defense_reaction', event_data) # Permite que passivas possam anular o hit (ex: Esquiva Perfeita)
-        event_data = battle_manager.emit('on_hit_check', event_data) # Permite que passivas chequem o gda inicial para suas condições de ativação
-        hit = False
-        gda = event_data['gda']
-        if gda > (0 + target.grd - caster.pre): 
-            hit = True
-            if gda < 0:
-                gda = 0
-                event_data['gda'] = gda
-            event_data = battle_manager.emit('on_gda_modify', event_data) # Permite que passivas modifiquem o GdA (ex: Força Bruta, Letalidade)
-
-        # 3. Resolve o Dano
-        if hit:
-            event_data["history"].append("O ataque acertou!")
-            event_data = battle_manager.emit('on_damage_calculation', event_data) # Momento onde Habilidades Marciais aplicam seus bônus de dano
-            final_gda = max(0, event_data['gda']) # Recarrega o GdA caso alguma passiva tenha modificado ele na etapa de cálculo de dano
-            damage = caster.pda + (caster.mda * final_gda)
-            event_data["history"].append(f"Dano calculado: PDA {caster.pda} + (MDA {caster.mda} x GdA {final_gda}) = {damage}") 
-            target.take_damage(damage)
-            event_data["damage"] = damage
-            event_data = battle_manager.emit('on_damage_taken', event_data)
+        # Rolagem de ataque
+        roll_result = self.battle_manager.dice_service.roll_dice(self.actor.atk_die, attack_load.attack_state)
+        if roll_result.rollstate == RollState.ADVANTAGE:
+            attack_load.history.append(f"{self.actor.name} tem vantagem! Rolou {roll_result.roll1} e {roll_result.roll2}, ficando com {roll_result.final_roll}!")
+        elif roll_result.rollstate == RollState.DISADVANTAGE:
+            attack_load.history.append(f"{self.actor.name} tem desvantagem! Rolou {roll_result.roll1} e {roll_result.roll2}, ficando com {roll_result.final_roll}!")
         else:
-            event_data["history"].append("O ataque foi completamente defendido!")
+            attack_load.history.append(f"{self.actor.name} rolou {roll_result.final_roll} para atacar!")
+        mod_atk_roll = roll_result.final_roll + self.actor.rank + self.actor.bda
+        attack_load.history.append(f"Bônus de Rank do atacante: {self.actor.rank} | Bônus de Ataque: {self.actor.bda} | Total modificado: {mod_atk_roll}")
+        
+        # Rolagem de defesa
+        roll_result = self.battle_manager.dice_service.roll_dice(self.target.def_die, attack_load.defense_state)
+        if roll_result.rollstate == RollState.ADVANTAGE:
+            attack_load.history.append(f"{self.target.name} tem vantagem na defesa! Rolou {roll_result.roll1} e {roll_result.roll2}, ficando com {roll_result.final_roll}!")
+        elif roll_result.rollstate == RollState.DISADVANTAGE:
+            attack_load.history.append(f"{self.target.name} tem desvantagem na defesa! Rolou {roll_result.roll1} e {roll_result.roll2}, ficando com {roll_result.final_roll}!")
+        else:
+            attack_load.history.append(f"{self.target.name} rolou {roll_result.final_roll} para defender!")
+        mod_def_roll = roll_result.final_roll + self.target.rank + self.target.bdd
+        attack_load.history.append(f"Bônus de Rank do defensor: {self.target.rank} | Bônus de Defesa: {self.target.bdd} | Total modificado: {mod_def_roll}")
+        
+        # Cálculo do GdA base
+        attack_load.gda = mod_atk_roll - mod_def_roll
+        attack_load.history.append(f"GdA base é {attack_load.gda} ({mod_atk_roll} - {mod_def_roll})")
+        # Segundo sinal: permite que reações reajustem o GdA antes da verificação de acerto
+        self.battle_manager.emit('on_defense_reaction', attack_load)
+        attack_load.history.append(f"GdA após reações defensivas é {attack_load.gda}, a precisão de {self.actor.name} é {self.actor.pre} e a guarda de {self.target.name} é {self.target.grd}.")
+        if attack_load.gda > (0 + self.target.grd - self.actor.pre): # Aplica a lógica de Precisão e Guarda
+            attack_load.hit = True
+            # Terceiro sinal: permite que passivas chequem o GdA para suas condições de ativação
+            self.battle_manager.emit('on_hit_check', attack_load)
+            # Transforma o GdA negativo em 0 para o cáculo de dano
+            if attack_load.gda < 0:
+                attack_load.gda = 0
+            # Quarto sinal: permite que passivas reajustem o GdA antes do cálculo de dano
+            self.battle_manager.emit('on_gda_modify', attack_load)
 
-        # O custo de ação é puxado direto do atributo do personagem
-        self.action_cost = caster.action_cost_base
+            attack_load.history.append("O ataque acertou!")
+            # Quinto sinal: permite que magias e skills modifiquem os parâmetros do ataque antes do cálculo de dano
+            self.battle_manager.emit('on_damage_calculation', attack_load)
+            final_gda = max(0, attack_load.gda)
+            attack_load.damage = attack_load.damage + self.actor.pda + (self.actor.mda * final_gda)
+            attack_load.history.append(f"Dano calculado: PDA {self.actor.pda} + (MDA {self.actor.mda} x GdA {final_gda}) = {attack_load.damage}") 
+            self.battle_manager.emit('on_damage_taken', attack_load)
+            self.target.take_damage(attack_load.damage)
+        else:
+            attack_load.history.append("O ataque foi completamente defendido!")
+            # Terceiro sinal: permite que passivas chequem o GdA para suas condições de ativação
+            self.battle_manager.emit('on_hit_check', attack_load)
 
-        event_data = battle_manager.emit('on_attack_end', event_data)
+        # Sexto sinal: informa o fim do ataque
+        self.battle_manager.emit('on_attack_end', attack_load)
 
-        # Retorna o resumo para o View (Terminal/Pygame) renderizar
-        return event_data
+        return attack_load
 
-class GenerateManaAction(Ability):
-    def __init__(self):
-        # Gerar mana não custa foco, mas custa o Tempo de Ação base do personagem
-        super().__init__(name="Concentrar Mana", focus_cost=0, action_cost=0)
+class GenerateManaAction(BattleAction):
+    """
+    Ação padrão para gerar mana
+    """
+    def __init__(self, template: BattleActionTemplate, actor: 'Character', target: 'Character', battle_manager: 'BattleManager'):
+        super().__init__(template = template, actor=actor, target=target, battle_manager=battle_manager)
 
-    def can_execute(self, caster: 'Character', target: 'Character') -> tuple[bool, str]:
+    def can_execute(self) -> tuple[bool, str]:
+        """ 
+        Verifica a reserva de mana e o limite de mana manifestada antes de permitir e retorna uma tupla (can_execute: bool, message: str).
+        """
         # Regra 1: O tanque secou?
-        if caster.current_mp <= 0:
+        if self.actor.current_mp <= 0:
             return False, "Sua reserva diária de mana esgotou!"
             
-        # Regra 2: A mão já está cheia?
-        max_floating = 5 * caster.men
-        if caster.floating_mp >= max_floating:
-            return False, "Sua mana engatilhada já está no limite!"
-            
+        # Regra 2: O mão já está cheia?
+        max_floating = self.actor.rules.limite_mana * self.actor.men
+        if self.actor.floating_mp >= max_floating:
+            return False, "Sua mana manifestada já está no limite!"
         return True, ""
 
-    def execute(self, caster: 'Character', target: 'Character', battle_manager: 'BattleManager') -> dict:
-        # Usa a lógica que você já fez na classe Character
-        old_floating = caster.floating_mp
-        new_floating = caster.generate_mana()
+    def execute(self) -> ActionLoad:
+        """
+        Gera mana usando a lógica interna do Character e retorna um ActionLoad.
+        """
+        old_floating = self.actor.floating_mp
+        # Lógica interna de gerar mana dentro de Character
+        new_floating = self.actor.generate_mana()
         generated = new_floating - old_floating
+
+        return ActionLoad(
+            character=self.actor,
+            history=[f"{self.actor.name} canalizou sua energia e gerou {generated} de Mana!"]
+        )
+
+class GenerateFocusAction(BattleAction):
+    """
+    Ação padrão para gerar foco
+    """
+    def __init__(self, template: BattleActionTemplate, actor: 'Character', target: 'Character', battle_manager: 'BattleManager'):
+        super().__init__(template=template, actor=actor, target=target, battle_manager=battle_manager)
+
+    def can_execute(self) -> tuple[bool, str]:
+        """
+        Verifica o limite de foco manifestado e retorna uma tupla (can_execute: bool, message: str).
+        """
+        max_focus = self.actor.rules.limite_foco * self.actor.men
         
-        self.action_cost = caster.action_cost_base # Puxa o custo de HAB
-
-        return {
-            "history": f"{caster.name} gerou {generated} de Mana!"
-        }
-
-class GenerateFocusAction(Ability):
-    def __init__(self):
-        # Como é uma ação ativa do turno, não custa foco para usar, mas custará o Tempo de Ação
-        super().__init__(name="Concentrar Foco", focus_cost=0, action_cost=0)
-
-    def can_execute(self, caster: 'Character', target: 'Character') -> tuple[bool, str]:
-        # O teto máximo de foco é 5 vezes a Mente (MEN)
-        max_focus = 5 * caster.men
-        
-        # Validação: O tanque já está cheio?
-        if caster.floating_focus >= max_focus:
+        # Regra: O foco já está no limite?
+        if self.actor.floating_focus >= max_focus:
             return False, "Seu Foco já está no limite máximo!"
             
         return True, ""
 
-    def execute(self, caster: 'Character', target: 'Character', battle_manager: 'BattleManager') -> dict:
-        # Guardamos o valor antigo para saber exatamente quanto foi gerado neste turno
-        old_focus = caster.floating_focus
-        
-        # Chama o método matemático limpo que você já construiu no Character
-        new_focus = caster.generate_focus()
-        
+    def execute(self) -> ActionLoad:
+        """
+        Gera foco usando a lógica interna do Character e retorna um ActionLoad.
+        """
+        old_focus = self.actor.floating_focus
+        # Lógica interna de gerar foco dentro de Character
+        new_focus = self.actor.generate_focus()
         generated = new_focus - old_focus
-        
-        # A ação gasta o tempo padrão do personagem no Relógio de Ticks
-        self.action_cost = caster.action_cost_base
 
-        # Retorna o dicionário para a View ler e mostrar na tela/terminal
-        return {
-            "history": f"{caster.name} respirou fundo e gerou {generated} de Foco!"
-        }
+        return ActionLoad(
+            character=self.actor,
+            history=[f"{self.actor.name} respirou fundo e gerou {generated} de Foco!"]
+        )
 
-class SkillNivelUm(Ability):
-    def __init__(self):
-        super().__init__(name="Skill Nível 1", focus_cost=4, action_cost=0)
+class SkillNivelUm(BattleAction):
+    def __init__(self, template: BattleActionTemplate, actor: 'Character', target: 'Character', battle_manager: 'BattleManager'):
+        super().__init__(template=template, actor=actor, target=target, battle_manager=battle_manager)
 
-    def can_execute(self, caster: 'Character', target: 'Character') -> tuple[bool, str]:
-        if caster.floating_focus < self.focus_cost:
+    def can_execute(self) -> tuple[bool, str]:
+        if self.actor.floating_focus < self.focus_cost:
             return False, "Foco insuficiente para usar esta habilidade!"
         return True, ""
 
-    def execute(self, caster: 'Character', target: 'Character', battle_manager: 'BattleManager') -> dict:
-        self.caster = caster
-        caster.spend_focus(self.focus_cost)
-        battle_manager.subscribe('on_damage_calculation', self.add_Damage)
-        ataque = BasicAttack()
-        event_data = ataque.execute(caster, target, battle_manager, is_skill=True)
-        battle_manager.unsubscribe('on_damage_calculation', self.add_Damage)
-
-        return event_data
-    
-    def add_Damage(self, event_data: dict) -> dict:
-        if event_data['caster'].char_id == self.caster.char_id:
-            event_data['gda'] += 5 # Adiciona um bônus fixo de GdA
-            event_data['history'].append(f"[SKILL] {self.name} aumentou o GdA em +5!")
-        return event_data
-    
-class Evasão(Ability):
-    def __init__(self):
-        super().__init__(name="Evasão", focus_cost=2, action_cost=0)
-    
-    def register_listeners(self, caster: 'Character', battle_manager: 'BattleManager'):
-        battle_manager.subscribe('on_defense_reaction', self.apply_passive)
-        self.caster = caster
-    
-    def can_execute(self, caster: Character, target: Character) -> tuple[bool, str]:
-        if caster.floating_focus < self.focus_cost:
-            return False, "Foco insuficiente para usar esta habilidade!"
-        return True, ""
-    
-    def apply_passive(self, event_data: dict) -> dict:
-        if event_data['target'].char_id == self.caster.char_id:
-            if event_data['gda'] > 0:
-                can_use, msg = self.can_execute(self.caster, event_data['caster'])
-                if can_use:
-                    self.caster.spend_focus(self.focus_cost)
-                    roll = event_data['battle_manager'].dice_service.roll_dice(4) # Rola 1d4
-                    event_data['gda'] -= roll # Reduz o GdA com um rolamento de 1d4
-                    event_data['history'].append(f"[SKILL] {self.caster.name} usou Evasão! GdA reduzido em {roll} para {event_data['gda']}!")
+    def execute(self) -> ActionLoad:
         
-        return event_data
+        # Consome o custo
+        self.actor.spend_focus(self.focus_cost)
+        
+        # Callback para modificar o ataque. Consegue lembrar quem é "caster".)
+        def add_damage_hook(attack_load: 'AttackLoad'):
+            # Verificação de se o ataque é deste caster
+            if attack_load.character.char_id == self.actor.char_id:
+                attack_load.gda += 5 # Bônus de GdA
+                attack_load.history.append(f"[SKILL] {self.name} aumentou o GdA em +5!")
+
+        # Inscreve o callback
+        self.battle_manager.subscribe('on_damage_calculation', add_damage_hook)
+        
+        basic_attack_template = self.battle_manager.data_service.get_action_template("basic_attack_template")
+
+        # Executa o ataque
+        ataque = BasicAttack(template = basic_attack_template, actor = self.actor, target=self.target, battle_manager=self.battle_manager, attack_type=AttackType.SKILL)
+        action_load = ataque.execute()
+        
+        # Desinscreve o callback
+        self.battle_manager.unsubscribe('on_damage_calculation', add_damage_hook)
+
+        return action_load
+
+registry = {
+    "BasicAttack": BasicAttack,
+    "GenerateManaAction": GenerateManaAction,
+    "GenerateFocusAction": GenerateFocusAction,
+    "SkillNivelUm": SkillNivelUm
+}

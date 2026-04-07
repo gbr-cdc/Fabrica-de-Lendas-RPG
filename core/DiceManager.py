@@ -1,7 +1,7 @@
 
 import random
 from collections import deque
-from core.Models import RollState
+from core.Models import RollResult, RollState
 
 class DiceManager:
     def __init__(self, seed: int | None = None):
@@ -11,12 +11,18 @@ class DiceManager:
     def schedule_result(self, val: int):
         self.queue.append(val)
 
-    def roll_dice(self, sides: int, state: RollState = RollState.NEUTRAL) -> int:
+    def roll_dice(self, sides: int, state: RollState = RollState.NEUTRAL) -> RollResult:
         if self.queue:
-            return self.queue.popleft()
-        if state == RollState.ADVANTAGE:
-            return max(self.random.randint(1, sides), self.random.randint(1, sides))
+            value=self.queue.popleft()
+            return RollResult(value, value, scheduled=True)
+        elif state == RollState.ADVANTAGE:
+            roll1 = self.random.randint(1, sides)
+            roll2 = self.random.randint(1, sides)
+            return RollResult(max(roll1, roll2), roll1, roll2, RollState.ADVANTAGE)
         elif state == RollState.DISADVANTAGE:
-            return min(self.random.randint(1, sides), self.random.randint(1, sides))
+            roll1 = self.random.randint(1, sides)
+            roll2 = self.random.randint(1, sides)
+            return RollResult(min(roll1, roll2), roll1, roll2, RollState.DISADVANTAGE)
         else:
-            return self.random.randint(1, sides)
+            roll = self.random.randint(1, sides)
+            return RollResult(roll, roll, None, RollState.NEUTRAL)
