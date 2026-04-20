@@ -88,6 +88,9 @@ class BattleManager:
         for key, character in self.characters.items():
             characters.append(character)
         return characters
+        
+    def get_controller(self, char_id: str) -> 'CharacterController':
+        return self.controllers.get(char_id)
 
     def subscribe(self, event_name: str, callback: Callable):
         """

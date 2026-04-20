@@ -3,6 +3,7 @@ from typing import Callable, Dict, TYPE_CHECKING
 from core.Enums import RollState, AttackType
 from core.Events import AttackLoad
 from core.Bases import IBattleContext, BattlePassive
+from core.CharacterSystem import CharacterSystem
 
 if TYPE_CHECKING:
     from entities.Characters import Character
@@ -26,8 +27,9 @@ class GracaDoDuelista(BattlePassive):
                 if attack_load.gda > (0 + self.owner.grd - attack_load.character.pre):
                     custo_evasao = 2
                     if self.owner.floating_focus >= custo_evasao:
-                        if self.owner.controller.choose_reaction(self.owner, self.name, attack_load, self.context):
-                            self.owner.spend_focus(custo_evasao)
+                        controller = self.context.get_controller(self.owner.char_id)
+                        if controller and controller.choose_reaction(self.owner, self.name, attack_load, self.context):
+                            CharacterSystem.spend_focus(self.owner, custo_evasao)
                             roll = self.dice_service.roll_dice(4, RollState.NEUTRAL)
                             attack_load.gda -= roll.final_roll
 

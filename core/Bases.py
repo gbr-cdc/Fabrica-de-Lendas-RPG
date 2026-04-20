@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from core.DiceManager import DiceManager
     from core.Structs import AttackActionTemplate
     from core.Enums import BattleActionType
+    from controllers.CharacterController import CharacterController
 
 
 # --- CLASSES BASE ---
@@ -49,6 +50,7 @@ class IBattleContext(Protocol):
     def subscribe(self, event_name: str, callback: Callable) -> None: ...
     def unsubscribe(self, event_name: str, callback: Callable) -> None: ...
     def get_characters(self) -> List[Character]: ...
+    def get_controller(self, char_id: str) -> 'CharacterController': ...
 
 class BattleAction(GameAction):
     """

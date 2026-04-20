@@ -25,6 +25,6 @@ This system will be used for Monte Carlo testing but is already designed to be a
 
 ## 4. Development Rules
 * TDD: If the task is to create a new feature in the core engine, write and run the test in pytest BEFORE finalizing the implementation. The code is only ready if the test is green.
-* Artifact Logging: Always maintain a persistent log of our work. Use `task.md` to track progress (TODOs, WIP, Done) and `implementation_plan.md` to propose complex changes before executing them.
+* Project Logging: Always maintain a persistent log of our work in `DEVLOG.md` in the project root. Each entry should include the date, a description of the overall idea, and a checklist of steps. Continue using `implementation_plan.md` (Artifact) to propose complex changes before executing them.
 * Version Control Protocol: Once a feature or fix is complete and tests are green, ask the user for permission to `git commit` and `git push`. Never run these commands automatically without explicit approval.
 * Incremental Delivery: Break large refactors down into smaller, testable steps. Update the task log and verify with `pytest` after each step rather than attempting massive rewrites at once.

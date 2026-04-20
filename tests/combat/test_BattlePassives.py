@@ -72,3 +72,51 @@ def test_maos_pesadas(mock_atordoado):
     # MãosPesadas checks if gda > 3 to apply Atordoado
     mock_atordoado.assert_called_once()
     assert "Mãos Pesadas" in load.history[0]
+
+def test_graca_do_duelista_acerto():
+    char = MagicMock()
+    char.char_id = "c1"
+    passive = GracaDoDuelista(char, MagicMock())
+    hooks = passive.get_hooks()
+    
+    passive.dice_service.roll_dice.return_value = MagicMock(final_roll=5)
+    
+    load = AttackLoad(character=char, target=MagicMock(), battle_context=MagicMock(), 
+                      attack_type=MagicMock(), attack_state=MagicMock(), defense_state=MagicMock(), 
+                      gda=2, damage=0)
+    
+    hooks["on_gda_modify"](load)
+    assert load.gda == 7
+    assert "Graça do Duelista adicionou +5 de GdA!" in load.history[0]
+
+@patch("core.CharacterSystem.CharacterSystem.spend_focus")
+def test_graca_do_duelista_reacao(mock_spend_focus):
+    char = MagicMock()
+    char.char_id = "c1"
+    char.grd = 2
+    char.floating_focus = 3
+    char.name = "Duelist"
+    
+    context = MagicMock()
+    controller = MagicMock()
+    controller.choose_reaction.return_value = True
+    context.get_controller.return_value = controller
+    
+    passive = GracaDoDuelista(char, context)
+    hooks = passive.get_hooks()
+    
+    passive.dice_service.roll_dice.return_value = MagicMock(final_roll=3)
+    
+    attacker = MagicMock()
+    attacker.pre = 1
+    
+    load = AttackLoad(character=attacker, target=char, battle_context=context, 
+                      attack_type=MagicMock(), attack_state=MagicMock(), defense_state=MagicMock(), 
+                      gda=5, damage=0)
+                      
+    hooks["on_defensive_reaction"](load)
+    
+    # 5 > (0 + 2 - 1) => 5 > 1, so reaction triggers
+    mock_spend_focus.assert_called_once_with(char, 2)
+    assert load.gda == 2 # 5 - 3
+    assert "usou Evasão!" in load.history[0]
