@@ -1,17 +1,16 @@
+from __future__ import annotations
 import json
-from core.Enums import BattleActionType, ArmorType, AttributeType, WeaponType
-from core.Structs import CombatStyle, GameRules
-from combat.BattleActions import BattleActionTemplate
-from entities.Itens import Armor, Weapon
+from core.Enums import BattleActionType, ArmorType, AttributeType, WeaponType, AttackType
+from core.Structs import CombatStyle, GameRules, AttackActionTemplate, AttackEffects
+from entities.Items import Armor, Weapon
 from entities.Characters import Character
-from combat.BattleActions import registry as actions_registry
-from combat.PassiveAbilities import registry as passives_registry
+from combat.BattlePassives import registry as passives_registry
 from controllers.CharacterController import registry as controllers_registry
 
 class DataManager:
     def __init__(self):
             # O dicionário privado que guarda os moldes na memória
-            self._action_templates: dict[str, 'BattleActionTemplate'] = {}
+            self._action_templates: dict[str, 'AttackActionTemplate'] = {}
             self._combat_styles: dict[str, CombatStyle] = {}
             self._characters: dict[str, Character] = {}
             self._game_rules: 'GameRules | None' = None
@@ -127,7 +126,6 @@ class DataManager:
     def load_action_templates(self, filepath: str):
         """
         Carrega os templates de ações de combate a partir de um arquivo JSON.
-        Usa o actions_registry para preencher o campo command com a classe de ação correta.
         """
         with open(filepath, 'r') as f:
             data = json.load(f)
@@ -135,8 +133,6 @@ class DataManager:
         templates = {}
         for key, template_data in data.items():
             action_id = key
-            if action_id not in actions_registry:
-                raise KeyError(f"Template '{key}' referencia action_id '{action_id}' não registrado no actions_registry.")
 
             action_type_value = template_data["action_type"].lower()
             try:
@@ -144,17 +140,27 @@ class DataManager:
             except ValueError as exc:
                 raise ValueError(f"Action type inválido para template '{key}': '{template_data['action_type']}'") from exc
 
-            templates[action_id] = BattleActionTemplate(
+            attack_type_value = template_data.get("attack_type", "basic_attack").lower()
+            try:
+                attack_type = AttackType(attack_type_value)
+            except ValueError as exc:
+                raise ValueError(f"Attack type inválido para template '{key}': '{attack_type_value}'") from exc
+
+            effects_data = template_data.get("effects", [])
+            effects = [AttackEffects(id=e["id"], parameters=e.get("parameters", {})) for e in effects_data]
+
+            templates[action_id] = AttackActionTemplate(
                 id=action_id,
                 nome=template_data["nome"],
                 action_type=action_type,
+                attack_type=attack_type,
                 focus_cost=template_data["focus_cost"],
-                command=actions_registry[action_id]
+                effects=effects
             )
 
         self._action_templates = templates
     
-    def get_action_template(self, action_id: str) -> 'BattleActionTemplate':
+    def get_action_template(self, action_id: str) -> 'AttackActionTemplate':
         """Retorna o molde de uma ação. Estoura um KeyError se o ID não existir."""
         try:
             return self._action_templates[action_id]

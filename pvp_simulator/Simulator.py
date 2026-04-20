@@ -1,7 +1,9 @@
 from typing import Dict, Any
 import copy
 from core.Models import Character
-from core.BattleManager import BattleManager
+from combat.BattleManager import BattleManager
+from core.CharacterSystem import CharacterSystem
+from controllers.CharacterController import PvP1v1Controller
 from core.DiceManager import DiceManager
 from core.DataManager import load_combat_styles, load_game_rules, load_characters
 
@@ -48,8 +50,8 @@ class PvPSimulator:
 
         #Insere os personagens na fila de ação, considerando o custo de ação base para determinar quem começa.
         if(self.character1.action_cost_base != self.character2.action_cost_base):
-            self.battle_manager.add_character(self.character1, start_tick=self.character1.action_cost_base)
-            self.battle_manager.add_character(self.character2, start_tick=self.character2.action_cost_base)
+            self.battle_manager.add_character(self.character1, controller=PvP1v1Controller(), start_tick=self.character1.action_cost_base)
+            self.battle_manager.add_character(self.character2, controller=PvP1v1Controller(), start_tick=self.character2.action_cost_base)
         else:
             #Se for empate, rola um dado para desempatar.
             while True:
@@ -58,14 +60,14 @@ class PvPSimulator:
                 if roll1 != roll2:
                     break
             if roll1 > roll2:
-                self.battle_manager.add_character(self.character1, start_tick=self.character1.action_cost_base)
-                self.battle_manager.add_character(self.character2, start_tick=self.character2.action_cost_base)
+                self.battle_manager.add_character(self.character1, controller=PvP1v1Controller(), start_tick=self.character1.action_cost_base)
+                self.battle_manager.add_character(self.character2, controller=PvP1v1Controller(), start_tick=self.character2.action_cost_base)
             elif roll2 > roll1:
-                self.battle_manager.add_character(self.character2, start_tick=self.character2.action_cost_base)
-                self.battle_manager.add_character(self.character1, start_tick=self.character1.action_cost_base)
+                self.battle_manager.add_character(self.character2, controller=PvP1v1Controller(), start_tick=self.character2.action_cost_base)
+                self.battle_manager.add_character(self.character1, controller=PvP1v1Controller(), start_tick=self.character1.action_cost_base)
 
         #Loop principal        
-        while turn_count < max_turns and self.character1.is_alive() and self.character2.is_alive():
+        while turn_count < max_turns and CharacterSystem.is_alive(self.character1) and CharacterSystem.is_alive(self.character2):
             # Pega o próximo personagem da fila de ação
             actor = self.battle_manager.get_next_actor()
             # Para se a fila estiver vazia (o que não deveria acontecer, mas é uma medida de segurança)
@@ -107,7 +109,7 @@ class PvPSimulator:
 
             #Só gera foco se o personagem usou o ataque básico, não a skill.
             if skill_used is False:
-                actor.generate_focus()
+                CharacterSystem.generate_focus(actor)
             
             #Sinaliza que o turno acabou
             self.battle_manager.emit('on_turn_end', {'character': actor})
@@ -116,7 +118,7 @@ class PvPSimulator:
         history.append(f"Batalha terminada! {self.character1.name}: {self.character1.current_hp}HP | {self.character2.name}: {self.character2.current_hp}HP")
 
         return {
-            "winner": self.character1.name if self.character1.is_alive() else self.character2.name,
+            "winner": self.character1.name if CharacterSystem.is_alive(self.character1) else self.character2.name,
             "turns": turn_count,
             "final_hp": {
                 self.character1.name: self.character1.current_hp,
@@ -133,8 +135,8 @@ class PvPSimulator:
         max_turns = 1000 # Para evitar loops infinitos
         # Insere os personagens na fila de ação, considerando o custo de ação base para determinar quem começa.
         if(self.character1.action_cost_base != self.character2.action_cost_base):
-            self.battle_manager.add_character(self.character1, start_tick=self.character1.action_cost_base)
-            self.battle_manager.add_character(self.character2, start_tick=self.character2.action_cost_base)
+            self.battle_manager.add_character(self.character1, controller=PvP1v1Controller(), start_tick=self.character1.action_cost_base)
+            self.battle_manager.add_character(self.character2, controller=PvP1v1Controller(), start_tick=self.character2.action_cost_base)
         else:
             # Se for empate, rola um dado para desempatar.
             while True:
@@ -143,14 +145,14 @@ class PvPSimulator:
                 if roll1 != roll2:
                     break
             if roll1 > roll2:
-                self.battle_manager.add_character(self.character1, start_tick=self.character1.action_cost_base)
-                self.battle_manager.add_character(self.character2, start_tick=self.character2.action_cost_base)
+                self.battle_manager.add_character(self.character1, controller=PvP1v1Controller(), start_tick=self.character1.action_cost_base)
+                self.battle_manager.add_character(self.character2, controller=PvP1v1Controller(), start_tick=self.character2.action_cost_base)
             elif roll2 > roll1:
-                self.battle_manager.add_character(self.character2, start_tick=self.character2.action_cost_base)
-                self.battle_manager.add_character(self.character1, start_tick=self.character1.action_cost_base)
+                self.battle_manager.add_character(self.character2, controller=PvP1v1Controller(), start_tick=self.character2.action_cost_base)
+                self.battle_manager.add_character(self.character1, controller=PvP1v1Controller(), start_tick=self.character1.action_cost_base)
 
         # Loop principal
-        while turn_count < max_turns and self.character1.is_alive() and self.character2.is_alive():
+        while turn_count < max_turns and CharacterSystem.is_alive(self.character1) and CharacterSystem.is_alive(self.character2):
             # Pega o próximo personagem da fila de ação
             actor = self.battle_manager.get_next_actor()
             # Para se a fila estiver vazia (o que não deveria acontecer, mas é uma medida de segurança)
@@ -184,13 +186,13 @@ class PvPSimulator:
 
             #Só gera foco se o personagem usou o ataque básico, não a skill.
             if skill_used is False:
-                actor.generate_focus()
+                CharacterSystem.generate_focus(actor)
             
             #Sinaliza que o turno acabou
             self.battle_manager.emit('on_turn_end', {'character': actor})
         
         return {
-            "winner": self.character1.name if self.character1.is_alive() else self.character2.name,
+            "winner": self.character1.name if CharacterSystem.is_alive(self.character1) else self.character2.name,
             "turns": turn_count,
             "final_hp": {
                 self.character1.name: self.character1.current_hp,

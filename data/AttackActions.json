@@ -1,0 +1,23 @@
+{
+    "BasicAttack": {
+        "nome": "Ataque Básico",
+        "action_type": "standard_action",
+        "attack_type": "basic_attack",
+        "focus_cost": 0,
+        "effects": []
+    },
+    "SkillN1": {
+        "nome": "Habilidade Nível 1",
+        "action_type": "standard_action",
+        "attack_type": "skill",
+        "focus_cost": 4,
+        "effects": [
+            {
+                "id": "add_gda",
+                "parameters": {
+                    "amount": 5
+                }
+            }
+        ]
+    }
+}

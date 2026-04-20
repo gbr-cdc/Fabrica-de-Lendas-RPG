@@ -1,7 +1,7 @@
 from core.Events import ActionLoad
 from entities.Characters import Character
 from combat.BattleActions import BattleAction
-from combat.BattleManager import BattleManager
+from core.Bases import IBattleContext
 
 class CharacterController:
     """
@@ -9,14 +9,14 @@ class CharacterController:
     Pode ser implementada por um humano (PlayerController) ou por uma máquina (AIController).
     """
     
-    def choose_action(self, actor: 'Character', battle_manager: 'BattleManager', action_load: 'ActionLoad|None' = None) -> 'BattleAction':
+    def choose_action(self, actor: 'Character', context: 'IBattleContext', action_load: 'ActionLoad|None' = None) -> 'BattleAction':
         """
         Chamado no início do turno do personagem.
         Deve analisar o campo de batalha, escolher uma habilidade, um alvo e retornar o Comando instanciado.
         """
         raise NotImplementedError("Ação de turno não implementada pelo Controller.")
 
-    def choose_reaction(self, actor: 'Character', reaction_id: str, context: 'ActionLoad', battle_manager: 'BattleManager') -> bool:
+    def choose_reaction(self, actor: 'Character', reaction_id: str, action_load: 'ActionLoad', context: 'IBattleContext') -> bool:
         """
         Chamado no meio da resolução de ações quando uma habilidade condicional é engatilhada.
         O context (ActionLoad) permite que o Controller saiba o que está acontecendo (ex: quem está atacando, qual o dano atual).
@@ -26,9 +26,9 @@ class CharacterController:
 
 class PvP1v1Controller(CharacterController):
 
-    def choose_action(self, actor: 'Character', battle_manager: 'BattleManager', action_load: 'ActionLoad|None' = None) -> 'BattleAction':
+    def choose_action(self, actor: 'Character', context: 'IBattleContext', action_load: 'ActionLoad|None' = None) -> 'BattleAction':
         target = None
-        for key, character in battle_manager.characters.items():
+        for character in context.get_characters():
             if character is not actor:
                 target = character
                 break
@@ -37,17 +37,21 @@ class PvP1v1Controller(CharacterController):
             raise RuntimeError(f"Controller de {actor} não conseguiu achar um alvo")
         
         if action_load is not None:
-            basic_attack_template = battle_manager.data_service.get_action_template("BasicAttack")
-            return basic_attack_template.command(basic_attack_template, actor, target, battle_manager)
+            from combat.BattleActions import registry as actions_registry
+            basic_attack_template = context.get_template("BasicAttack")
+            return actions_registry["AttackAction"](basic_attack_template, actor, target, context)
 
-        skill_template = battle_manager.data_service.get_action_template("TemplateSkillN1")
+        skill_template = context.get_template("SkillN1")
         cost = skill_template.focus_cost
         if actor.floating_focus >= cost:
-            return skill_template.command(skill_template, actor, target, battle_manager)
-        basic_attack_template = battle_manager.data_service.get_action_template("BasicAttack")
-        return basic_attack_template.command(basic_attack_template, actor, target, battle_manager)
+            from combat.BattleActions import registry as actions_registry
+            return actions_registry["AttackAction"](skill_template, actor, target, context)
+            
+        from combat.BattleActions import registry as actions_registry
+        basic_attack_template = context.get_template("BasicAttack")
+        return actions_registry["AttackAction"](basic_attack_template, actor, target, context)
     
-    def choose_reaction(self, actor: 'Character', reaction_id: str, context: 'ActionLoad', battle_manager: 'BattleManager') -> bool:
+    def choose_reaction(self, actor: 'Character', reaction_id: str, action_load: 'ActionLoad', context: 'IBattleContext') -> bool:
         return True
 
 

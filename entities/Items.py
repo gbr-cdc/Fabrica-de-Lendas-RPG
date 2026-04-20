@@ -3,8 +3,6 @@ from dataclasses import dataclass, field
 from typing import List
 from core.Enums import WeaponType, ArmorType
 
-
-
 @dataclass
 class Weapon:
     name: str

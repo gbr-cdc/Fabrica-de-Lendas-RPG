@@ -1,9 +1,11 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import List
-from core.Enums import BattleInteractionType, RollState
-from combat.BattleManager import BattleManager
-from entities.Characters import Character
+from typing import List, TYPE_CHECKING
+from core.Enums import AttackType, RollState
+
+if TYPE_CHECKING:
+    from core.Bases import IBattleContext
+    from entities.Characters import Character
 
 @dataclass(kw_only=True)
 class ActionLoad:
@@ -15,8 +17,8 @@ class ActionLoad:
 @dataclass(kw_only=True)
 class AttackLoad(ActionLoad):
     target: 'Character'
-    battle_manager: 'BattleManager'
-    interaction_type: BattleInteractionType
+    battle_context: 'IBattleContext'
+    attack_type: AttackType
     attack_state: RollState
     defense_state: RollState
     gda: int = 0

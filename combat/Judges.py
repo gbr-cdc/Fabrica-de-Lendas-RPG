@@ -1,33 +1,18 @@
+from core.Bases import IBattleContext
 from core.Enums import BattleState
-from combat.BattleManager import BattleManager
 
 class BattleJudge:
-    """
-    Determina a condição de vitória de uma batalha
-    """
-    def rule(self, battle_manager: BattleManager)-> BattleState: 
-        raise NotImplementedError  
-
-class LastManStanding(BattleJudge):
-    """
-    Determina a condição de vitória de uma batalha
-    """
-    def rule(self, battle_manager: BattleManager)-> BattleState:
-        live_characters = 0
-        winner = None
-        for key,character in battle_manager.characters.items():
-            if character.is_alive():
-                live_characters += 1
-                winner = character
-        if live_characters != 1:
-            winner = None
-        if live_characters == 0:
-            return BattleState.DRAW
-        if winner:
-            battle_manager.battle_result.winners.append(winner)
-            battle_manager.characters.pop(winner.char_id)
-            for key, character in battle_manager.characters.items():
-                battle_manager.battle_result.losers.append(character)
-            return BattleState.VICTORY
-        return BattleState.RUNNING
+    def rule(self, context: 'IBattleContext') -> 'BattleState':
+        characters = context.get_characters()
         
+        team_1_alive = any(c.is_alive() for c in characters if c.team == 1)
+        team_2_alive = any(c.is_alive() for c in characters if c.team == 2)
+        
+        if team_1_alive and team_2_alive:
+            return BattleState.RUNNING
+        elif team_1_alive and not team_2_alive:
+            return BattleState.VICTORY
+        elif not team_1_alive and team_2_alive:
+            return BattleState.DEFEAT
+        else:
+            return BattleState.DRAW

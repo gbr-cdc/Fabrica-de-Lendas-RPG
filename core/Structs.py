@@ -1,9 +1,10 @@
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import Dict, List
-from combat.BattleManager import BattleManager
-from core.Enums import RollState, AttributeType, ArmorType, WeaponType
-from entities.Characters import Character
+from dataclasses import dataclass, field
+from typing import Dict, List, TYPE_CHECKING, Any
+from core.Enums import RollState, AttributeType, ArmorType, WeaponType, BattleActionType, AttackType
+from core.Bases import BattleAction
+if TYPE_CHECKING:
+    from entities.Characters import Character
 
 # --- MODELOS DE DADOS ---
 @dataclass
@@ -25,11 +26,11 @@ class RollResult:
 
 @dataclass
 class BattleResult:
-    history: List[str] = []
-    winners: List[Character] = []
-    losers: List[Character] = []
+    history: List[str] = field(default_factory=list)
+    winners: List[Character] = field(default_factory=list)
+    losers: List[Character] = field(default_factory=list)
     duration: int = 0
-    action_per_character: dict[str, int] = {}
+    action_per_character: dict[str, int] = field(default_factory=dict)
 
 @dataclass
 class CombatStyle:
@@ -39,5 +40,17 @@ class CombatStyle:
     main_stat: AttributeType
     armor_type: ArmorType
     weapon_type: WeaponType
- 
 
+@dataclass
+class AttackEffects:
+    id: str
+    parameters: Dict[str, Any]
+
+@dataclass
+class AttackActionTemplate:
+    id: str
+    nome: str
+    action_type: type['BattleActionType']
+    attack_type: type['AttackType']
+    focus_cost: int
+    effects: List[AttackEffects] = field(default_factory=list)

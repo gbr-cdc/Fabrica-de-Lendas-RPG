@@ -1,13 +1,19 @@
+from __future__ import annotations
 import heapq
-from typing import List, Callable, Dict
+from typing import List, Callable, Dict, TYPE_CHECKING
+from collections import defaultdict
 from core.Enums import BattleState, BattleActionType
-from core.Structs import BattleResult
+from core.Structs import BattleResult, AttackActionTemplate
 from core.Events import ActionLoad
-from core.DataManager import DataManager
-from combat.Judges import BattleJudge
-from combat.PassiveAbilities import registry
-from core.DiceManager import DiceManager
-from entities.Characters import Character
+from combat.BattlePassives import registry
+from core.CharacterSystem import CharacterSystem
+
+if TYPE_CHECKING:
+    from core.DataManager import DataManager
+    from combat.Judges import BattleJudge
+    from core.DiceManager import DiceManager
+    from entities.Characters import Character
+    from controllers.CharacterController import CharacterController
 
 class BattleManager:
     """
@@ -24,7 +30,9 @@ class BattleManager:
         self.judge = judge
         #Lista de personagens na batalha, acessível por char_id
         self.characters: Dict[str, Character] = {}
+        self.controllers: Dict[str, CharacterController] = {}
         self.graveyard: Dict[str, Character] = {}
+        self.active_passives = defaultdict(list)
 
         self.battle_result = BattleResult()
         self.battle_state = BattleState.RUNNING
@@ -42,29 +50,44 @@ class BattleManager:
             'on_turn_end': [], # Fim do turno
             'on_character_death': [] # Quando um personagem morre
         }
+    
+    def get_template(self, template_id: str) -> AttackActionTemplate:
+        return self.data_service.get_action_template(template_id)
 
-    def add_character(self, character: 'Character', start_tick: int = 0):
+    def add_character(self, character: 'Character', controller: 'CharacterController', start_tick: int = 0):
         """
         Adiciona um personagem à batalha e o agenda na fila de ação.
         """
         self.characters[character.char_id] = character
+        self.controllers[character.char_id] = controller
+        self.battle_result.action_per_character[character.char_id] = 0
         # heapq.heappush adiciona a tupla (start_tick, char_id, character) mantendo a propriedade de Min-Heap
         heapq.heappush(self.timeline, (start_tick, character.char_id, character))
-
-        character.active_passives = []
         
         # Permite que as habilidades inscrevam seus comandos no Event Bus
         for passive in character.passive_abilities:
             if passive in registry:
                 passive_instance = registry[passive](character, self)
-                passive_instance.register_listeners()
-                character.active_passives.append(passive_instance)
+                hooks = passive_instance.get_hooks()
+                for event_name, callback in hooks.items():
+                    self.subscribe(event_name, callback)
+                self.active_passives[character.char_id].append((passive_instance, hooks))
     
     def remove_character(self, char_id: str):
-        character = self.characters.pop(char_id)
-        for passive in character.active_passives:
-            passive.unregister_listeners()
-        character.active_passives = []
+        character = self.characters.pop(char_id, None)
+        self.controllers.pop(char_id, None)
+        if character is None:
+            return
+        for passive_instance, hooks in self.active_passives[char_id]:
+            for event_name, callback in hooks.items():
+                self.unsubscribe(event_name, callback)
+        self.active_passives.pop(char_id)
+    
+    def get_characters(self) -> List[Character]:
+        characters = []
+        for key, character in self.characters.items():
+            characters.append(character)
+        return characters
 
     def subscribe(self, event_name: str, callback: Callable):
         """
@@ -97,7 +120,7 @@ class BattleManager:
         while self.timeline:
             tick, char_id, character = heapq.heappop(self.timeline)
             
-            if char_id in self.characters and character.is_alive():
+            if char_id in self.characters and CharacterSystem.is_alive(character):
                 self.current_tick = tick
                 return character
                 
@@ -110,7 +133,7 @@ class BattleManager:
         next_tick = self.current_tick + action_cost
         heapq.heappush(self.timeline, (next_tick, character.char_id, character))
     
-    def delay_character(self, character: 'Character', extra_ticks: int | float):
+    def delay_character(self, character: 'Character', extra_ticks: int):
         """
         Encontra o personagem na linha do tempo e empurra a ação dele mais para o futuro.
         """
@@ -137,7 +160,7 @@ class BattleManager:
         for char_id in list(self.characters.keys()):
             personagem = self.characters[char_id]
             
-            if not personagem.is_alive():
+            if not CharacterSystem.is_alive(personagem):
                 mortos_neste_turno.append(personagem)
                 # Remove do dicionário de vivos
                 self.remove_character(char_id)
@@ -164,20 +187,45 @@ class BattleManager:
             self.emit("on_turn_start", ActionLoad(character = actor))
             self.resolve_deaths()
 
-            action = actor.controller.choose_action(actor, self)
-            action_load = action.execute_if_possible()
+            action = self.controllers[actor.char_id].choose_action(actor, self)
 
-            decision_attempts = 0
-            max_attempts = 1000
-
-            while not action_load.success:
-                decision_attempts += 1
-                if decision_attempts >= max_attempts:
-                    self.battle_state = BattleState.ERROR
-                    self.battle_result.history.append(f"[ERRO CRÍTICO] Controller de {actor.name} entrou em decision loop!")
-                    break # Quebra o while interno
-                action = actor.controller.choose_action(actor, self, action_load)
+            # Pega os hooks da ação
+            action_hooks = {}
+            if hasattr(action, 'get_hooks'):
+                action_hooks = action.get_hooks()
+                
+            try:
+                for event_name, callback in action_hooks.items():
+                    self.subscribe(event_name, callback)
+                    
                 action_load = action.execute_if_possible()
+
+                decision_attempts = 0
+                max_attempts = 1000
+
+                while not action_load.success:
+                    decision_attempts += 1
+                    if decision_attempts >= max_attempts:
+                        self.battle_state = BattleState.ERROR
+                        self.battle_result.history.append(f"[ERRO CRÍTICO] Controller de {actor.name} entrou em decision loop!")
+                        break # Quebra o while interno
+                    
+                    # Se falhou, temos que limpar os antigos hooks antes de tentar uma nova ação
+                    for event_name, callback in action_hooks.items():
+                        self.unsubscribe(event_name, callback)
+                    
+                    action = self.controllers[actor.char_id].choose_action(actor, self, action_load)
+                    
+                    action_hooks = {}
+                    if hasattr(action, 'get_hooks'):
+                        action_hooks = action.get_hooks()
+                    for event_name, callback in action_hooks.items():
+                        self.subscribe(event_name, callback)
+                        
+                    action_load = action.execute_if_possible()
+            finally:
+                for event_name, callback in action_hooks.items():
+                    self.unsubscribe(event_name, callback)
             
             if self.battle_state == BattleState.ERROR:
                 break

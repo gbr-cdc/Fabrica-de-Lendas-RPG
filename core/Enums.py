@@ -12,12 +12,12 @@ class ArmorType(Enum):
     HEAVY = "heavy"
 
 class WeaponType(Enum):
-    GREAT_WEAPON = "great_weapon",
-    MEDIUM_WEAPON = "medium_weapon",
-    LIGHT_WEAPON = "light_weapon",
-    DOUBLE_WEAPON = "double_weapon",
-    WEAPON_AND_SHIELD = "weapon_and_shield",
-    RANGED_WEAPON = "ranged_weapon",
+    GREAT_WEAPON = "great_weapon"
+    MEDIUM_WEAPON = "medium_weapon"
+    LIGHT_WEAPON = "light_weapon"
+    DOUBLE_WEAPON = "double_weapon"
+    WEAPON_AND_SHIELD = "weapon_and_shield"
+    RANGED_WEAPON = "ranged_weapon"
     MAGICAL_FOCUS = "magical_focus"
 
 class AttributeType(Enum):
@@ -30,7 +30,7 @@ class StatusEffectType(Enum):
     ENVENENADO = "Envenenado"
     QUEIMADO = "Queimado"
 
-class BattleInteractionType(Enum):
+class AttackType(Enum):
     BASIC_ATTACK = "basic_attack"
     SKILL = "skill"
     EXTRA_ATTACK = "extra_attack"
