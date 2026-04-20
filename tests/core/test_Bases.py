@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock
-from core.Bases import GameAction
+from core.Bases import GameAction, BattleAction
 from core.Events import ActionLoad
 
 class DummyAction(GameAction):
@@ -34,3 +34,16 @@ def test_execute_if_possible_failure():
     assert action.executed is False
     assert load.success is False
     assert "Failed to execute" in load.history
+
+def test_battle_action_defaults():
+    actor = MagicMock()
+    target = MagicMock()
+    context = MagicMock()
+    action = BattleAction("Test", actor, target, context, MagicMock())
+    
+    can, msg = action.can_execute()
+    assert can is True
+    
+    load = action.execute()
+    assert load.success is False
+    assert "não pode ser executada" in load.history[0]

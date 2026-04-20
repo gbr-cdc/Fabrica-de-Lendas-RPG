@@ -1,4 +1,5 @@
 import pytest
+from unittest.mock import MagicMock
 from entities.Characters import Character
 from core.Structs import GameRules, CombatStyle
 from core.Enums import AttributeType, ArmorType, WeaponType
@@ -75,6 +76,12 @@ def test_character_equip_armor(dummy_char):
     CharacterSystem.equip_armor(dummy_char, a2)
     assert dummy_char.max_hp == 70 # 50 base + 20 (replaced 10)
 
+def test_character_equip_armor_invalid_type(dummy_char):
+    a = Armor(name="Farrapos", hp_bonus=0, type=ArmorType.LIGHT)
+    success, msg, old = CharacterSystem.equip_armor(dummy_char, a)
+    assert success is False
+    assert "não pode equipar" in msg
+
 def test_character_generate_focus(dummy_char):
     max_focus = dummy_char.rules.limite_foco * dummy_char.men # 3 * 10 = 30
     assert dummy_char.floating_focus == 0
@@ -114,17 +121,33 @@ def test_character_spend_mana(dummy_char):
 
 def test_character_stat_properties_with_modifiers(dummy_char):
     assert dummy_char.bda == dummy_char.base_bda
+    assert dummy_char.bdd == dummy_char.base_bdd
+    assert dummy_char.pre == dummy_char.base_pre
+    assert dummy_char.grd == dummy_char.base_grd
+    assert dummy_char.pda == dummy_char.base_pda
+    assert dummy_char.mda == dummy_char.base_mda
+    assert dummy_char.rank == dummy_char.base_rank
     
     mod1 = PersistentModifier("bda", 2, "Test")
     mod2 = EphemeralModifier("bda", 3, "Test2")
+    mod3 = EphemeralModifier("rank", 1, "Test3")
     
     dummy_char.add_modifier(mod1)
     dummy_char.add_modifier(mod2)
+    dummy_char.add_modifier(mod3)
     
     assert dummy_char.bda == dummy_char.base_bda + 5
+    assert dummy_char.rank == dummy_char.base_rank + 1
     
     dummy_char.remove_modifier(mod1)
     assert dummy_char.bda == dummy_char.base_bda + 3
+
+def test_character_status_effects(dummy_char):
+    effect = MagicMock()
+    dummy_char.add_status_effect(effect)
+    assert effect in dummy_char.status_effects
+    dummy_char.remove_status_effect(effect)
+    assert effect not in dummy_char.status_effects
 
 def test_character_clear_ephemeral_modifiers(dummy_char):
     mod1 = PersistentModifier("bdd", 2, "Test")

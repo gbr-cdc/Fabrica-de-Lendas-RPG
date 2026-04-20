@@ -29,3 +29,10 @@ def test_dice_manager_disadvantage_roll():
     assert result.roll1 == 18
     assert result.roll2 == 10
     assert dm.random.randint.call_count == 2
+
+def test_dice_manager_scheduled_roll():
+    dm = DiceManager()
+    dm.schedule_result(20)
+    result = dm.roll_dice(20)
+    assert result.final_roll == 20
+    assert result.scheduled is True

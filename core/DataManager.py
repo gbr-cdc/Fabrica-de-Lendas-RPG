@@ -5,7 +5,7 @@ from core.Structs import CombatStyle, GameRules, AttackActionTemplate, AttackEff
 from entities.Items import Armor, Weapon
 from entities.Characters import Character
 from combat.BattlePassives import registry as passives_registry
-from controllers.CharacterController import registry as controllers_registry
+from core.CharacterSystem import CharacterSystem
 
 class DataManager:
     def __init__(self):
@@ -83,19 +83,13 @@ class DataManager:
             if combat_style_key not in self._combat_styles:
                 raise KeyError(f"CombatStyle '{combat_style_key}' não encontrado para personagem '{key}'")
             
-            try:
-                controller = controllers_registry[char_data["controller"]]()
-            except KeyError as exc:
-                raise KeyError(f"[ERRO FATAL] Controller {char_data["controller"]} de {key} não foi encontrado") from exc
-            
             # Cria o personagem a partir de char_data
             char = Character(
                 char_id=key,
                 name=char_data["Nome"],
                 attributes=[char_data["FIS"], char_data["HAB"], char_data["MEN"]],
                 combat_style=self._combat_styles[combat_style_key],
-                rules=self._game_rules,
-                controller = controller
+                rules=self._game_rules
             )
 
             # Cria a arma e armadura a partir de char_data e equipa o personagem
@@ -105,14 +99,14 @@ class DataManager:
                 mda=char_data["Weapon"]["mda"],
                 type=WeaponType(char_data["Weapon"]["type"])
             )
-            char.equip_weapon(weapon)
+            CharacterSystem.equip_weapon(char, weapon)
             
             armor = Armor(
                 name=char_data["Armor"]["name"],
                 hp_bonus=char_data["Armor"]["hp_bonus"],
                 type=ArmorType(char_data["Armor"]["type"])
             )
-            char.equip_armor(armor)
+            CharacterSystem.equip_armor(char, armor)
 
             # Itera sobre as habilidades listadas no JSON e cria as instâncias usando o ability_registry
             char.active_abilities = char_data["Abilities"]

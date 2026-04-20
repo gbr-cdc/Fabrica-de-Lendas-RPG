@@ -13,3 +13,8 @@ def test_modifier_inheritance():
     assert isinstance(e_mod, StatModifier)
     assert isinstance(p_mod, StatModifier)
     assert not isinstance(e_mod, PersistentModifier)
+
+def test_modifier_apply_remove():
+    mod = StatModifier("bdd", 1, "test")
+    mod.apply(None)
+    mod.remove(None)
