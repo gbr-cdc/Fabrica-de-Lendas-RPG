@@ -9,6 +9,15 @@
 
 ## RECENT HISTORY
 
+## 2026-04-20: PvP Simulator Path Fix
+
+**Overall Idea:**
+Fix `ModuleNotFoundError` when running `Main.py` directly from the project root by adding the root directory to `sys.path`.
+
+**Steps:**
+- [x] Update `pvp_simulator/Main.py` to inject project root into `sys.path`. | Files: `pvp_simulator/Main.py` | Status: Done.
+- [x] Verify simulation execution from terminal. | Status: Done.
+
 ## 2026-04-20: Timeline Tie-Breaking Logic
 
 **Overall Idea:**
