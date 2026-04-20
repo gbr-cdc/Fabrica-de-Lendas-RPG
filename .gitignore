@@ -1,1 +1,7 @@
 Sistema_RPG_Regras.txt
+__pycache__/
+*.pyc
+*.bak
+.pytest_cache/
+.coverage
+test_output.txt
