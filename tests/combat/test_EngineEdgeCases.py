@@ -14,11 +14,11 @@ def test_battle_judge_defeat():
     
     char1 = MagicMock()
     char1.team = 1
-    char1.is_alive.return_value = False
+    char1.current_hp = 0
     
     char2 = MagicMock()
     char2.team = 2
-    char2.is_alive.return_value = True
+    char2.current_hp = 10
     
     context.get_characters.return_value = [char1, char2]
     
@@ -30,11 +30,11 @@ def test_battle_judge_draw():
     
     char1 = MagicMock()
     char1.team = 1
-    char1.is_alive.return_value = False
+    char1.current_hp = 0
     
     char2 = MagicMock()
     char2.team = 2
-    char2.is_alive.return_value = False
+    char2.current_hp = 0
     
     context.get_characters.return_value = [char1, char2]
     
@@ -71,7 +71,7 @@ def test_battle_manager_decision_loop():
     actor.char_id = "actor"
     actor.name = "Actor"
     actor.current_hp = 50
-    actor.is_alive.return_value = True
+    actor.current_hp = 100
     actor.action_cost_base = 10
     
     controller = MagicMock()
@@ -97,7 +97,7 @@ def test_battle_manager_resolve_deaths():
     actor.char_id = "dead"
     actor.name = "DeadActor"
     actor.current_hp = 0
-    actor.is_alive.return_value = False
+    actor.current_hp = 0
     
     bm.characters["dead"] = actor
     bm.controllers["dead"] = MagicMock()
@@ -149,7 +149,7 @@ def test_battle_manager_move_action_cost():
     actor = MagicMock()
     actor.char_id = "actor"
     actor.current_hp = 100
-    actor.is_alive.return_value = True
+    actor.current_hp = 100
     actor.action_cost_base = 100
     
     action = MagicMock()
@@ -183,7 +183,7 @@ def test_battle_manager_decision_retry_loop():
     actor = MagicMock()
     actor.char_id = "actor"
     actor.current_hp = 100
-    actor.is_alive.return_value = True
+    actor.current_hp = 100
     actor.action_cost_base = 10
     
     controller = MagicMock()

@@ -4,55 +4,63 @@
     "atq_die": 12,
     "def_die": 8,
     "main_stat": "FIS",
-    "armor_type": "heavy"
+    "armor_type": "heavy",
+    "weapon_type": "great_weapon"
   },
   "Duelista": {
     "name": "Duelista",
     "atq_die": 10,
     "def_die": 10,
     "main_stat": "HAB",
-    "armor_type": "light"
+    "armor_type": "light",
+    "weapon_type": "medium_weapon"
   },
   "Defensor": {
     "name": "Defensor",
     "atq_die": 8,
     "def_die": 12,
     "main_stat": "FIS",
-    "armor_type": "heavy"
+    "armor_type": "heavy",
+    "weapon_type": "weapon_and_shield"
   },
   "Cavaleiro": {
     "name": "Cavaleiro",
     "atq_die": 10,
     "def_die": 10,
     "main_stat": "FIS",
-    "armor_type": "heavy"
+    "armor_type": "heavy",
+    "weapon_type": "medium_weapon"
   },
   "Retalhador": {
     "name": "Retalhador",
     "atq_die": 10,
     "def_die": 8,
     "main_stat": "HAB",
-    "armor_type": "light"
+    "armor_type": "light",
+    "weapon_type": "double_weapon"
   },
   "Lutador": {
     "name": "Lutador",
     "atq_die": 10,
     "def_die": 10,
     "main_stat": "FIS",
-    "armor_type": "light"
+    "armor_type": "light",
+    "weapon_type": "light_weapon"
   },
   "Atirador": {
     "name": "Atirador",
     "atq_die": 10,
     "def_die": 8,
     "main_stat": "HAB",
-    "armor_type": "light"
+    "armor_type": "light",
+    "weapon_type": "ranged_weapon"
   },
   "Conjurador": {
     "name": "Conjurador",
     "atq_die": 8,
     "def_die": 8,
     "main_stat": "MEN",
-    "armor_type": "robe"
+    "armor_type": "robe",
+    "weapon_type": "magical_focus"
   }
 }

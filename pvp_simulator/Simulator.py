@@ -1,19 +1,23 @@
 from typing import Dict, Any
 import copy
-from core.Models import Character
+from entities.Characters import Character
 from combat.BattleManager import BattleManager
 from core.CharacterSystem import CharacterSystem
 from controllers.CharacterController import PvP1v1Controller
 from core.DiceManager import DiceManager
-from core.DataManager import load_combat_styles, load_game_rules, load_characters
+from core.DataManager import DataManager
+from combat.Judges import BattleJudge
 
 CHARACTERS_FILE = "data/Characters.json"
 COMBAT_STYLES_FILE = "data/CombatStyles.json"
 RULES_FILE = "data/Rules.json"
+ATTACK_ACTIONS_FILE = "data/AttackActions.json"
 
 class PvPSimulator:
-    def __init__(self, battle_manager: BattleManager, character1: Character, character2: Character):
-        self.battle_manager = battle_manager
+    def __init__(self, dice_manager: DiceManager, data_manager: DataManager, judge: BattleJudge, character1: Character, character2: Character):
+        self.dice_manager = dice_manager
+        self.data_manager = data_manager
+        self.judge = judge
         self.character1 = character1
         self.character2 = character2
 
@@ -28,175 +32,98 @@ class PvPSimulator:
         dice_seed: int | None = None
     ) -> "PvPSimulator":
         """
-        Factory method para criar um PvPSimulator a partir dos arquivos de dados.
+        Factory method to create a PvPSimulator from data files.
         """
-        combat_styles = load_combat_styles(combat_styles_filepath)
-        rules = load_game_rules(rules_filepath)
-        characters = load_characters(characters_filepath, combat_styles, rules)
+        dm = DataManager()
+        dm.load_game_rules(rules_filepath)
+        dm.load_combat_styles(combat_styles_filepath)
+        dm.load_action_templates(ATTACK_ACTIONS_FILE)
+        dm.load_characters(characters_filepath)
+
+        char1 = dm.get_character(char1_id)
+        char2 = dm.get_character(char2_id)
+        
+        # In PvP 1v1, we assign teams 1 and 2
+        char1.team = 1
+        char2.team = 2
 
         return cls(
-            battle_manager=BattleManager(DiceManager(seed=dice_seed)),
-            character1=characters[char1_id],
-            character2=characters[char2_id]
+            dice_manager=DiceManager(seed=dice_seed),
+            data_manager=dm,
+            judge=BattleJudge(),
+            character1=char1,
+            character2=char2
         )
 
-    def single_battle_verbose(self):
-        """ 
-        Simula uma batalha entre os dois personagens, retornando detalhes de cada turno.
-        """
-        turn_count = 0
-        max_turns = 1000 # Para evitar loops infinitos
-        history = []
-
-        #Insere os personagens na fila de ação, considerando o custo de ação base para determinar quem começa.
-        if(self.character1.action_cost_base != self.character2.action_cost_base):
-            self.battle_manager.add_character(self.character1, controller=PvP1v1Controller(), start_tick=self.character1.action_cost_base)
-            self.battle_manager.add_character(self.character2, controller=PvP1v1Controller(), start_tick=self.character2.action_cost_base)
+    def _setup_battle(self, c1: Character, c2: Character) -> BattleManager:
+        bm = BattleManager(self.dice_manager, self.data_manager, self.judge)
+        
+        # Tie-break logic for initial action
+        if c1.action_cost_base != c2.action_cost_base:
+            bm.add_character(c1, PvP1v1Controller(), start_tick=c1.action_cost_base)
+            bm.add_character(c2, PvP1v1Controller(), start_tick=c2.action_cost_base)
         else:
-            #Se for empate, rola um dado para desempatar.
+            # If equal, roll to decide who goes first
             while True:
-                roll1 = self.battle_manager.dice_service.roll_dice(10)
-                roll2 = self.battle_manager.dice_service.roll_dice(10)
+                roll1 = self.dice_manager.roll_dice(10).final_roll
+                roll2 = self.dice_manager.roll_dice(10).final_roll
                 if roll1 != roll2:
                     break
             if roll1 > roll2:
-                self.battle_manager.add_character(self.character1, controller=PvP1v1Controller(), start_tick=self.character1.action_cost_base)
-                self.battle_manager.add_character(self.character2, controller=PvP1v1Controller(), start_tick=self.character2.action_cost_base)
-            elif roll2 > roll1:
-                self.battle_manager.add_character(self.character2, controller=PvP1v1Controller(), start_tick=self.character2.action_cost_base)
-                self.battle_manager.add_character(self.character1, controller=PvP1v1Controller(), start_tick=self.character1.action_cost_base)
-
-        #Loop principal        
-        while turn_count < max_turns and CharacterSystem.is_alive(self.character1) and CharacterSystem.is_alive(self.character2):
-            # Pega o próximo personagem da fila de ação
-            actor = self.battle_manager.get_next_actor()
-            # Para se a fila estiver vazia (o que não deveria acontecer, mas é uma medida de segurança)
-            if actor is None:
-                break
-
-            # Sinaliza que o turno começou
-            self.battle_manager.emit('on_turn_start', {'character': actor})
-            
-            history.append(f"\n[Turno {turn_count + 1}] {actor.name} (HP: {actor.current_hp}/{actor.max_hp}, Foco: {actor.floating_focus}) está agindo!")
-            
-            # Determina o alvo
-            target = self.character2 if actor.char_id == self.character1.char_id else self.character1
-            
-            # Regra para usar skill(Espera que a skill seja a segunda habilidade na lista))
-            can_use, msg = actor.abilities[1].can_execute(actor, target)
-            if can_use:
-                ability = actor.abilities[1]
-                result = actor.abilities[1].execute(actor, target, self.battle_manager)
-                skill_used = True
-                for line in result.get("history", []):
-                    history.append(f"  {line}")
-            
-            # Se não, usa o ataque básico (Espera que o ataque básico seja a primeira habilidade na lista)
+                bm.add_character(c1, PvP1v1Controller(), start_tick=c1.action_cost_base)
+                bm.add_character(c2, PvP1v1Controller(), start_tick=c2.action_cost_base)
             else:
-                ability = actor.abilities[0]
-                skill_used = False
-                can_use, msg = ability.can_execute(actor, target)
-                if can_use:
-                    result = ability.execute(actor, target, self.battle_manager)
-                    for line in result.get("history", []):
-                        history.append(f"  {line}")
-                else:
-                    history.append(f"  {msg}")
-            
-            # Volta o personagem para a fila. Se a habilidade não tiver um custo de ação específico, usa o custo base do personagem.
-            self.battle_manager.schedule_next_action(actor, ability.action_cost or actor.action_cost_base)
-            turn_count += 1
+                bm.add_character(c2, PvP1v1Controller(), start_tick=c2.action_cost_base)
+                bm.add_character(c1, PvP1v1Controller(), start_tick=c1.action_cost_base)
+        return bm
 
-            #Só gera foco se o personagem usou o ataque básico, não a skill.
-            if skill_used is False:
-                CharacterSystem.generate_focus(actor)
-            
-            #Sinaliza que o turno acabou
-            self.battle_manager.emit('on_turn_end', {'character': actor})
+    def single_battle_verbose(self):
+        """ 
+        Simulates a battle and returns detailed history.
+        """
+        c1 = copy.deepcopy(self.character1)
+        c2 = copy.deepcopy(self.character2)
         
+        bm = self._setup_battle(c1, c2)
+        bm.run_battle()
+        
+        result = bm.battle_result
+        winner_name = c1.name if CharacterSystem.is_alive(c1) else c2.name
+        
+        # Add a final line to match previous output style
+        history = list(result.history)
         history.append(f"\n{'='*50}")
-        history.append(f"Batalha terminada! {self.character1.name}: {self.character1.current_hp}HP | {self.character2.name}: {self.character2.current_hp}HP")
+        history.append(f"Batalha terminada! {c1.name}: {c1.current_hp}HP | {c2.name}: {c2.current_hp}HP")
 
         return {
-            "winner": self.character1.name if CharacterSystem.is_alive(self.character1) else self.character2.name,
-            "turns": turn_count,
+            "winner": winner_name,
+            "turns": result.duration,
             "final_hp": {
-                self.character1.name: self.character1.current_hp,
-                self.character2.name: self.character2.current_hp
+                c1.name: c1.current_hp,
+                c2.name: c2.current_hp
             },
             "history": history
         }
 
     def single_battle_summary(self):
         """ 
-        Simula uma batalha entre os dois personagens, mas retorna apenas o resultado final
+        Simulates a battle and returns only the final result.
         """
-        turn_count = 0
-        max_turns = 1000 # Para evitar loops infinitos
-        # Insere os personagens na fila de ação, considerando o custo de ação base para determinar quem começa.
-        if(self.character1.action_cost_base != self.character2.action_cost_base):
-            self.battle_manager.add_character(self.character1, controller=PvP1v1Controller(), start_tick=self.character1.action_cost_base)
-            self.battle_manager.add_character(self.character2, controller=PvP1v1Controller(), start_tick=self.character2.action_cost_base)
-        else:
-            # Se for empate, rola um dado para desempatar.
-            while True:
-                roll1 = self.battle_manager.dice_service.roll_dice(10)
-                roll2 = self.battle_manager.dice_service.roll_dice(10)
-                if roll1 != roll2:
-                    break
-            if roll1 > roll2:
-                self.battle_manager.add_character(self.character1, controller=PvP1v1Controller(), start_tick=self.character1.action_cost_base)
-                self.battle_manager.add_character(self.character2, controller=PvP1v1Controller(), start_tick=self.character2.action_cost_base)
-            elif roll2 > roll1:
-                self.battle_manager.add_character(self.character2, controller=PvP1v1Controller(), start_tick=self.character2.action_cost_base)
-                self.battle_manager.add_character(self.character1, controller=PvP1v1Controller(), start_tick=self.character1.action_cost_base)
-
-        # Loop principal
-        while turn_count < max_turns and CharacterSystem.is_alive(self.character1) and CharacterSystem.is_alive(self.character2):
-            # Pega o próximo personagem da fila de ação
-            actor = self.battle_manager.get_next_actor()
-            # Para se a fila estiver vazia (o que não deveria acontecer, mas é uma medida de segurança)
-            if actor is None:
-                break
-            
-            # Sinaliza que o turno começou
-            self.battle_manager.emit('on_turn_start', {'character': actor})
-            
-            # Determina o alvo
-            target = self.character2 if actor.char_id == self.character1.char_id else self.character1
-            
-            # Regra para usar skill(Espera que a skill seja a segunda habilidade na lista))
-            can_use, msg = actor.abilities[1].can_execute(actor, target)
-            if can_use:
-                ability = actor.abilities[1]
-                skill_used = True
-                ability.execute(actor, target, self.battle_manager)
-            
-            # Se não, usa o ataque básico (Espera que o ataque básico seja a primeira habilidade na lista)
-            else:
-                ability = actor.abilities[0]
-                skill_used = False
-                can_use, msg = ability.can_execute(actor, target)
-                if can_use:
-                    ability.execute(actor, target, self.battle_manager)
-            
-            # Volta o personagem para a fila. Se a habilidade não tiver um custo de ação específico, usa o custo base do personagem.
-            self.battle_manager.schedule_next_action(actor, ability.action_cost or actor.action_cost_base)
-            turn_count += 1
-
-            #Só gera foco se o personagem usou o ataque básico, não a skill.
-            if skill_used is False:
-                CharacterSystem.generate_focus(actor)
-            
-            #Sinaliza que o turno acabou
-            self.battle_manager.emit('on_turn_end', {'character': actor})
+        c1 = copy.deepcopy(self.character1)
+        c2 = copy.deepcopy(self.character2)
+        
+        bm = self._setup_battle(c1, c2)
+        bm.run_battle()
+        
+        result = bm.battle_result
+        winner_name = c1.name if CharacterSystem.is_alive(c1) else c2.name
         
         return {
-            "winner": self.character1.name if CharacterSystem.is_alive(self.character1) else self.character2.name,
-            "turns": turn_count,
+            "winner": winner_name,
+            "turns": result.duration,
             "final_hp": {
-                self.character1.name: self.character1.current_hp,
-                self.character2.name: self.character2.current_hp
+                c1.name: c1.current_hp,
+                c2.name: c2.current_hp
             }
         }
 
@@ -209,18 +136,19 @@ def simulate_multiple_battles(
     rules_filepath: str = RULES_FILE,
 ) -> Dict[str, Any]:
     """
-    Simula múltiplas batalhas entre dois personagens e retorna estatísticas agregadas.
+    Simulates multiple battles and returns aggregated statistics.
     """
-    # Carrega os dados uma vez fora do loop
-    combat_styles = load_combat_styles(combat_styles_filepath)
-    rules = load_game_rules(rules_filepath)
-    all_characters = load_characters(characters_filepath, combat_styles, rules)
+    dm = DataManager()
+    dm.load_game_rules(rules_filepath)
+    dm.load_combat_styles(combat_styles_filepath)
+    dm.load_action_templates(ATTACK_ACTIONS_FILE)
+    dm.load_characters(characters_filepath)
     
-    # Templates para os personagens específicos
-    char1_template = all_characters[char1_id]
-    char2_template = all_characters[char2_id]
+    char1_template = dm.get_character(char1_id)
+    char2_template = dm.get_character(char2_id)
+    char1_template.team = 1
+    char2_template.team = 2
 
-    # Inicializa o dicionário de resultados
     results = {
         char1_id: 0,
         char2_id: 0,
@@ -229,45 +157,36 @@ def simulate_multiple_battles(
         "average_turns": 0.0
     }
 
-    # Lista para armazenar o número de turnos de cada batalha
     turns_list = []
 
-    # Loop de simulações
     for _ in range(num_simulations):
-        # Cria cópias profundas dos templates para instâncias frescas
-        heroi1 = copy.deepcopy(char1_template)
-        heroi2 = copy.deepcopy(char2_template)
-
-        # Cria um novo simulador para cada batalha, garantindo que o estado seja limpo
         simulator = PvPSimulator(
-            BattleManager(DiceManager()),
-            heroi1,
-            heroi2
+            dice_manager=DiceManager(),
+            data_manager=dm,
+            judge=BattleJudge(),
+            character1=char1_template,
+            character2=char2_template
         )
 
-        # Simula a batalha e coleta o resumo
         summary = simulator.single_battle_summary()
         winner = summary["winner"]
         turns = summary["turns"]
         
-        # Acumula o número de turnos para calcular a média depois
         turns_list.append(turns)
 
-        # Atualiza os resultados de vitórias/derrotas/empates
-        if winner == heroi1.name:
+        if winner == char1_template.name:
             results[char1_id] += 1
-        elif winner == heroi2.name:
+        elif winner == char2_template.name:
             results[char2_id] += 1
         else:
             results["draws"] += 1
 
-    # Calcula o total e a média de turnos
     results["total_turns"] = sum(turns_list)
     results["average_turns"] = sum(turns_list) / len(turns_list) if turns_list else 0.0
 
     return results
 
-# Funções de interface para rodar as simulações a partir do Main.py
+# Interface functions for Main.py
 def multy(char1_id: str, char2_id: str):
     results = simulate_multiple_battles(10000, char1_id, char2_id)
 
