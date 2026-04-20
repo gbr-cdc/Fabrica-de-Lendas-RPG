@@ -13,11 +13,12 @@ class Character:
     """
     A representação dos dados e status do personagem.
     """
-    def __init__(self, char_id: str, name: str, attributes: List[int], combat_style: CombatStyle, rules: GameRules):
+    def __init__(self, char_id: str, name: str, attributes: List[int], combat_style: CombatStyle, rules: GameRules, team: int = 0):
         
         # Identificação
         self.char_id = char_id
         self.name = name
+        self.team = team
         
         # Atributos base
         self.rules = rules

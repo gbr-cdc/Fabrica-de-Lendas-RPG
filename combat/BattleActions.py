@@ -4,6 +4,7 @@ from core.Bases import BattleAction, IBattleContext
 from core.Events import ActionLoad, AttackLoad
 from core.Structs import AttackActionTemplate
 from core.Enums import RollState, BattleActionType, AttackType
+from core.CharacterSystem import CharacterSystem
 
 if TYPE_CHECKING:
     from entities.Characters import Character
@@ -18,7 +19,7 @@ class AttackAction(BattleAction):
         self.attack_type = attack_type if attack_type is not None else template.attack_type
 
     def can_execute(self) -> tuple[bool, str]:
-        if not self.target.is_alive():
+        if not CharacterSystem.is_alive(self.target):
             return False, "O alvo já está derrotado!"
         if self.actor.floating_focus < self.template.focus_cost:
             return False, f"Foco insuficiente para usar {self.name}!"
@@ -41,7 +42,7 @@ class AttackAction(BattleAction):
         return hooks
 
     def execute(self) -> ActionLoad:
-        self.actor.spend_focus(self.template.focus_cost)
+        CharacterSystem.spend_focus(self.actor, self.template.focus_cost)
 
         attack_load = AttackLoad(
             character=self.actor,
@@ -87,7 +88,7 @@ class AttackAction(BattleAction):
             attack_load.history.append(f"Dano calculado: PDA {self.actor.pda} + (MDA {self.actor.mda} x GdA {final_gda}) = {attack_load.damage}") 
             
             self.context.emit('on_damage_taken', attack_load)
-            self.target.take_damage(attack_load.damage)
+            CharacterSystem.take_damage(self.target, attack_load.damage)
         else:
             attack_load.history.append("O ataque foi completamente defendido!")
             self.context.emit('on_hit_check', attack_load)
@@ -95,7 +96,7 @@ class AttackAction(BattleAction):
         self.context.emit('on_attack_end', attack_load)
         
         if self.attack_type == AttackType.BASIC_ATTACK:
-            self.actor.generate_focus()
+            CharacterSystem.generate_focus(self.actor)
 
         return attack_load
 
@@ -116,7 +117,7 @@ class GenerateManaAction(BattleAction):
 
     def execute(self) -> ActionLoad:
         old_floating = self.actor.floating_mp
-        new_floating = self.actor.generate_mana()
+        new_floating = CharacterSystem.generate_mana(self.actor)
         generated = new_floating - old_floating
         return ActionLoad(character=self.actor, history=[f"{self.actor.name} canalizou sua energia e gerou {generated} de Mana!"])
 
@@ -135,7 +136,7 @@ class GenerateFocusAction(BattleAction):
 
     def execute(self) -> ActionLoad:
         old_focus = self.actor.floating_focus
-        new_focus = self.actor.generate_focus()
+        new_focus = CharacterSystem.generate_focus(self.actor)
         generated = new_focus - old_focus
         return ActionLoad(character=self.actor, history=[f"{self.actor.name} respirou fundo e gerou {generated} de Foco!"])
 

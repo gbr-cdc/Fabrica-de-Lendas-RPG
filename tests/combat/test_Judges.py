@@ -9,11 +9,11 @@ def test_battle_judge_running():
     
     char1 = MagicMock()
     char1.team = 1
-    char1.is_alive.return_value = True
+    char1.current_hp = 10
     
     char2 = MagicMock()
     char2.team = 2
-    char2.is_alive.return_value = True
+    char2.current_hp = 10
     
     context.get_characters.return_value = [char1, char2]
     
@@ -25,11 +25,11 @@ def test_battle_judge_victory():
     
     char1 = MagicMock()
     char1.team = 1
-    char1.is_alive.return_value = True
+    char1.current_hp = 10
     
     char2 = MagicMock()
     char2.team = 2
-    char2.is_alive.return_value = False # Team 2 is dead
+    char2.current_hp = 0 # Team 2 is dead
     
     context.get_characters.return_value = [char1, char2]
     
@@ -41,11 +41,11 @@ def test_battle_judge_draw():
     
     char1 = MagicMock()
     char1.team = 1
-    char1.is_alive.return_value = False
+    char1.current_hp = 0
     
     char2 = MagicMock()
     char2.team = 2
-    char2.is_alive.return_value = False
+    char2.current_hp = 0
     
     context.get_characters.return_value = [char1, char2]
     
