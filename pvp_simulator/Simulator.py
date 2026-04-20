@@ -57,24 +57,8 @@ class PvPSimulator:
 
     def _setup_battle(self, c1: Character, c2: Character) -> BattleManager:
         bm = BattleManager(self.dice_manager, self.data_manager, self.judge)
-        
-        # Tie-break logic for initial action
-        if c1.action_cost_base != c2.action_cost_base:
-            bm.add_character(c1, PvP1v1Controller(), start_tick=c1.action_cost_base)
-            bm.add_character(c2, PvP1v1Controller(), start_tick=c2.action_cost_base)
-        else:
-            # If equal, roll to decide who goes first
-            while True:
-                roll1 = self.dice_manager.roll_dice(10).final_roll
-                roll2 = self.dice_manager.roll_dice(10).final_roll
-                if roll1 != roll2:
-                    break
-            if roll1 > roll2:
-                bm.add_character(c1, PvP1v1Controller(), start_tick=c1.action_cost_base)
-                bm.add_character(c2, PvP1v1Controller(), start_tick=c2.action_cost_base)
-            else:
-                bm.add_character(c2, PvP1v1Controller(), start_tick=c2.action_cost_base)
-                bm.add_character(c1, PvP1v1Controller(), start_tick=c1.action_cost_base)
+        bm.add_character(c1, PvP1v1Controller(), start_tick=c1.action_cost_base)
+        bm.add_character(c2, PvP1v1Controller(), start_tick=c2.action_cost_base)
         return bm
 
     def single_battle_verbose(self):

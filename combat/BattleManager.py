@@ -34,6 +34,8 @@ class BattleManager:
         self.graveyard: Dict[str, Character] = {}
         self.active_passives = defaultdict(list)
 
+        self.timeline_slots = set() # (tick, hab, roll) registry to ensure uniqueness
+
         self.battle_result = BattleResult()
         self.battle_state = BattleState.RUNNING
         
@@ -54,6 +56,13 @@ class BattleManager:
     def get_template(self, template_id: str) -> AttackActionTemplate:
         return self.data_service.get_action_template(template_id)
 
+    def _get_unique_roll(self, tick: int, hab: int) -> int:
+        """Determina um valor de d10 único para a combinação de tick e HAB."""
+        while True:
+            roll = self.dice_service.roll_dice(10).final_roll
+            if (tick, hab, roll) not in self.timeline_slots:
+                return roll
+
     def add_character(self, character: 'Character', controller: 'CharacterController', start_tick: int = 0):
         """
         Adiciona um personagem à batalha e o agenda na fila de ação.
@@ -61,8 +70,14 @@ class BattleManager:
         self.characters[character.char_id] = character
         self.controllers[character.char_id] = controller
         self.battle_result.action_per_character[character.char_id] = 0
-        # heapq.heappush adiciona a tupla (start_tick, char_id, character) mantendo a propriedade de Min-Heap
-        heapq.heappush(self.timeline, (start_tick, character.char_id, character))
+        
+        # Tie-break logic
+        roll = self._get_unique_roll(start_tick, character.hab)
+        self.timeline_slots.add((start_tick, character.hab, roll))
+        
+        # heapq.heappush adiciona a tupla mantendo a propriedade de Min-Heap
+        # Estrutura: (tick, -hab, -roll, char_id, character)
+        heapq.heappush(self.timeline, (start_tick, -character.hab, -roll, character.char_id, character))
         
         # Permite que as habilidades inscrevam seus comandos no Event Bus
         for passive in character.passive_abilities:
@@ -121,7 +136,12 @@ class BattleManager:
         Ignora personagens mortos ou que foram removidos da batalha.
         """
         while self.timeline:
-            tick, char_id, character = heapq.heappop(self.timeline)
+            tick, neg_hab, neg_roll, char_id, character = heapq.heappop(self.timeline)
+            hab, roll = -neg_hab, -neg_roll
+            
+            # Remove o slot ocupado do registro
+            if (tick, hab, roll) in self.timeline_slots:
+                self.timeline_slots.remove((tick, hab, roll))
             
             if char_id in self.characters and CharacterSystem.is_alive(character):
                 self.current_tick = tick
@@ -134,23 +154,33 @@ class BattleManager:
         Reinsere o personagem na fila de tempo após ele agir.
         """
         next_tick = self.current_tick + action_cost
-        heapq.heappush(self.timeline, (next_tick, character.char_id, character))
+        roll = self._get_unique_roll(next_tick, character.hab)
+        self.timeline_slots.add((next_tick, character.hab, roll))
+        
+        heapq.heappush(self.timeline, (next_tick, -character.hab, -roll, character.char_id, character))
     
     def delay_character(self, character: 'Character', extra_ticks: int):
         """
         Encontra o personagem na linha do tempo e empurra a ação dele mais para o futuro.
         """
         for i, entry in enumerate(self.timeline):
-            tick, char_id, char = entry 
+            tick, neg_hab, neg_roll, char_id, char = entry 
+            hab, roll = -neg_hab, -neg_roll
             
             if char_id == character.char_id:
-                # 1. Calcula o novo tempo
+                # 1. Libera o slot antigo
+                if (tick, hab, roll) in self.timeline_slots:
+                    self.timeline_slots.remove((tick, hab, roll))
+                
+                # 2. Calcula o novo tempo e roll
                 novo_tick = tick + extra_ticks
+                novo_roll = self._get_unique_roll(novo_tick, hab)
+                self.timeline_slots.add((novo_tick, hab, novo_roll))
                 
-                # 2. Sobrescreve a tupla na mesma posição do vetor (Evita o shift de memória do pop)
-                self.timeline[i] = (novo_tick, char_id, char)
+                # 3. Sobrescreve a tupla na mesma posição do vetor
+                self.timeline[i] = (novo_tick, -hab, -novo_roll, char_id, char)
                 
-                # 3. Reconstrói a árvore de prioridades com o novo valor
+                # 4. Reconstrói a árvore de prioridades com o novo valor
                 heapq.heapify(self.timeline)
                 
                 break # Achou e atualizou, pode sair do laço
