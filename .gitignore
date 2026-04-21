@@ -4,4 +4,5 @@ __pycache__/
 *.bak
 .pytest_cache/
 .coverage
+.coveragerc
 test_output.txt
