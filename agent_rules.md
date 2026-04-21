@@ -2,12 +2,12 @@
 Senior Architect & Game Dev advisor for **Fábrica de Lendas** RPG Combat Engine.
 
 ## 1. Engine Architecture (Inviolable)
-* **1.1 MVC**: The project should be developed following the MVC pattern. Everything in `core`, `battle`, `entities`, and `data` is part of the model. Controllers are in `controllers`. Views are to be implemented. Standalone helper scripts live in `utilities/`. Design documents and plans live in `docs/`.
-* **1.2 Command Pattern**: `GameAction` and subclasses follow the Command Pattern.
-* **1.3 Observer Pattern**: `BattleActions`, `BattlePassives` and `StatusEffects` work with hooks subscribed in the EventBus (`BattleManager`).
-* **1.4 Data-Driven**: `AttackAction` uses `AttackActionTemplate` (from `AttackActions.json`).
-* **1.5 IoC/EventBus**: Entities expose hooks via `get_hooks()`; `BattleManager` handles all subscriptions.
-* **1.6 Lifecycle Safety**: Wrap ephemeral hook processing in `try...finally` to ensure unsubscription.
+* **1.1 Game-Centric MVC**: Adhere to a strict separation of concerns. **Models** encapsulate the 'Simulation' (all rules, state, and entities in `core/`, `battle/`, `entities/`, `data/`); **Controllers** act as 'Orchestrators' (managing flow and processing commands in `controllers/`); and **Views** handle the 'Presentation' (logging and UI). Standalone helpers live in `utilities/` and documentation in `docs/`.
+* **1.2 Command Pattern**: `GameAction` and subclasses follow the Command Pattern. Controllers instantiate GameActions for the current context.
+* **1.3 Reactive Hook Pattern (Observer)**: Decouple reactive logic (such as Abilities, Passives, and Effects) from the core simulation via an **EventBus**. Components register hooks with a module's central orchestrator (currently the `BattleManager`, but designed for future modularity) to respond to state transitions without direct coupling.
+* **1.4 Data-Driven**: Behaviours of habilities and effects should be defined in JSON files.
+* **1.5 IoC/EventBus**: Entities expose hooks via `get_hooks()`; the module's central orchestrator handles all event subscriptions.
+* **1.6 Lifecycle Safety**: Wrap ephemeral(duration = 1 action cycle) hook processing in `try...finally` to ensure unsubscription.
 * **1.7 CQRS**: Direct state changes (e.g., modifier removal) use context methods; events are for notification only.
 * **1.8 Stat Blocks**: Attributes are immutable; use **Modifier Stack Pattern** for changes.
 * **1.9 Anemic Entities**: `Character` is a data container; logic resides in external systems.
