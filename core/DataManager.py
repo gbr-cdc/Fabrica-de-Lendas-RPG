@@ -4,7 +4,7 @@ from core.Enums import BattleActionType, ArmorType, AttributeType, WeaponType, A
 from core.Structs import CombatStyle, GameRules, AttackActionTemplate, AttackEffects
 from entities.Items import Armor, Weapon
 from entities.Characters import Character
-from combat.BattlePassives import registry as passives_registry
+from battle.BattlePassives import registry as passives_registry
 from core.CharacterSystem import CharacterSystem
 
 class DataManager:

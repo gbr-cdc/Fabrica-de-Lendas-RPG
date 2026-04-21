@@ -4,7 +4,7 @@ from core.Events import ActionLoad
 
 if TYPE_CHECKING:
     from entities.Characters import Character
-    from combat.BattleManager import BattleManager
+    from battle.BattleManager import BattleManager
     from core.DiceManager import DiceManager
     from core.Structs import AttackActionTemplate
     from core.Enums import BattleActionType

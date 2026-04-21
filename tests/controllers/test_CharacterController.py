@@ -32,7 +32,7 @@ def test_pvp1v1_controller_with_target_no_focus():
     
     context.get_template.side_effect = mock_get_template
     
-    with patch('combat.BattleActions.registry') as mock_registry:
+    with patch('battle.BattleActions.registry') as mock_registry:
         mock_action_class = MagicMock()
         mock_registry.__getitem__.return_value = mock_action_class
         
@@ -62,7 +62,7 @@ def test_pvp1v1_controller_with_target_with_focus():
     
     context.get_template.side_effect = mock_get_template
     
-    with patch('combat.BattleActions.registry') as mock_registry:
+    with patch('battle.BattleActions.registry') as mock_registry:
         mock_action_class = MagicMock()
         mock_registry.__getitem__.return_value = mock_action_class
         
@@ -83,7 +83,7 @@ def test_pvp1v1_controller_with_action_load():
     basic_atk = MagicMock()
     context.get_template.return_value = basic_atk
     
-    with patch('combat.BattleActions.registry') as mock_registry:
+    with patch('battle.BattleActions.registry') as mock_registry:
         mock_action_class = MagicMock()
         mock_registry.__getitem__.return_value = mock_action_class
         ctrl.choose_action(actor, context, action_load)

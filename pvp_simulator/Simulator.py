@@ -1,12 +1,12 @@
 from typing import Dict, Any
 import copy
 from entities.Characters import Character
-from combat.BattleManager import BattleManager
+from battle.BattleManager import BattleManager
 from core.CharacterSystem import CharacterSystem
 from controllers.CharacterController import PvP1v1Controller
 from core.DiceManager import DiceManager
 from core.DataManager import DataManager
-from combat.Judges import BattleJudge
+from battle.Judges import BattleJudge
 
 CHARACTERS_FILE = "data/Characters.json"
 COMBAT_STYLES_FILE = "data/CombatStyles.json"

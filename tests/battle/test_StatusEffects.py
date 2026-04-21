@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock
-from combat.StatusEffects import Atordoado
+from battle.StatusEffects import Atordoado
 from core.Modifiers import EphemeralModifier
 from core.Events import ActionLoad
 

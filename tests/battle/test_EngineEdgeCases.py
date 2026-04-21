@@ -1,11 +1,11 @@
 
 import pytest
 from unittest.mock import MagicMock
-from combat.BattleManager import BattleManager
-from combat.Judges import BattleJudge
+from battle.BattleManager import BattleManager
+from battle.Judges import BattleJudge
 from core.Enums import BattleState, RollState, BattleActionType
 from core.Events import ActionLoad
-from combat.StatusEffects import StatusEffect
+from battle.StatusEffects import StatusEffect
 from controllers.CharacterController import PvP1v1Controller
 
 def test_battle_judge_defeat():

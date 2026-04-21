@@ -1,6 +1,26 @@
 # Development Log History
 
+## 2026-04-20: Project Reorganization
+**Plan:** [project_reorganization.md](docs/plans/project_reorganization.md)
+
+**Overall Idea:**
+Structural cleanup — rename/move files and folders with no logic changes. Renamed `combat/` → `battle/`, moved docs to `docs/`, removed stale tracked files, renamed `core/Bases.py` → `core/BaseClasses.py`, moved `DiceCalculator.py` to `utilities/`.
+
+**Steps:**
+- [x] `git rm test_output.txt` | Status: Done.
+- [x] `git mv "GDD Sistema de Batalha.md" docs/` | Status: Done.
+- [x] `mv Sistema_RPG_Regras.txt docs/` | Status: Done.
+- [x] `git mv DiceCalculator.py utilities/DiceCalculator.py` + created `utilities/__init__.py` | Status: Done.
+- [x] `git mv core/Bases.py core/BaseClasses.py` + updated all imports | Status: Done.
+- [x] `git mv tests/core/test_Bases.py tests/core/test_BaseClasses.py` | Status: Done.
+- [x] `git mv combat battle` | Status: Done.
+- [x] `git mv tests/combat tests/battle` | Status: Done.
+- [x] Grep-replaced all `from combat.` / `patch('combat.` strings | Status: Done.
+- [x] Updated `agent_rules.md` Section 1 | Status: Done.
+- [x] `python3 -m pytest` — 87 passed | Status: Done.
+
 ## 2026-04-20: Timeline Tie-Breaking Logic
+**Plan:** [timeline_tie_breaking.md](docs/plans/timeline_tie_breaking.md)
 
 **Overall Idea:**
 Implement game-compliant tie-breaking in the combat timeline where higher HAB and d10 rolls determine turn order on tied ticks. Delegate logic from Controller (Simulator) to Model (BattleManager).
@@ -14,6 +34,7 @@ Implement game-compliant tie-breaking in the combat timeline where higher HAB an
 - [x] Verify with tests and simulation. | Files: `tests/combat/`, `pvp_simulator/` | Status: Done.
 
 ## 2026-04-20: PvP Simulator Refactor
+**Plan:** [update_pvp_simulator.md](docs/plans/update_pvp_simulator.md)
 
 **Overall Idea:**
 Update `pvp_simulator/Simulator.py` to delegate turn logic to `BattleManager.run_battle()`, resolving architectural debt and ensuring compatibility with the current data-driven engine.
@@ -26,6 +47,7 @@ Update `pvp_simulator/Simulator.py` to delegate turn logic to `BattleManager.run
 - [x] Fixed missing `weapon_type` in `CombatStyles.json`. | Files: `data/CombatStyles.json` | Status: Done.
 
 ## 2026-04-20: Decouple Combat Logic from Character Entity
+**Plan:** [combat_decoupling.md](docs/plans/combat_decoupling.md)
 
 **Overall Idea:**
 Remove logic dependencies from the `Character` entity by redirecting lifecycle and resource method calls to the `CharacterSystem` utility class, fulfilling Rule 1.13.

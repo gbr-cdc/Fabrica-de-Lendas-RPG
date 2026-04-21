@@ -1,4 +1,4 @@
-from core.Bases import IBattleContext
+from core.BaseClasses import IBattleContext
 from core.Enums import BattleState
 from core.CharacterSystem import CharacterSystem
 

@@ -5,12 +5,12 @@ from collections import defaultdict
 from core.Enums import BattleState, BattleActionType
 from core.Structs import BattleResult, AttackActionTemplate
 from core.Events import ActionLoad
-from combat.BattlePassives import registry
+from battle.BattlePassives import registry
 from core.CharacterSystem import CharacterSystem
 
 if TYPE_CHECKING:
     from core.DataManager import DataManager
-    from combat.Judges import BattleJudge
+    from battle.Judges import BattleJudge
     from core.DiceManager import DiceManager
     from entities.Characters import Character
     from controllers.CharacterController import CharacterController

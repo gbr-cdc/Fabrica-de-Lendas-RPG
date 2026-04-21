@@ -4,7 +4,7 @@ from typing import List, TYPE_CHECKING
 from core.Enums import AttackType, RollState
 
 if TYPE_CHECKING:
-    from core.Bases import IBattleContext
+    from core.BaseClasses import IBattleContext
     from entities.Characters import Character
 
 @dataclass(kw_only=True)

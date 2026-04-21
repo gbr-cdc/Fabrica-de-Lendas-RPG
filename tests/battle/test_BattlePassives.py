@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock, patch
-from combat.BattlePassives import ForçaBruta, Combo, GracaDoDuelista, MãosPesadas
+from battle.BattlePassives import ForçaBruta, Combo, GracaDoDuelista, MãosPesadas
 from core.Events import AttackLoad
 
 def test_forca_bruta():
@@ -17,7 +17,7 @@ def test_forca_bruta():
     hooks["on_gda_modify"](load)
     assert load.gda == 8
 
-@patch("combat.BattlePassives.Atordoado")
+@patch("battle.BattlePassives.Atordoado")
 def test_combo(mock_atordoado):
     char = MagicMock()
     char.char_id = "c1"
@@ -34,7 +34,7 @@ def test_combo(mock_atordoado):
                       gda=5, damage=0)
     load.hit = True
                       
-    with patch("combat.BattlePassives.action_registry") as mock_registry:
+    with patch("battle.BattlePassives.action_registry") as mock_registry:
         mock_action_class = MagicMock()
         mock_action_instance = MagicMock()
         mock_action_instance.execute_if_possible.return_value = MagicMock(success=True, history=["mocked"])
@@ -55,7 +55,7 @@ def test_combo(mock_atordoado):
         hooks["on_attack_end"](load)
         mock_atordoado.assert_called_once()
 
-@patch("combat.BattlePassives.Atordoado")
+@patch("battle.BattlePassives.Atordoado")
 def test_maos_pesadas(mock_atordoado):
     char = MagicMock()
     char.char_id = "c1"
@@ -126,7 +126,7 @@ def test_combo_passive_logic():
     owner.char_id = "owner"
     context = MagicMock()
     
-    from combat.BattlePassives import Combo
+    from battle.BattlePassives import Combo
     combo = Combo(owner, context)
     hooks = combo.get_hooks()
     hook = hooks['on_attack_end']
@@ -147,7 +147,7 @@ def test_combo_passive_logic():
     action_mock = MagicMock()
     action_mock.execute_if_possible.return_value = MagicMock(success=True, history=["Combo Hit!"])
     
-    from combat.BattlePassives import action_registry
+    from battle.BattlePassives import action_registry
     with MagicMock() as mock_reg:
         action_registry["AttackAction"] = MagicMock(return_value=action_mock)
         hook(hit_load)
@@ -178,7 +178,7 @@ def test_combo_passive_logic():
     assert combo.stage == 0
 
 def test_maos_pesadas_logic():
-    from combat.BattlePassives import MãosPesadas
+    from battle.BattlePassives import MãosPesadas
     owner = MagicMock()
     owner.char_id = "owner"
     context = MagicMock()

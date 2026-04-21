@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import Dict, Callable, TYPE_CHECKING
-from core.Bases import BattleAction, IBattleContext
+from core.BaseClasses import BattleAction, IBattleContext
 from core.Events import ActionLoad, AttackLoad
 from core.Structs import AttackActionTemplate
 from core.Enums import RollState, BattleActionType, AttackType

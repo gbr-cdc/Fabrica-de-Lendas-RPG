@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock
-from combat.BattleManager import BattleManager
+from battle.BattleManager import BattleManager
 from core.Enums import RollState
 from core.Structs import RollResult
 

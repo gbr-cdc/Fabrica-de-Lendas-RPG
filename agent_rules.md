@@ -2,7 +2,7 @@
 Senior Architect & Game Dev advisor for **Fábrica de Lendas** RPG Combat Engine.
 
 ## 1. Engine Architecture (Inviolable)
-* **MVC**: The project should be developed following the MVC pattern. Everything in core, combat, entities and data is part of the model. Controllers are in controllers. Views are to be implemented.
+* **MVC**: The project should be developed following the MVC pattern. Everything in `core`, `battle`, `entities`, and `data` is part of the model. Controllers are in `controllers`. Views are to be implemented. Standalone helper scripts live in `utilities/`. Design documents and plans live in `docs/`.
 * **Command Pattern**: `GameAction` and subclasses follow the Command Pattern.
 * **Observer Pattern**: `BattleActions`, `BattlePassives` and `StatusEffects` work with hooks subscribed in the EventBus (`BattleManager`).
 * **Data-Driven**: `AttackAction` uses `AttackActionTemplate` (from `AttackActions.json`).
@@ -46,6 +46,7 @@ To ensure a fresh agent can execute the task after a reset, `DEVLOG.md` entries 
 ### 4.3. Persistence & Archiving
 *   **Plan Persistence**: Approved plans stay in `docs/plans/` for the duration of the feature development.
 *   **Log Archiving**: Move completed tasks to `DEVLOG_HISTORY.md`; keep only the **Active Task + 3 Recent** entries in `DEVLOG.md`.
+*   **Plan Link Survival**: The `**Plan:**` field from the active task **MUST be preserved** verbatim when archiving to `DEVLOG_HISTORY.md`. Never strip it.
 
 ### 4.4. The Git & Sync Protocol
 *   **Proactive Commit Prompt**: Upon completing all steps of an **Active Task** and verifying with green tests, the agent **MUST** proactively ask for permission to `git add .`, `git commit`, and `git push`.

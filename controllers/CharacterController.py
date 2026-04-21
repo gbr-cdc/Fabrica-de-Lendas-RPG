@@ -1,7 +1,7 @@
 from core.Events import ActionLoad
 from entities.Characters import Character
-from combat.BattleActions import BattleAction
-from core.Bases import IBattleContext
+from battle.BattleActions import BattleAction
+from core.BaseClasses import IBattleContext
 
 class CharacterController:
     """
@@ -37,17 +37,17 @@ class PvP1v1Controller(CharacterController):
             raise RuntimeError(f"Controller de {actor} não conseguiu achar um alvo")
         
         if action_load is not None:
-            from combat.BattleActions import registry as actions_registry
+            from battle.BattleActions import registry as actions_registry
             basic_attack_template = context.get_template("BasicAttack")
             return actions_registry["AttackAction"](basic_attack_template, actor, target, context)
 
         skill_template = context.get_template("SkillN1")
         cost = skill_template.focus_cost
         if actor.floating_focus >= cost:
-            from combat.BattleActions import registry as actions_registry
+            from battle.BattleActions import registry as actions_registry
             return actions_registry["AttackAction"](skill_template, actor, target, context)
             
-        from combat.BattleActions import registry as actions_registry
+        from battle.BattleActions import registry as actions_registry
         basic_attack_template = context.get_template("BasicAttack")
         return actions_registry["AttackAction"](basic_attack_template, actor, target, context)
     

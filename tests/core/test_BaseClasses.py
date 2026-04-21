@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock
-from core.Bases import GameAction, BattleAction
+from core.BaseClasses import GameAction, BattleAction
 from core.Events import ActionLoad
 
 class DummyAction(GameAction):

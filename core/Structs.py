@@ -2,7 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Dict, List, TYPE_CHECKING, Any
 from core.Enums import RollState, AttributeType, ArmorType, WeaponType, BattleActionType, AttackType
-from core.Bases import BattleAction
+from core.BaseClasses import BattleAction
 if TYPE_CHECKING:
     from entities.Characters import Character
 

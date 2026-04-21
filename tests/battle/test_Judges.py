@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock
-from combat.Judges import BattleJudge
+from battle.Judges import BattleJudge
 from core.Enums import BattleState
 
 def test_battle_judge_running():

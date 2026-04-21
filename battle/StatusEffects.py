@@ -1,12 +1,12 @@
 from __future__ import annotations
 from typing import Callable, Dict, TYPE_CHECKING
 from core.Events import ActionLoad
-from core.Bases import IBattleContext, BattlePassive
+from core.BaseClasses import IBattleContext, BattlePassive
 from core.Modifiers import EphemeralModifier
 
 if TYPE_CHECKING:
     from entities.Characters import Character
-    from combat.BattleManager import BattleManager
+    from battle.BattleManager import BattleManager
 
 class StatusEffect(BattlePassive):
     """ 

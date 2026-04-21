@@ -2,13 +2,13 @@ from __future__ import annotations
 from typing import Callable, Dict, TYPE_CHECKING
 from core.Enums import RollState, AttackType
 from core.Events import AttackLoad
-from core.Bases import IBattleContext, BattlePassive
+from core.BaseClasses import IBattleContext, BattlePassive
 from core.CharacterSystem import CharacterSystem
 
 if TYPE_CHECKING:
     from entities.Characters import Character
-from combat.StatusEffects import Atordoado
-from combat.BattleActions import AttackAction, registry as action_registry
+from battle.StatusEffects import Atordoado
+from battle.BattleActions import AttackAction, registry as action_registry
 
 class GracaDoDuelista(BattlePassive):
     def __init__(self, owner: 'Character', context: 'IBattleContext'):

@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock, patch
-from combat.BattleActions import AttackAction, GenerateManaAction, GenerateFocusAction
+from battle.BattleActions import AttackAction, GenerateManaAction, GenerateFocusAction
 from core.Structs import AttackActionTemplate, AttackEffects, RollResult
 from core.Enums import BattleActionType, RollState, AttackType
 
@@ -10,7 +10,7 @@ def test_generate_mana_action():
     actor.rules.limite_mana = 2
     actor.men = 10 # limit is 20
     actor.floating_mp = 0
-    with patch('combat.BattleActions.CharacterSystem.generate_mana', return_value=5):
+    with patch('battle.BattleActions.CharacterSystem.generate_mana', return_value=5):
         action = GenerateManaAction(actor, target=actor, context=MagicMock())
         
         can_exec, msg = action.can_execute()
@@ -24,7 +24,7 @@ def test_generate_focus_action():
     actor.rules.limite_foco = 3
     actor.men = 10 # limit 30
     actor.floating_focus = 0
-    with patch('combat.BattleActions.CharacterSystem.generate_focus', return_value=10):
+    with patch('battle.BattleActions.CharacterSystem.generate_focus', return_value=10):
         action = GenerateFocusAction(actor, target=actor, context=MagicMock())
         
         can_exec, msg = action.can_execute()
