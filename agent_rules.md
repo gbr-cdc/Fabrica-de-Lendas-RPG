@@ -35,7 +35,11 @@ Senior Architect & Game Dev advisor for **Fábrica de Lendas** RPG Combat Engine
     - Translate the approved plan into a **Self-Contained Task** in `DEVLOG.md`.
     - Purpose: Actionable instructions for the **Agent**.
 *   **Stop & Sync**: After Stage 2, the agent **MUST STOP** and recommend a **Context Reset** (New Chat).
-*   **Sizing Guidelines**: An `[EXECUTION]` session should target **3–5 atomic steps**. If a task exceeds **7 steps**, it MUST be split into "Part 1", "Part 2", etc. This enforces a context reset at a logical checkpoint and prevents context saturation.
+*   **Sizing Guidelines**: An `[EXECUTION]` session should target **3–5 atomic steps**. If a task exceeds **7 steps**, it MUST be split into logical blocks (e.g., "Part 1", "Part 2").
+*   **Task Lifecycle Labels**: 
+    - The current session's target is labeled `## ACTIVE TASK`.
+    - Subsequent blocks are labeled `## PENDING TASK`.
+*   **Promotion Protocol**: Upon completion of the `ACTIVE TASK` and the mandatory **Context Reset**, the next `PENDING TASK` is promoted to `ACTIVE TASK`. The agent MUST review the **Handover Notes** from the previous part before commencing.
 
 ### 4.2. Task Content (Self-Containment)
 To ensure a fresh agent can execute the task after a reset, `DEVLOG.md` entries must include:
