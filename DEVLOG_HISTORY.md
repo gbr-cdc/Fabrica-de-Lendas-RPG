@@ -7,17 +7,20 @@
 Structural cleanup — rename/move files and folders with no logic changes. Renamed `combat/` → `battle/`, moved docs to `docs/`, removed stale tracked files, renamed `core/Bases.py` → `core/BaseClasses.py`, moved `DiceCalculator.py` to `utilities/`.
 
 **Steps:**
-- [x] `git rm test_output.txt` | Status: Done.
-- [x] `git mv "GDD Sistema de Batalha.md" docs/` | Status: Done.
-- [x] `mv Sistema_RPG_Regras.txt docs/` | Status: Done.
-- [x] `git mv DiceCalculator.py utilities/DiceCalculator.py` + created `utilities/__init__.py` | Status: Done.
-- [x] `git mv core/Bases.py core/BaseClasses.py` + updated all imports | Status: Done.
-- [x] `git mv tests/core/test_Bases.py tests/core/test_BaseClasses.py` | Status: Done.
-- [x] `git mv combat battle` | Status: Done.
-- [x] `git mv tests/combat tests/battle` | Status: Done.
-- [x] Grep-replaced all `from combat.` / `patch('combat.` strings | Status: Done.
-- [x] Updated `agent_rules.md` Section 1 | Status: Done.
-- [x] `python3 -m pytest` — 87 passed | Status: Done.
+- [x] Remove stale tracked files. | Files: `test_output.txt` | Status: Done.
+- [x] Move design documents to `docs/`. | Files: `GDD Sistema de Batalha.md`, `Sistema_RPG_Regras.txt` | Status: Done.
+- [x] Move utility script to `utilities/`. | Files: `DiceCalculator.py` | Status: Done.
+- [x] Rename core base classes and update imports. | Files: `core/BaseClasses.py`, `tests/core/test_BaseClasses.py` | Status: Done.
+- [x] Rename combat module to battle and update imports. | Files: `battle/`, `tests/battle/` | Status: Done.
+
+## 2026-04-20: PvP Simulator Path Fix
+
+**Overall Idea:**
+Fix `ModuleNotFoundError` when running `Main.py` directly from the project root by adding the root directory to `sys.path`.
+
+**Steps:**
+- [x] Inject project root into `sys.path` in simulator entry point. | Files: `pvp_simulator/Main.py` | Status: Done.
+- [x] Verify execution from terminal. | Files: `pvp_simulator/` | Status: Done.
 
 ## 2026-04-20: Timeline Tie-Breaking Logic
 **Plan:** [timeline_tie_breaking.md](docs/plans/timeline_tie_breaking.md)
@@ -73,12 +76,12 @@ Fix inconsistencies in agent rules regarding atomic tasks, planning workflow, an
 Refactor the `Character` class to strictly act as a data container (anemic domain model) per the "Plain Character Sheet" architectural rule. All domain logic must be stripped from the entity and moved into a dedicated stateless system. The combat engine must be updated to track character "brains" (controllers) externally rather than injecting them into the data object.
 
 **Steps Completed:**
-- [x] Create `core/CharacterSystem.py` to hold isolated domain logic (mana, focus, damage, equipment).
-- [x] Strip verb methods and `controller` dependency from `entities/Characters.py`.
-- [x] Refactor `combat/BattleManager.py` to track character controllers internally via `add_character`.
-- [x] Update `tests/entities/test_Characters.py` to test against `CharacterSystem`.
-- [x] Update `tests/combat/test_BattleManager.py` and `pvp_simulator/Simulator.py` to pass controllers into the engine.
-- [x] Verify all 47 tests pass.
+- [x] Create `core/CharacterSystem.py` for isolated domain logic. | Files: `core/CharacterSystem.py` | Status: Done.
+- [x] Strip verb methods and `controller` from `Character`. | Files: `entities/Characters.py` | Status: Done.
+- [x] Refactor `BattleManager` to track controllers. | Files: `battle/BattleManager.py` | Status: Done.
+- [x] Update character tests. | Files: `tests/entities/test_Characters.py` | Status: Done.
+- [x] Update engine and simulator for external controllers. | Files: `battle/BattleManager.py`, `pvp_simulator/Simulator.py` | Status: Done.
+- [x] Verify all 47 tests pass. | Files: `tests/` | Status: Done.
 
 ## 2026-04-20: Graça do Duelista Bugfix and Test Coverage
 
@@ -86,10 +89,10 @@ Refactor the `Character` class to strictly act as a data container (anemic domai
 Add unit tests for the `GraçaDoDuelista` BattlePassive to ensure it properly modifies Attack Load (GdA) and handles evasion reactions. Also, fix a regression in `GracaDoDuelista` introduced by the Character Refactor, where the passive attempted to directly access `self.owner.controller` and `self.owner.spend_focus` which are no longer available on the plain data container.
 
 **Steps Completed:**
-- [x] Extend `IBattleContext` and `BattleManager` to expose a `get_controller(char_id)` method.
-- [x] Refactor `GracaDoDuelista` to use `self.context.get_controller()` and `CharacterSystem.spend_focus()`.
-- [x] Add `test_graca_do_duelista_acerto` and `test_graca_do_duelista_reacao` in `tests/combat/test_BattlePassives.py`.
-- [x] Verify tests pass with `pytest`.
+- [x] Extend `IBattleContext` for controller access. | Files: `core/BaseClasses.py`, `battle/BattleManager.py` | Status: Done.
+- [x] Refactor `GracaDoDuelista` for new systems. | Files: `battle/BattlePassives.py` | Status: Done.
+- [x] Add unit tests for hit/reaction scenarios. | Files: `tests/battle/test_BattlePassives.py` | Status: Done.
+- [x] Verify tests pass with `pytest`. | Files: `tests/` | Status: Done.
 
 ## 2026-04-20: DEVLOG and Agent Rules Optimization
 
