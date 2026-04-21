@@ -26,7 +26,7 @@ Senior Architect & Game Dev advisor for **Fábrica de Lendas** RPG Combat Engine
 ## 4. Orchestration & Token Economy
 
 ### 4.1. The Command Post Pattern
-*   **Goal Initialization**: Every goal requires a two-stage setup before execution starts.
+*   **Goal Initialization**: Every goal requires a two-stage setup before execution starts. Sessions should begin with a **Context Header** (see Section 4.5).
 *   **Stage 1: Implementation Plan (User-Facing)**: 
     - Create/Update a file in `docs/plans/[task_name].md`.
     - Purpose: Explain architecture, trade-offs, and rationale. 
@@ -53,3 +53,24 @@ To ensure a fresh agent can execute the task after a reset, `DEVLOG.md` entries 
 *   **Commit Message Format**: Use `task_name: brief_summary` (e.g., `PvP Simulator Refactor: delegated turn logic to BattleManager`).
 *   **No Task Overlap**: Never start a new "Implementation Plan" or "Active Task" if there are uncommitted changes from a previously completed task.
 *   **Consistency Check**: Before committing, ensure `DEVLOG.md` is updated and consistent with the architectural requirements and task history.
+
+### 4.5. Session Contexts
+Sessions (especially after a Context Reset) SHOULD start with a context declaration to align agent behavior.
+
+*   **[PLANNING]**: 
+    - **Goal**: Draft implementation plans in `docs/plans/`.
+    - **Behavior**: Prioritize architecture, trade-offs, and Stage 1 setup. Do NOT modify source code.
+*   **[EXECUTION]**: 
+    - **Goal**: Complete an **Active Task** from `DEVLOG.md`.
+    - **Behavior**: Focus on coding, TDD, and Git protocol. Requires an active task in `DEVLOG.md`.
+*   **[DISCUSSION]**: 
+    - **Goal**: Brainstorming or clarifying logic.
+    - **Behavior**: Consult docs/code without mandatory file changes.
+*   **[REUNION]**: 
+    - **Goal**: Workflow/Rule evolution (e.g., updating `agent_rules.md`).
+    - **Behavior**: Focus on project structure and orchestration rules.
+*   **[DEBUG]**: 
+    - **Goal**: Isolating a bug/regression.
+    - **Behavior**: Use `pytest` and logs to find root causes before move to [PLANNING].
+
+**Protocol**: The agent MUST acknowledge the context in the first response. If no context is provided, the agent SHOULD propose one based on the current state (e.g., active task presence).

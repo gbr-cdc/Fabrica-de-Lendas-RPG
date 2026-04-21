@@ -3,7 +3,28 @@
 > [!TIP]
 > **Token Economy:** Only the active task and the last 3 completed entries are kept here. Older entries are archived in [DEVLOG_HISTORY.md](file:///home/alice/Repositorios/RPG/DEVLOG_HISTORY.md).
 
-## ACTIVE TASK: None
+## ACTIVE TASK: Implement Postura Defensiva (Destruidor)
+**Plan:** [postura_defensiva.md](docs/plans/postura_defensiva.md)
+
+**Description:**
+Implement the "Postura Defensiva" ability for the Destruidor style, including stateful passive logic, free actions in the BattleManager, and ephemeral precision penalty tracking.
+
+**Context & Constraints:**
+- Must follow Rule 1.12 (Modifier Stack Pattern) for dice changes.
+- Must follow Rule 1.5 (Observer Pattern) for passive hooks.
+- Free actions must loop at the start of the turn without advancing the tick.
+- Tracking penalty must be ephemeral and clear if the target doesn't attack the owner.
+
+**Steps:**
+- [ ] `core/Enums.py`: Add `FREE_ACTION` to `BattleActionType`.
+- [ ] `entities/Characters.py`: Refactor `atk_die`/`def_die` to properties; add `remove_modifiers_by_source(source: str)`.
+- [ ] `core/BaseClasses.py`: Add `get_active_passive()` to `IBattleContext`.
+- [ ] `battle/BattleManager.py`: Add `get_active_passive()` and refactor `run_battle()` for free-action loop.
+- [ ] `battle/BattlePassives.py`: Implement `PosturaDefensiva` class and register it.
+- [ ] `battle/BattleActions.py`: Implement `TogglePosturaDefensiva` action and register it.
+- [ ] `tests/battle/test_postura_defensiva.py`: Create tests for toggle logic, dice modifiers, and penalty lifecycle.
+- [ ] `python3 -m pytest tests/battle/test_postura_defensiva.py` - Verify implementation.
+
 
 ---
 

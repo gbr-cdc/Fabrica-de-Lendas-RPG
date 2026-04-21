@@ -18,11 +18,9 @@
     "Abilities": [
       "BasicAttack",
       "SkillNivelUm",
-      "GenerateManaAction",
       "GenerateFocusAction"
     ],
     "Passives": [],
-
     "CombatStyle": "Destruidor"
   },
   "Cavaleiro": {
@@ -44,10 +42,9 @@
     "Abilities": [
       "BasicAttack",
       "SkillNivelUm",
-      "GenerateManaAction",
       "GenerateFocusAction"
     ],
-    "Passives":[],
+    "Passives": [],
     "CombatStyle": "Cavaleiro"
   }
 }
