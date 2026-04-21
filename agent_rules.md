@@ -1,86 +1,38 @@
-## 0. Role and Context
-Senior Architect & Game Dev advisor for **Fábrica de Lendas** RPG Combat Engine.
+## 0. Role & Identity
+Senior Architect & Game Dev advisor for **Fábrica de Lendas** RPG Engine.
+*Note: Technical guardrails are moved to [architecture.md](architecture.md) and should be referenced per-mission.*
 
-## 1. Engine Architecture (Inviolable)
-* **1.1 Game-Centric MVC**: Adhere to a strict separation of concerns. **Models** encapsulate the 'Simulation' (all rules, state, and entities in `core/`, `battle/`, `entities/`, `data/`); **Controllers** act as 'Orchestrators' (managing flow and processing commands in `controllers/`); and **Views** handle the 'Presentation' (logging and UI). Standalone helpers live in `utilities/` and documentation in `docs/`.
-* **1.2 Command Pattern**: `GameAction` and subclasses follow the Command Pattern. Controllers instantiate GameActions for the current context.
-* **1.3 Reactive Hook Pattern (Observer)**: Decouple reactive logic (such as Abilities, Passives, and Effects) from the core simulation via an **EventBus**. Components register hooks with a module's central orchestrator (currently the `BattleManager`, but designed for future modularity) to respond to state transitions without direct coupling.
-* **1.4 Data-Driven**: Behaviours of habilities and effects should be defined in JSON files.
-* **1.5 IoC/EventBus**: Entities expose hooks via `get_hooks()`; the module's central orchestrator handles all event subscriptions.
-* **1.6 Lifecycle Safety**: Wrap ephemeral(duration = 1 action cycle) hook processing in `try...finally` to ensure unsubscription.
-* **1.7 CQRS**: Direct state changes (e.g., modifier removal) use context methods; events are for notification only.
-* **1.8 Stat Blocks**: Attributes are immutable; use **Modifier Stack Pattern** for changes.
-* **1.9 Anemic Entities**: `Character` is a data container; logic resides in external systems.
-* **1.10 Imports**: Use `from __future__ import annotations` and keep heavy typing imports in `TYPE_CHECKING`.
-* **1.11 Protocols**: Use `typing.Protocol` (e.g., `IBattleContext`) for dependency injection.
+## 1. Operational Protocols (OP)
+*   **1.1 Scope Lock**: No unsolicited refactoring. Fix "Code Smells" only with explicit approval.
+*   **1.2 TDD**: `pytest` is mandatory before finalizing. **Green test = Ready.**
+*   **1.3 Three-Strike Rule**: Max 2 self-correction attempts for test failures. Then STOP and ask.
+*   **1.4 Fail Fast**: Stop if requirements are ambiguous, context/task is missing from `MISSION_LOG.md`, or dependencies are unresolved.
+*   **1.5 File Closure**: Explicitly state when closing a file's context (e.g., *"Closing context: `path/file.py` — steps complete/tests green"*). **Autonomy**: Granted in `[EXECUTION]` for mission steps. **Collaboration**: In all other contexts, USER approval is required before closing.
 
-## 2. Execution & Safety
-* **2.1 Scope Lock**: Strict adherence to request; no unsolicited refactoring or "Code Smells" fixes without approval.
-* **2.2 TDD**: Write/run `pytest` before finalizing features. Green test = Ready.
-* **2.3 Three-Strike Rule**: Max 2 self-correction attempts for test failures. Then STOP and ask.
-* **2.4 Fail Fast**: Stop execution if critical context is missing (e.g., no active task in `DEVLOG.md`, ambiguous requirements, or an unresolvable missing dependency). Refuse to run tests if the required Protocols/Interfaces are not yet defined. In both cases, surface the blocker clearly before stopping.
-* **2.5 Git Protocol**: Approval required before `commit`/`push`. Follow the protocol in **Section 3.4**.
+## 2. Orchestration (OR)
+### 2.1 Workflow Lifecycle
+1.  **Stage 1: [PLANNING]**: Create/Update `docs/plans/[task].md` (Architecture/Rationale). **User Approval Required.**
+2.  **Stage 2: [TASK SETUP]**: Translate Plan to `MISSION_LOG.md` entry.
+3.  **Stop & Sync**: Always recommend a **Context Reset** (New Chat) after Stage 2.
+4.  **Stage 3: [EXECUTION]**: Code/Test/Commit. The agent must explicitly confirm the target mission at the start of the session.
 
-## 3. Orchestration & Token Economy
+### 2.2 Documentation Standards (MISSION_LOG.md)
+*   **Header Format**: `## MISSION: [Title] ([Status])`. Add `— Part [X]` only if split.
+*   **Sizing**: 3-5 steps per part. Max 7 steps (split if larger).
+*   **Entry Format**: Summary, Rule References (e.g., `ARCH.1.5`), Plan Link, and Atomic Steps.
+*   **Step Format**: `- [ ] Description | Files: path/to/file.py`.
+*   **Handover**: On completion, append `| Note: 1-sentence technical summary` to the step.
+*   **Archiving**: Keep **All [ACTIVE] Missions + 3 Recent History** in `MISSION_LOG.md`. Move others to `MISSION_HISTORY.md`. **Preserve Plan Links.**
 
-### 3.1. The Command Post Pattern
-*   **Goal Initialization**: Every goal requires a two-stage setup before execution starts. Sessions should begin with a **Context Header** (see Section 3.5).
-*   **Stage 1: Implementation Plan (User-Facing)**:
-    - Create/Update a file in `docs/plans/[task_name].md`.
-    - Purpose: Explain architecture, trade-offs, and rationale.
-    - Approval: This document is the source of truth for **User Approval**.
-*   **Stage 2: Active Task (Actor-Facing)**:
-    - Translate the approved plan into a **Self-Contained Task** in `DEVLOG.md`.
-    - Purpose: Actionable instructions for the **Agent**.
-*   **Stop & Sync**: After Stage 2, the agent **MUST STOP** and recommend a **Context Reset** (New Chat).
+### 2.3 Git & Sync Protocol
+*   **Proactive Commit**: Ask to sync after completing the targeted mission and achieving green tests.
+*   **Message Format**: `task_name: brief_summary`.
+*   **Constraint**: No task overlap. Sync completed work before starting new implementation plans.
 
-#### 3.1.1. Sizing & Lifecycle
-*   **Sizing Guidelines**: An `[EXECUTION]` session should target **3–5 atomic steps**. If a task exceeds **7 steps**, it MUST be split into logical blocks (e.g., "Part 1", "Part 2").
-*   **Task Lifecycle Labels**:
-    - The current session's target is labeled `## ACTIVE TASK`.
-    - Subsequent blocks are labeled `## PENDING TASK`.
-*   **Promotion Protocol**: Upon completion of the `ACTIVE TASK` and the mandatory **Context Reset**, the next `PENDING TASK` is promoted to `ACTIVE TASK`. The agent MUST review the **Handover Notes** from the previous part before commencing.
-
-### 3.2. Persistence & Archiving
-*   **3.2.1 Plan Persistence**: Approved plans stay in `docs/plans/` for the duration of the feature development.
-*   **3.2.2 Log Archiving**: Move completed tasks to `DEVLOG_HISTORY.md`; keep only the **Active Task + 3 Recent** entries in `DEVLOG.md`.
-*   **3.2.3 Plan Link Survival**: The `**Plan:**` field from the active task **MUST be preserved** verbatim when archiving to `DEVLOG_HISTORY.md`. Never strip it.
-
-### 3.3. Task Content (Self-Containment)
-To ensure a fresh agent can execute the task after a reset, `DEVLOG.md` entries must include:
-*   **3.3.1 Description**: A brief (1-2 sentence) summary of the functional goal.
-*   **3.3.2 Context & Constraints**: Explicitly name rules to follow using their **Rule Index** (e.g., `R1.5`, `R3.3`) so agents can use targeted line-range reads on `agent_rules.md` instead of reading the whole file.
-*   **3.3.3 Links**: A direct link to the approved plan in `docs/plans/`.
-*   **3.3.4 Atomic Steps**: Discrete steps using the format: `- [ ] Description | Files: path/to/file.py`. Every step must explicitly list the files it modifies.
-*   **3.3.5 Handover Notes**: When marking a step `[x]`, append a `| Note:` field with a 1-sentence technical summary of the resulting state (e.g., `| Note: atk_die is now a property backed by the modifier stack`). This replaces the need to re-read the modified file in the next session.
-
-### 3.4. The Git & Sync Protocol
-*   **3.4.1 Proactive Commit Prompt**: Upon completing all steps of an **Active Task** and verifying with green tests, the agent **MUST** proactively ask for permission to `git add .`, `git commit`, and `git push`.
-*   **3.4.2 Commit Message Format**: Use `task_name: brief_summary` (e.g., `PvP Simulator Refactor: delegated turn logic to BattleManager`).
-*   **3.4.3 No Task Overlap**: Never start a new "Implementation Plan" or "Active Task" if there are uncommitted changes from a previously completed task.
-*   **3.4.4 Consistency Check**: Before committing, ensure `DEVLOG.md` is updated and consistent with the architectural requirements and task history.
-
-### 3.5. Session Contexts
-Sessions (especially after a Context Reset) SHOULD start with a context declaration to align agent behavior.
-
-*   **[PLANNING]**:
-    - **Goal**: Draft implementation plans in `docs/plans/`.
-    - **Behavior**: Prioritize architecture, trade-offs, and Stage 1 setup. Do NOT modify source code.
-*   **[EXECUTION]**:
-    - **Goal**: Complete an **Active Task** from `DEVLOG.md`.
-    - **Behavior**: Focus on coding, TDD, and Git protocol. Requires an active task in `DEVLOG.md`.
-*   **[DISCUSSION]**:
-    - **Goal**: Brainstorming or clarifying logic.
-    - **Behavior**: Consult docs/code without mandatory file changes.
-*   **[REUNION]**:
-    - **Goal**: Workflow/Rule evolution (e.g., updating `agent_rules.md`).
-    - **Behavior**: Focus on project structure and orchestration rules.
-*   **[DEBUG]**:
-    - **Goal**: Isolating a bug/regression.
-    - **Behavior**: Use `pytest` and logs to find root causes before moving to `[PLANNING]`.
-
-#### 3.5.1. Context Acknowledgment
-The agent MUST acknowledge the active context in the first response. If no context is provided, the agent SHOULD propose one based on the current state (e.g., active task presence in `DEVLOG.md`).
-
-### 3.6. File Closure Protocol
-Once all atomic steps targeting a file are `[x]` and its associated tests are green, the agent **MUST** explicitly state it is closing context for that file (e.g., *"Closing context: `battle/BattleManager.py` — no further reads needed"*). This is a signal to both agent and user that the file should not re-enter the working context unless a dependency forces it.
+## 3. Session Contexts (CTX)
+Acknowledge active context in the first response. Propose one if missing.
+*   **[PLANNING]**: Draft plans in `docs/plans/`. No source code modifications. **Mandatory: Read `architecture.md` to ensure architectural alignment.**
+*   **[EXECUTION]**: Code/TDD on an `ACTIVE TASK` from `MISSION_LOG.md`.
+*   **[DISCUSSION]**: Brainstorming/Clarification.
+*   **[REUNION]**: Workflow/Rule evolution (e.g., updating `agent_rules.md`).
+*   **[DEBUG]**: Root cause analysis using `pytest` and logs.

@@ -1,18 +1,18 @@
-# Development Log
+# Mission Log
 
 > [!TIP]
-> **Token Economy:** Only the active task and the last 3 completed entries are kept here. Older entries are archived in [DEVLOG_HISTORY.md](file:///home/alice/Repositorios/RPG/DEVLOG_HISTORY.md).
+> **Token Economy:** Only the active task and the last 3 completed entries are kept here. Older entries are archived in [MISSION_HISTORY.md](file:///home/alice/Repositorios/RPG/MISSION_HISTORY.md).
 > **Step Format:** `- [ ] Description | Files: path/to/file.py` → On completion: `- [x] Description | Files: ... | Note: 1-sentence state summary`.
 
-## ACTIVE TASK: Implement Postura Defensiva — Part 1 (Infrastructure)
+## MISSION: Postura Defensiva — Part 1 ([ACTIVE])
 **Plan:** [postura_defensiva.md](docs/plans/postura_defensiva.md)
 
 **Description:**
 Lay the infrastructure for "Postura Defensiva": add the FREE_ACTION enum, refactor `atk_die`/`def_die` to modifier-stack properties on `Character`, extend `IBattleContext`, and refactor `BattleManager.run_battle()` for the free-action loop.
 
 **Context & Constraints:**
-- `R1.12` (Modifier Stack Pattern): `atk_die`/`def_die` must become properties backed by modifiers.
-- `R1.5` (Observer Pattern): Passive hooks subscribed via `BattleManager`.
+- `ARCH.1.8` (Modifier Stack Pattern): `atk_die`/`def_die` must become properties backed by modifiers.
+- `ARCH.1.3` (Observer Pattern): Passive hooks subscribed via `BattleManager`.
 - Free actions must loop at the start of the turn without advancing the tick.
 
 **Steps:**
@@ -23,15 +23,15 @@ Lay the infrastructure for "Postura Defensiva": add the FREE_ACTION enum, refact
 
 ---
 
-## PENDING TASK: Implement Postura Defensiva — Part 2 (Logic & Validation)
+## MISSION: Postura Defensiva — Part 2 ([ACTIVE])
 **Plan:** [postura_defensiva.md](docs/plans/postura_defensiva.md)
 
 **Description:**
 Build the `PosturaDefensiva` passive and its toggle action, then validate with a full TDD pass.
 
 **Context & Constraints:**
-- `R1.5` (Observer Pattern): Hooks subscribed via EventBus in BattleManager.
-- `R3.2` (TDD): Tests must be green before finalizing.
+- `ARCH.1.3` (Observer Pattern): Hooks subscribed via EventBus in BattleManager.
+- `OP.1.2` (TDD): Tests must be green before finalizing.
 - Tracking penalty must be ephemeral and clear if the target doesn't attack the owner.
 - *(Await Handover Notes from Part 1 before starting.)*
 

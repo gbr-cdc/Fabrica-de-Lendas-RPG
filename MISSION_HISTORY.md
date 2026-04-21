@@ -1,4 +1,4 @@
-# Development Log History
+# Mission Log History
 
 ## 2026-04-20: Project Reorganization
 **Plan:** [project_reorganization.md](docs/plans/project_reorganization.md)
@@ -68,7 +68,7 @@ Fix inconsistencies in agent rules regarding atomic tasks, planning workflow, an
 
 **Steps:**
 - [x] Refactor `agent_rules.md`: Optimize for size and clarity. | Files: `agent_rules.md`.
-- [x] Sync `DEVLOG.md`: Update status of orchestration tasks. | Files: `DEVLOG.md`.
+- [x] Sync `MISSION_LOG.md`: Update status of orchestration tasks. | Files: `MISSION_LOG.md`.
 
 ## 2026-04-20: Character Data Container Refactor
 
@@ -97,8 +97,8 @@ Add unit tests for the `GraçaDoDuelista` BattlePassive to ensure it properly mo
 ## 2026-04-20: DEVLOG and Agent Rules Optimization
 
 **Overall Idea:**
-Reduce token usage by implementing an archiving system for `DEVLOG.md`.
+Reduce token usage by implementing an archiving system for `MISSION_LOG.md`.
 
 **Steps Completed:**
-- [x] Archive legacy tasks to `DEVLOG_HISTORY.md`. | Files: `DEVLOG.md`, `DEVLOG_HISTORY.md`.
+- [x] Archive legacy tasks to `MISSION_HISTORY.md`. | Files: `MISSION_LOG.md`, `MISSION_HISTORY.md`.
 - [x] Implement Log Archiving policy in `agent_rules.md`. | Files: `agent_rules.md`.
