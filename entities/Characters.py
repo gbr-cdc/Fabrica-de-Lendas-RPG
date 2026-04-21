@@ -41,8 +41,8 @@ class Character:
         # Estilo de Combate e Equipamentos
         self.weapon = None
         self.armor = None
-        self.atk_die = combat_style.atq_die
-        self.def_die = combat_style.def_die
+        self.base_atk_die = combat_style.atq_die
+        self.base_def_die = combat_style.def_die
         self.combat_style = combat_style
         # Bônus de Rank
         self.base_rank = 0
@@ -97,6 +97,14 @@ class Character:
     def mda(self) -> int:
         return self.get_stat_total('mda', self.base_mda)
 
+    @property
+    def atk_die(self) -> int:
+        return self.get_stat_total('atk_die', self.base_atk_die)
+
+    @property
+    def def_die(self) -> int:
+        return self.get_stat_total('def_die', self.base_def_die)
+
     def add_modifier(self, modifier: 'StatModifier'):
         self.modifiers.append(modifier)
         
@@ -107,6 +115,9 @@ class Character:
     def clear_ephemeral_modifiers(self):
         from core.Modifiers import EphemeralModifier
         self.modifiers = [m for m in self.modifiers if not isinstance(m, EphemeralModifier)]
+
+    def remove_modifiers_by_source(self, source: str):
+        self.modifiers = [m for m in self.modifiers if getattr(m, 'source', None) != source]
 
     def add_status_effect(self, effect: 'StatusEffect'):
         self.status_effects.append(effect)

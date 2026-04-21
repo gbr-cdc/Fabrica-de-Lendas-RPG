@@ -16,10 +16,10 @@ Lay the infrastructure for "Postura Defensiva": add the FREE_ACTION enum, refact
 - Free actions must loop at the start of the turn without advancing the tick.
 
 **Steps:**
-- [ ] Add `FREE_ACTION` to `BattleActionType`. | Files: `core/Enums.py`
-- [ ] Refactor `atk_die`/`def_die` to properties; add `remove_modifiers_by_source(source: str)`. | Files: `entities/Characters.py`
-- [ ] Add `get_active_passive()` to `IBattleContext`. | Files: `core/BaseClasses.py`
-- [ ] Add `get_active_passive()` impl and refactor `run_battle()` for free-action loop. | Files: `battle/BattleManager.py`
+- [x] Add `FREE_ACTION` to `BattleActionType`. | Files: `core/Enums.py` | Note: Added FREE_ACTION to BattleActionType enum.
+- [x] Refactor `atk_die`/`def_die` to properties; add `remove_modifiers_by_source(source: str)`. | Files: `entities/Characters.py` | Note: Dice are now properties backed by modifiers.
+- [x] Add `get_active_passive()` to `IBattleContext`. | Files: `core/BaseClasses.py` | Note: Added get_active_passive to IBattleContext protocol.
+- [x] Add `get_active_passive()` impl and refactor `run_battle()` for free-action loop. | Files: `battle/BattleManager.py` | Note: Implemented get_active_passive and free action turn loop.
 
 ---
 
@@ -33,7 +33,7 @@ Build the `PosturaDefensiva` passive and its toggle action, then validate with a
 - `ARCH.1.3` (Observer Pattern): Hooks subscribed via EventBus in BattleManager.
 - `OP.1.2` (TDD): Tests must be green before finalizing.
 - Tracking penalty must be ephemeral and clear if the target doesn't attack the owner.
-- *(Await Handover Notes from Part 1 before starting.)*
+- *(Part 1 Handover: FREE_ACTION logic and dice properties are ready. BattleManager supports turn-start free actions.)*
 
 **Steps:**
 - [ ] Implement `PosturaDefensiva` class and register it. | Files: `battle/BattlePassives.py`

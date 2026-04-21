@@ -38,6 +38,7 @@ class AttackType(Enum):
 class BattleActionType(Enum):
     MOVE_ACTION = "move_action"
     STANDARD_ACTION = "standard_action"
+    FREE_ACTION = "free_action"
 
 class BattleState(Enum):
     VICTORY = "victory"

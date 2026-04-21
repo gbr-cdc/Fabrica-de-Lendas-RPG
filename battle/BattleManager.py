@@ -107,6 +107,13 @@ class BattleManager:
     def get_controller(self, char_id: str) -> 'CharacterController':
         return self.controllers.get(char_id)
 
+    def get_active_passive(self, char_id: str, name: str) -> 'BattlePassive' | None:
+        if char_id in self.active_passives:
+            for passive_instance, hooks in self.active_passives[char_id]:
+                if passive_instance.name == name:
+                    return passive_instance
+        return None
+
     def subscribe(self, event_name: str, callback: Callable):
         """
         Inscreve um callback como listener de um event
@@ -220,56 +227,82 @@ class BattleManager:
             self.emit("on_turn_start", ActionLoad(character = actor))
             self.resolve_deaths()
 
-            action = self.controllers[actor.char_id].choose_action(actor, self)
+            last_action_load = None
+            final_action = None
 
-            # Pega os hooks da ação
-            action_hooks = {}
-            if hasattr(action, 'get_hooks'):
-                action_hooks = action.get_hooks()
-                
-            try:
-                for event_name, callback in action_hooks.items():
-                    self.subscribe(event_name, callback)
-                    
-                action_load = action.execute_if_possible()
+            # Free Action Loop
+            while True:
+                if not CharacterSystem.is_alive(actor) or self.battle_state != BattleState.RUNNING:
+                    break
 
-                decision_attempts = 0
-                max_attempts = 1000
+                action = self.controllers[actor.char_id].choose_action(actor, self)
+                final_action = action
 
-                while not action_load.success:
-                    decision_attempts += 1
-                    if decision_attempts >= max_attempts:
-                        self.battle_state = BattleState.ERROR
-                        self.battle_result.history.append(f"[ERRO CRÍTICO] Controller de {actor.name} entrou em decision loop!")
-                        break # Quebra o while interno
+                # Pega os hooks da ação
+                action_hooks = {}
+                if hasattr(action, 'get_hooks'):
+                    action_hooks = action.get_hooks()
                     
-                    # Se falhou, temos que limpar os antigos hooks antes de tentar uma nova ação
-                    for event_name, callback in action_hooks.items():
-                        self.unsubscribe(event_name, callback)
-                    
-                    action = self.controllers[actor.char_id].choose_action(actor, self, action_load)
-                    
-                    action_hooks = {}
-                    if hasattr(action, 'get_hooks'):
-                        action_hooks = action.get_hooks()
+                try:
                     for event_name, callback in action_hooks.items():
                         self.subscribe(event_name, callback)
                         
                     action_load = action.execute_if_possible()
-            finally:
-                for event_name, callback in action_hooks.items():
-                    self.unsubscribe(event_name, callback)
-            
+
+                    decision_attempts = 0
+                    max_attempts = 1000
+
+                    while not action_load.success:
+                        decision_attempts += 1
+                        if decision_attempts >= max_attempts:
+                            self.battle_state = BattleState.ERROR
+                            self.battle_result.history.append(f"[ERRO CRÍTICO] Controller de {actor.name} entrou em decision loop!")
+                            break 
+                        
+                        for event_name, callback in action_hooks.items():
+                            self.unsubscribe(event_name, callback)
+                        
+                        action = self.controllers[actor.char_id].choose_action(actor, self, action_load)
+                        final_action = action
+                        
+                        action_hooks = {}
+                        if hasattr(action, 'get_hooks'):
+                            action_hooks = action.get_hooks()
+                        for event_name, callback in action_hooks.items():
+                            self.subscribe(event_name, callback)
+                            
+                        action_load = action.execute_if_possible()
+                    
+                    if self.battle_state == BattleState.ERROR:
+                        break
+                    
+                    self.battle_result.history.extend(action_load.history)
+                    last_action_load = action_load
+
+                    if action.action_type != BattleActionType.FREE_ACTION:
+                        break
+                    
+                    self.resolve_deaths()
+                    self.battle_state = self.judge.rule(self)
+
+                finally:
+                    for event_name, callback in action_hooks.items():
+                        self.unsubscribe(event_name, callback)
+
             if self.battle_state == BattleState.ERROR:
                 break
             
-            self.emit("on_turn_end", action_load)
+            if last_action_load:
+                self.emit("on_turn_end", last_action_load)
+            
             self.resolve_deaths()
-            self.battle_result.history.extend(action_load.history)
-            action_cost = actor.action_cost_base
-            if action.action_type == BattleActionType.MOVE_ACTION:
-                action_cost = action_cost//2
-            self.schedule_next_action(actor, action_cost)
+            
+            if final_action:
+                action_cost = actor.action_cost_base
+                if final_action.action_type == BattleActionType.MOVE_ACTION:
+                    action_cost = action_cost//2
+                self.schedule_next_action(actor, action_cost)
+            
             self.battle_result.duration += 1
             self.battle_result.action_per_character[actor.char_id] += 1
 
