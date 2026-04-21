@@ -35,13 +35,15 @@ Senior Architect & Game Dev advisor for **Fábrica de Lendas** RPG Combat Engine
     - Translate the approved plan into a **Self-Contained Task** in `DEVLOG.md`.
     - Purpose: Actionable instructions for the **Agent**.
 *   **Stop & Sync**: After Stage 2, the agent **MUST STOP** and recommend a **Context Reset** (New Chat).
+*   **Sizing Guidelines**: An `[EXECUTION]` session should target **3–5 atomic steps**. If a task exceeds **7 steps**, it MUST be split into "Part 1", "Part 2", etc. This enforces a context reset at a logical checkpoint and prevents context saturation.
 
 ### 4.2. Task Content (Self-Containment)
 To ensure a fresh agent can execute the task after a reset, `DEVLOG.md` entries must include:
 *   **Description**: A brief (1-2 sentence) summary of the functional goal.
-*   **Context & Constraints**: Explicitly name rules to follow (e.g., "Must respect Rule 1.13") and specific technical details (e.g., "Replace methods: `is_alive`, `take_damage`").
+*   **Context & Constraints**: Explicitly name rules to follow using their **Rule Index** (e.g., `R1.5`, `R4.2`) so agents can use targeted line-range reads on `agent_rules.md` instead of reading the whole file.
 *   **Links**: A direct link to the approved plan in `docs/plans/`.
 *   **Atomic Steps**: Discrete steps using the format: `- [ ] Description | Files: path/to/file.py`. Every step must explicitly list the files it modifies.
+*   **Handover Notes**: When marking a step `[x]`, append a `| Note:` field with a 1-sentence technical summary of the resulting state (e.g., `| Note: atk_die is now a property backed by the modifier stack`). This replaces the need to re-read the modified file in the next session.
 
 ### 4.3. Persistence & Archiving
 *   **Plan Persistence**: Approved plans stay in `docs/plans/` for the duration of the feature development.
@@ -74,3 +76,6 @@ Sessions (especially after a Context Reset) SHOULD start with a context declarat
     - **Behavior**: Use `pytest` and logs to find root causes before move to [PLANNING].
 
 **Protocol**: The agent MUST acknowledge the context in the first response. If no context is provided, the agent SHOULD propose one based on the current state (e.g., active task presence).
+
+### 4.6. File Closure Protocol
+Once all atomic steps targeting a file are `[x]` and its associated tests are green, the agent **MUST** explicitly state it is closing context for that file (e.g., *"Closing context: `battle/BattleManager.py` — no further reads needed"*). This is a signal to both agent and user that the file should not re-enter the working context unless a dependency forces it.

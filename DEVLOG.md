@@ -2,24 +2,40 @@
 
 > [!TIP]
 > **Token Economy:** Only the active task and the last 3 completed entries are kept here. Older entries are archived in [DEVLOG_HISTORY.md](file:///home/alice/Repositorios/RPG/DEVLOG_HISTORY.md).
+> **Step Format:** `- [ ] Description | Files: path/to/file.py` → On completion: `- [x] Description | Files: ... | Note: 1-sentence state summary`.
 
-## ACTIVE TASK: Implement Postura Defensiva (Destruidor)
+## ACTIVE TASK: Implement Postura Defensiva — Part 1 (Infrastructure)
 **Plan:** [postura_defensiva.md](docs/plans/postura_defensiva.md)
 
 **Description:**
-Implement the "Postura Defensiva" ability for the Destruidor style, including stateful passive logic, free actions in the BattleManager, and ephemeral precision penalty tracking.
+Lay the infrastructure for "Postura Defensiva": add the FREE_ACTION enum, refactor `atk_die`/`def_die` to modifier-stack properties on `Character`, extend `IBattleContext`, and refactor `BattleManager.run_battle()` for the free-action loop.
 
 **Context & Constraints:**
-- Must follow Rule 1.12 (Modifier Stack Pattern) for dice changes.
-- Must follow Rule 1.5 (Observer Pattern) for passive hooks.
+- `R1.12` (Modifier Stack Pattern): `atk_die`/`def_die` must become properties backed by modifiers.
+- `R1.5` (Observer Pattern): Passive hooks subscribed via `BattleManager`.
 - Free actions must loop at the start of the turn without advancing the tick.
-- Tracking penalty must be ephemeral and clear if the target doesn't attack the owner.
 
 **Steps:**
 - [ ] Add `FREE_ACTION` to `BattleActionType`. | Files: `core/Enums.py`
 - [ ] Refactor `atk_die`/`def_die` to properties; add `remove_modifiers_by_source(source: str)`. | Files: `entities/Characters.py`
 - [ ] Add `get_active_passive()` to `IBattleContext`. | Files: `core/BaseClasses.py`
-- [ ] Add `get_active_passive()` and refactor `run_battle()` for free-action loop. | Files: `battle/BattleManager.py`
+- [ ] Add `get_active_passive()` impl and refactor `run_battle()` for free-action loop. | Files: `battle/BattleManager.py`
+
+---
+
+## PENDING TASK: Implement Postura Defensiva — Part 2 (Logic & Validation)
+**Plan:** [postura_defensiva.md](docs/plans/postura_defensiva.md)
+
+**Description:**
+Build the `PosturaDefensiva` passive and its toggle action, then validate with a full TDD pass.
+
+**Context & Constraints:**
+- `R1.5` (Observer Pattern): Hooks subscribed via EventBus in BattleManager.
+- `R3.2` (TDD): Tests must be green before finalizing.
+- Tracking penalty must be ephemeral and clear if the target doesn't attack the owner.
+- *(Await Handover Notes from Part 1 before starting.)*
+
+**Steps:**
 - [ ] Implement `PosturaDefensiva` class and register it. | Files: `battle/BattlePassives.py`
 - [ ] Implement `TogglePosturaDefensiva` action and register it. | Files: `battle/BattleActions.py`
 - [ ] Create tests for toggle logic, dice modifiers, and penalty lifecycle. | Files: `tests/battle/test_postura_defensiva.py`
