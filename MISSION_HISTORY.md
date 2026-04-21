@@ -1,5 +1,21 @@
 # Mission Log History
 
+## 2026-04-21 17:37: Postura Defensiva
+**Plan:** [postura_defensiva.md](docs/plans/postura_defensiva.md)
+
+**Overall Idea:**
+Implement the "Postura Defensiva" toggleable passive for the Destruidor combat style. This included adding infrastructure for free actions in the battle timeline, refactoring character dice to a modifier-stack pattern, and implementing hit-tracking logic with ephemeral precision penalties.
+
+**Steps:**
+- [x] Add `FREE_ACTION` to `BattleActionType`. | Files: `core/Enums.py`.
+- [x] Refactor `atk_die`/`def_die` to properties; add `remove_modifiers_by_source(source: str)`. | Files: `entities/Characters.py`.
+- [x] Add `get_active_passive()` to `IBattleContext`. | Files: `core/BaseClasses.py`.
+- [x] Add `get_active_passive()` impl and refactor `run_battle()` for free-action loop. | Files: `battle/BattleManager.py`.
+- [x] Implement `PosturaDefensiva` class and register it. | Files: `battle/BattlePassives.py`.
+- [x] Implement `TogglePosturaDefensiva` action and register it. | Files: `battle/BattleActions.py`.
+- [x] Create and verify tests for posture mechanics. | Files: `tests/battle/test_postura_defensiva.py`.
+
+
 ## 2026-04-20: Project Reorganization
 **Plan:** [project_reorganization.md](docs/plans/project_reorganization.md)
 
