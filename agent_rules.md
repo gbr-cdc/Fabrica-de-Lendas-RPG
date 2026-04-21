@@ -41,7 +41,7 @@ To ensure a fresh agent can execute the task after a reset, `DEVLOG.md` entries 
 *   **Description**: A brief (1-2 sentence) summary of the functional goal.
 *   **Context & Constraints**: Explicitly name rules to follow (e.g., "Must respect Rule 1.13") and specific technical details (e.g., "Replace methods: `is_alive`, `take_damage`").
 *   **Links**: A direct link to the approved plan in `docs/plans/`.
-*   **Atomic Steps**: Discrete steps using the format: `- [ ] Description | Files: path/to/file.py | Status: Pending`. Every step must explicitly list the files it modifies.
+*   **Atomic Steps**: Discrete steps using the format: `- [ ] Description | Files: path/to/file.py`. Every step must explicitly list the files it modifies.
 
 ### 4.3. Persistence & Archiving
 *   **Plan Persistence**: Approved plans stay in `docs/plans/` for the duration of the feature development.

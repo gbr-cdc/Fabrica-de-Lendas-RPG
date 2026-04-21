@@ -16,14 +16,14 @@ Implement the "Postura Defensiva" ability for the Destruidor style, including st
 - Tracking penalty must be ephemeral and clear if the target doesn't attack the owner.
 
 **Steps:**
-- [ ] Add `FREE_ACTION` to `BattleActionType`. | Files: `core/Enums.py` | Status: Pending
-- [ ] Refactor `atk_die`/`def_die` to properties; add `remove_modifiers_by_source(source: str)`. | Files: `entities/Characters.py` | Status: Pending
-- [ ] Add `get_active_passive()` to `IBattleContext`. | Files: `core/BaseClasses.py` | Status: Pending
-- [ ] Add `get_active_passive()` and refactor `run_battle()` for free-action loop. | Files: `battle/BattleManager.py` | Status: Pending
-- [ ] Implement `PosturaDefensiva` class and register it. | Files: `battle/BattlePassives.py` | Status: Pending
-- [ ] Implement `TogglePosturaDefensiva` action and register it. | Files: `battle/BattleActions.py` | Status: Pending
-- [ ] Create tests for toggle logic, dice modifiers, and penalty lifecycle. | Files: `tests/battle/test_postura_defensiva.py` | Status: Pending
-- [ ] Verify implementation with pytest. | Files: `tests/battle/test_postura_defensiva.py` | Status: Pending
+- [ ] Add `FREE_ACTION` to `BattleActionType`. | Files: `core/Enums.py`
+- [ ] Refactor `atk_die`/`def_die` to properties; add `remove_modifiers_by_source(source: str)`. | Files: `entities/Characters.py`
+- [ ] Add `get_active_passive()` to `IBattleContext`. | Files: `core/BaseClasses.py`
+- [ ] Add `get_active_passive()` and refactor `run_battle()` for free-action loop. | Files: `battle/BattleManager.py`
+- [ ] Implement `PosturaDefensiva` class and register it. | Files: `battle/BattlePassives.py`
+- [ ] Implement `TogglePosturaDefensiva` action and register it. | Files: `battle/BattleActions.py`
+- [ ] Create tests for toggle logic, dice modifiers, and penalty lifecycle. | Files: `tests/battle/test_postura_defensiva.py`
+- [ ] Verify implementation with pytest. | Files: `tests/battle/test_postura_defensiva.py`
 
 
 ---
