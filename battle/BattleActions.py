@@ -140,8 +140,21 @@ class GenerateFocusAction(BattleAction):
         generated = new_focus - old_focus
         return ActionLoad(character=self.actor, history=[f"{self.actor.name} respirou fundo e gerou {generated} de Foco!"])
 
+class TogglePosturaDefensiva(BattleAction):
+    def __init__(self, actor: 'Character', target: 'Character', context: 'IBattleContext'):
+        super().__init__(name="Alternar Postura Defensiva", actor=actor, target=target, context=context, action_type=BattleActionType.FREE_ACTION)
+
+    def execute(self) -> ActionLoad:
+        # Pega a instância da passiva através do contexto
+        passive = self.context.get_active_passive(self.actor.char_id, "Postura Defensiva")
+        if passive and hasattr(passive, 'toggle'):
+            msg = passive.toggle()
+            return ActionLoad(character=self.actor, history=[msg])
+        return ActionLoad(character=self.actor, history=["Falha ao alternar postura: passiva não encontrada."], success=False)
+
 registry = {
     "AttackAction": AttackAction,
     "GenerateMana": GenerateManaAction,
     "GenerateFocus": GenerateFocusAction,
+    "TogglePosturaDefensiva": TogglePosturaDefensiva,
 }

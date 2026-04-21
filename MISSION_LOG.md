@@ -4,7 +4,7 @@
 > **Token Economy:** Only the active task and the last 3 completed entries are kept here. Older entries are archived in [MISSION_HISTORY.md](file:///home/alice/Repositorios/RPG/MISSION_HISTORY.md).
 > **Step Format:** `- [ ] Description | Files: path/to/file.py` → On completion: `- [x] Description | Files: ... | Note: 1-sentence state summary`.
 
-## MISSION: Postura Defensiva — Part 1 ([ACTIVE])
+## MISSION: Postura Defensiva ([COMPLETE])
 **Plan:** [postura_defensiva.md](docs/plans/postura_defensiva.md)
 
 **Description:**
@@ -23,7 +23,9 @@ Lay the infrastructure for "Postura Defensiva": add the FREE_ACTION enum, refact
 
 ---
 
-## MISSION: Postura Defensiva — Part 2 ([ACTIVE])
+---
+
+## MISSION: Postura Defensiva — Part 2 ([COMPLETE])
 **Plan:** [postura_defensiva.md](docs/plans/postura_defensiva.md)
 
 **Description:**
@@ -36,10 +38,10 @@ Build the `PosturaDefensiva` passive and its toggle action, then validate with a
 - *(Part 1 Handover: FREE_ACTION logic and dice properties are ready. BattleManager supports turn-start free actions.)*
 
 **Steps:**
-- [ ] Implement `PosturaDefensiva` class and register it. | Files: `battle/BattlePassives.py`
-- [ ] Implement `TogglePosturaDefensiva` action and register it. | Files: `battle/BattleActions.py`
-- [ ] Create tests for toggle logic, dice modifiers, and penalty lifecycle. | Files: `tests/battle/test_postura_defensiva.py`
-- [ ] Verify implementation with pytest. | Files: `tests/battle/test_postura_defensiva.py`
+- [x] Implement `PosturaDefensiva` class and register it. | Files: `battle/BattlePassives.py` | Note: Stateful passive with hit-tracking and penalty hooks.
+- [x] Implement `TogglePosturaDefensiva` action and register it. | Files: `battle/BattleActions.py` | Note: Free action to toggle posture state.
+- [x] Create tests for toggle logic, dice modifiers, and penalty lifecycle. | Files: `tests/battle/test_postura_defensiva.py` | Note: Full coverage for posture mechanics.
+- [x] Verify implementation with pytest. | Files: `tests/battle/test_postura_defensiva.py` | Note: 92 tests passed (5 new).
 
 
 ---
