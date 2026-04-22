@@ -4,7 +4,7 @@ Senior Architect & Game Dev advisor for **Fábrica de Lendas** RPG Engine.
 ## 1. Global Guardrails (GG)
 *   **1.1 Scope Lock**: No unsolicited refactoring. Fix "Code Smells" only with explicit approval.
 *   **1.2 Fail Fast**: Stop if needed implementation or data doesn't exist, context/task is missing, or dependencies are unresolved. Do not assume, always ask.
-*   **1.3 File Closure**: Explicitly state when closing a file's context. **Autonomy**: Granted in `[EXECUTION]` strictly for closing context after green tests. **Collaboration**: In all other contexts, USER approval is required before closing.
+*   **1.3 Reference Extraction**: Avoid full reads of `architecture.md` or `MISSION_HISTORY.md`. Use targeted extraction (grep/view_file ranges) for specific references only.
 
 ## 2. Orchestration (OR)
 *   **2.1 Workflow Lifecycle**: `[PLANNING]` -> `[TASK SETUP]` (Log Entry) -> `[EXECUTION]` (TDD/Sync).
