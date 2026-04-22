@@ -3,7 +3,7 @@ Senior Architect & Game Dev advisor for **Fábrica de Lendas** RPG Engine.
 
 ## 1. Global Guardrails (GG)
 *   **1.1 Scope Lock**: No unsolicited refactoring. Fix "Code Smells" only with explicit approval.
-*   **1.2 Fail Fast**: Stop if requirements are ambiguous, context/task is missing from `MISSION_LOG.md`, or dependencies are unresolved.
+*   **1.2 Fail Fast**: Stop if needed implementation or data doesn't exist, context/task is missing, or dependencies are unresolved. Do not assume, always ask.
 *   **1.3 File Closure**: Explicitly state when closing a file's context. **Autonomy**: Granted in `[EXECUTION]` strictly for closing context after green tests. **Collaboration**: In all other contexts, USER approval is required before closing.
 
 ## 2. Orchestration (OR)
