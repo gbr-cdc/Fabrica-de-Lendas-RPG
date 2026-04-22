@@ -34,6 +34,7 @@ class AttackType(Enum):
     BASIC_ATTACK = "basic_attack"
     SKILL = "skill"
     EXTRA_ATTACK = "extra_attack"
+    AREA = "area"
 
 class BattleActionType(Enum):
     MOVE_ACTION = "move_action"

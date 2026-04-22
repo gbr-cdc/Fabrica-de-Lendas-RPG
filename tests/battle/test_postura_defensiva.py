@@ -151,3 +151,30 @@ def test_toggle_action_execution():
     assert result.success is True
     assert result.history[0] == "Toggled!"
     context.get_active_passive.assert_called_once_with("c1", "Postura Defensiva")
+
+def test_postura_defensiva_on_roll_modify_no_target():
+    from core.Enums import AttackType, RollState
+    char = MagicMock(char_id="owner", name="Owner")
+    attacker = MagicMock(char_id="attacker", name="Attacker")
+    context = MagicMock()
+    
+    passive = PosturaDefensiva(char, context)
+    passive.is_active = True
+    passive._tracked_targets["attacker"] = False
+    
+    hooks = passive.get_hooks()
+    
+    # Attack with target=None (Master Roll scenario)
+    load = AttackLoad(
+        character=attacker,
+        target=None,
+        battle_context=context,
+        attack_type=AttackType.AREA,
+        attack_state=RollState.NEUTRAL,
+        defense_state=RollState.NEUTRAL
+    )
+    
+    # This should NOT crash
+    hooks["on_roll_modify"](load)
+    
+    assert passive._tracked_targets["attacker"] is False

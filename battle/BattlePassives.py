@@ -168,7 +168,7 @@ class PosturaDefensiva(BattlePassive):
 
         def penalty_hook(attack_load: 'AttackLoad'):
             cid = attack_load.character.char_id
-            if self.is_active and cid in self._tracked_targets and attack_load.target.char_id == self.owner.char_id:
+            if self.is_active and cid in self._tracked_targets and attack_load.target is not None and attack_load.target.char_id == self.owner.char_id:
                 mod = EphemeralModifier(stat_name='pre', value=-1, source='PosturaDefensiva_Penalidade')
                 attack_load.character.add_modifier(mod)
                 self._tracked_targets[cid] = True

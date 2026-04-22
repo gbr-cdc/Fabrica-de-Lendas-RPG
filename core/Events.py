@@ -16,7 +16,7 @@ class ActionLoad:
 
 @dataclass(kw_only=True)
 class AttackLoad(ActionLoad):
-    target: 'Character'
+    target: Character | None = None
     battle_context: 'IBattleContext'
     attack_type: AttackType
     attack_state: RollState

@@ -132,3 +132,15 @@ Reduce token usage by implementing an archiving system for `MISSION_LOG.md`.
 **Steps Completed:**
 - [x] Archive legacy tasks to `MISSION_HISTORY.md`. | Files: `MISSION_LOG.md`, `MISSION_HISTORY.md`.
 - [x] Implement Log Archiving policy in `agent_rules.md`. | Files: `agent_rules.md`.
+
+## 2026-04-22 20:33: Area Attacks Implementation [PART 1]
+**Plan:** [area_attacks.md](docs/plans/area_attacks.md)
+
+**Overall Idea:**
+Updated core event infrastructure and passive safety to support area-effect attacks. This included adding the `AREA` attack type, making the `target` field optional in `AttackLoad` (for shared master rolls), and implementing safety checks in `PosturaDefensiva` to prevent crashes when a target is missing. Fixed pre-existing test suite breakages caused by the recent multi-target refactor.
+
+**Steps:**
+- [x] Add `AREA = "area"` to `AttackType` enum | Files: `core/Enums.py` | Note: Added AREA to AttackType enum.
+- [x] Update `AttackLoad` dataclass to allow `target: Character | None = None` (required for shared rolls) | Files: `core/Events.py` | Note: Made target optional in AttackLoad.
+- [x] Audit all `on_roll_modify` hooks. Wrap any logic that accesses `attack_load.target` in an `if attack_load.target is not None:` check. | Files: `battle/BattlePassives.py` | Note: Added safety check to PosturaDefensiva.penalty_hook.
+- [x] Add unit test verifying `AttackLoad` supports optional targets | Files: `tests/core/test_Events.py` | Note: Verified AttackLoad flexibility with new tests.
