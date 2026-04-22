@@ -12,4 +12,3 @@ Evolution of meta-rules and workflows.
 
 ## Constraints
 - **Meta-Focus**: Edit only rules/workflow files.
-- **Consistency**: Align with `architecture.md` unless explicitly changed.
