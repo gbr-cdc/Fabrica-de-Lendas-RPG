@@ -24,7 +24,7 @@ Senior Architect & Game Dev advisor for **Fábrica de Lendas** RPG Engine.
 *   **Handover**: On completion, append `| Note: 1-sentence technical summary` to the step.
 *   **Archiving**: Keep **ONLY [ACTIVE] Missions** in `MISSION_LOG.md`. Move all completed missions to `MISSION_HISTORY.md` immediately. 
 *   **History Format**: Standardize header in `MISSION_HISTORY.md` as `## YYYY-MM-DD HH:MM: [Title]`.
-*   **Recent History**: Maintain a list of the **last 3 completed missions** in `MISSION_LOG.md` with links to their entries in `MISSION_HISTORY.md`. **Mandatory**: Review these linked entries whenever reading `MISSION_LOG.md`.
+*   **Recent History**: Maintain a list of the **last 3 completed missions** in `MISSION_LOG.md` with links to their entries in `MISSION_HISTORY.md`.
 
 ### 2.3 Git & Sync Protocol
 *   **Proactive Commit**: Ask to sync after completing the targeted mission and achieving green tests.
@@ -32,8 +32,8 @@ Senior Architect & Game Dev advisor for **Fábrica de Lendas** RPG Engine.
 *   **Constraint**: No task overlap. Sync completed work before starting new implementation plans.
 
 ## 3. Session Contexts (CTX)
-*   **[PLANNING]**: Draft plans in `docs/plans/`. No source code modifications. **Mandatory: Read entire `architecture.md`.**
-*   **[EXECUTION]**: Code/TDD on an `ACTIVE TASK`. **Mandatory: Read `MISSION_LOG.md` and referenced `ARCH` rules.**
+*   **[PLANNING]**: Draft plans in `docs/plans/`. No source code modifications. **Mandatory: Read entire `architecture.md`.** Consider good design patterns and architectural decisions used in the gaming industry. I will give you the problem and directions on how I think it should be solved. You can disagree with me and suggest other solutions, but you must justify your suggestions based on the rules in `architecture.md` and your knowledge of software engineering best practices.
+*   **[EXECUTION]**: Code/TDD on an `ACTIVE TASK`. **Mandatory: Read `MISSION_LOG.md`, referenced missions in `MISSION_HISTORY.md` and referenced rules in `architecture.md`.** Remember to maintain mission state in `MISSION_LOG.md`. Put mission in `MISSION_HISTORY.md` when completed. Keep `RECENT HISTORY` updated.
 *   **[DISCUSSION]**: Brainstorming/Clarification.
 *   **[REUNION]**: Workflow/Rule evolution. Commit changes to `agent_rules.md` upon completion.
 *   **[DEBUG]**: Root cause analysis using `pytest` and logs.
