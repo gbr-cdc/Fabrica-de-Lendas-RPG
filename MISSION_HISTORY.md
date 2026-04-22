@@ -1,5 +1,19 @@
 # Mission Log History
 
+## 2026-04-22 09:35: Targeting System Refactor
+**Plan:** [targeting_system.md](docs/plans/targeting_system.md)
+
+**Overall Idea:**
+Refactor the RPG battle engine to support multi-target actions, enabling future integration of AOE mechanics and map-based targeting. Updated `BattleAction` interface and subclasses to accept a list of targets. Updated `AttackAction` to iteratively resolve attacks against all targets. Refactored `PosturaDefensiva` to track multiple hit targets simultaneously using a dictionary-based state.
+
+**Steps:**
+- [x] Update `BattleAction` interface to accept `targets: List[Character]` | Files: `core/BaseClasses.py` | Note: Changed target to targets list and added backward-compatible property.
+- [x] Update `PvP1v1Controller` to provide targets as a list | Files: `controllers/CharacterController.py` | Note: All AttackAction calls now pass targets as a single-element list.
+- [x] Refactor `AttackAction` and other actions to handle multi-targeting | Files: `battle/BattleActions.py` | Note: AttackAction now loops over targets and aggregates history.
+- [x] Update `PosturaDefensiva` tracking logic for multiple targets | Files: `battle/BattlePassives.py` | Note: Replaced single tracking with a dict and updated all hooks.
+- [x] Update and verify tests for multi-target mechanics | Files: `tests/battle/test_postura_defensiva.py` | Note: Verified with existing tests and a new multi-target test suite.
+
+
 ## 2026-04-21 17:37: Postura Defensiva
 **Plan:** [postura_defensiva.md](docs/plans/postura_defensiva.md)
 

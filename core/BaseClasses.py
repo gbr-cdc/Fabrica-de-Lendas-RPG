@@ -58,11 +58,15 @@ class BattleAction(GameAction):
     Comandos executados no contexto de batalha.
     """
     # Parâmetros relevantes recebidos através do construtor, de forma que os métodos não possuam parâmetros em conformidade com o Command Pattern
-    def __init__(self, name: str, actor: 'Character', target: 'Character', context: 'IBattleContext', action_type: 'BattleActionType'):
+    def __init__(self, name: str, actor: 'Character', targets: List['Character'], context: 'IBattleContext', action_type: 'BattleActionType'):
         super().__init__(name=name, actor=actor)
-        self.target = target
+        self.targets = targets
         self.context = context
         self.action_type = action_type
+
+    @property
+    def target(self) -> 'Character' | None:
+        return self.targets[0] if self.targets else None
 
     def can_execute(self) -> tuple[bool, str]:
         """

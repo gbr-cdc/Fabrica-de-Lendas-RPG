@@ -51,7 +51,7 @@ def test_postura_defensiva_hit_tracking():
     load.hit = True
     hooks["on_gda_modify"](load)
     
-    assert passive._tracked_target == target
+    assert target.char_id in passive._tracked_targets
     assert "[POSTURA]" in load.history[0]
     
     # 2. Tracked target attacks owner
@@ -60,7 +60,7 @@ def test_postura_defensiva_hit_tracking():
                           gda=0, damage=0)
     hooks["on_roll_modify"](atk_load)
     
-    assert passive._penalty_applied is True
+    assert passive._tracked_targets[target.char_id] is True
     target.add_modifier.assert_called_once()
     mod = target.add_modifier.call_args[0][0]
     assert mod.stat_name == 'pre' and mod.value == -1
@@ -72,11 +72,11 @@ def test_postura_defensiva_cleanup_success():
     target = MagicMock()
     target.char_id = "target"
     context = MagicMock()
+    context.get_characters.return_value = [target]
     
     passive = PosturaDefensiva(char, context)
     passive.is_active = True
-    passive._tracked_target = target
-    passive._penalty_applied = True
+    passive._tracked_targets[target.char_id] = True
     hooks = passive.get_hooks()
     
     # Target attack ends
@@ -86,8 +86,7 @@ def test_postura_defensiva_cleanup_success():
     hooks["on_attack_end"](atk_load)
     
     target.remove_modifiers_by_source.assert_called_once_with("PosturaDefensiva_Penalidade")
-    assert passive._tracked_target is None
-    assert passive._penalty_applied is False
+    assert target.char_id not in passive._tracked_targets
 
 def test_postura_defensiva_cleanup_miss():
     char = MagicMock()
@@ -95,20 +94,47 @@ def test_postura_defensiva_cleanup_miss():
     target = MagicMock()
     target.char_id = "target"
     context = MagicMock()
+    context.get_characters.return_value = [target]
     
     passive = PosturaDefensiva(char, context)
     passive.is_active = True
-    passive._tracked_target = target
-    passive._penalty_applied = False # No attack against owner happened
+    passive._tracked_targets[target.char_id] = False # No attack against owner happened
     hooks = passive.get_hooks()
     
     # Target turn ends
     action_load = ActionLoad(character=target)
     hooks["on_turn_end"](action_load)
     
-    assert passive._tracked_target is None
+    assert target.char_id not in passive._tracked_targets
     # remove_modifiers_by_source shouldn't be called if penalty wasn't applied
     target.remove_modifiers_by_source.assert_not_called()
+
+def test_postura_defensiva_multi_tracking():
+    char = MagicMock()
+    char.char_id = "owner"
+    t1 = MagicMock(char_id="t1")
+    t2 = MagicMock(char_id="t2")
+    context = MagicMock()
+    
+    passive = PosturaDefensiva(char, context)
+    passive.is_active = True
+    hooks = passive.get_hooks()
+    
+    # Hit T1
+    load1 = AttackLoad(character=char, target=t1, battle_context=context, 
+                       attack_type=MagicMock(), attack_state=MagicMock(), defense_state=MagicMock(), 
+                       hit=True)
+    hooks["on_gda_modify"](load1)
+    
+    # Hit T2
+    load2 = AttackLoad(character=char, target=t2, battle_context=context, 
+                       attack_type=MagicMock(), attack_state=MagicMock(), defense_state=MagicMock(), 
+                       hit=True)
+    hooks["on_gda_modify"](load2)
+    
+    assert "t1" in passive._tracked_targets
+    assert "t2" in passive._tracked_targets
+    assert len(passive._tracked_targets) == 2
 
 def test_toggle_action_execution():
     char = MagicMock()
@@ -118,7 +144,7 @@ def test_toggle_action_execution():
     passive.toggle.return_value = "Toggled!"
     context.get_active_passive.return_value = passive
     
-    action = TogglePosturaDefensiva(char, MagicMock(), context)
+    action = TogglePosturaDefensiva(char, [], context)
     assert action.action_type == BattleActionType.FREE_ACTION
     
     result = action.execute()

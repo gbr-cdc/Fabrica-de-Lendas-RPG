@@ -39,17 +39,17 @@ class PvP1v1Controller(CharacterController):
         if action_load is not None:
             from battle.BattleActions import registry as actions_registry
             basic_attack_template = context.get_template("BasicAttack")
-            return actions_registry["AttackAction"](basic_attack_template, actor, target, context)
+            return actions_registry["AttackAction"](basic_attack_template, actor, [target], context)
 
         skill_template = context.get_template("SkillN1")
         cost = skill_template.focus_cost
         if actor.floating_focus >= cost:
             from battle.BattleActions import registry as actions_registry
-            return actions_registry["AttackAction"](skill_template, actor, target, context)
+            return actions_registry["AttackAction"](skill_template, actor, [target], context)
             
         from battle.BattleActions import registry as actions_registry
         basic_attack_template = context.get_template("BasicAttack")
-        return actions_registry["AttackAction"](basic_attack_template, actor, target, context)
+        return actions_registry["AttackAction"](basic_attack_template, actor, [target], context)
     
     def choose_reaction(self, actor: 'Character', reaction_id: str, action_load: 'ActionLoad', context: 'IBattleContext') -> bool:
         return True

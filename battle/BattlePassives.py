@@ -84,7 +84,7 @@ class Combo(BattlePassive):
                 if attack_load.hit:
                     self.hit = True
 
-                response = action_registry["AttackAction"](basic_attack_template, attack_load.character, attack_load.target, self.context, attack_type=AttackType.EXTRA_ATTACK).execute_if_possible()
+                response = action_registry["AttackAction"](basic_attack_template, attack_load.character, [attack_load.target], self.context, attack_type=AttackType.EXTRA_ATTACK).execute_if_possible()
 
                 self.stage = 0
                 self.hit = False
@@ -100,7 +100,7 @@ class Combo(BattlePassive):
                     return
                 
                 self.stage += 1
-                response = action_registry["AttackAction"](basic_attack_template, attack_load.character, attack_load.target, self.context, attack_type=AttackType.EXTRA_ATTACK).execute_if_possible()
+                response = action_registry["AttackAction"](basic_attack_template, attack_load.character, [attack_load.target], self.context, attack_type=AttackType.EXTRA_ATTACK).execute_if_possible()
                 
                 if response.success:
                     attack_load.history.append(f"[PASSIVA] Combo! {self.owner.name} ataca novamente (Estágio {self.stage})!")
@@ -121,8 +121,7 @@ class PosturaDefensiva(BattlePassive):
         super().__init__(name="Postura Defensiva", owner=owner, context=context)
         self.is_active = False
         self._dice_modifiers = []
-        self._tracked_target: 'Character' | None = None
-        self._penalty_applied = False
+        self._tracked_targets: Dict[str, bool] = {}  # char_id -> penalty_applied
 
     def toggle(self) -> str:
         from core.Modifiers import EphemeralModifier
@@ -143,17 +142,21 @@ class PosturaDefensiva(BattlePassive):
             return f"{self.owner.name} saiu da Postura Defensiva."
 
     def _start_tracking(self, target: 'Character'):
-        if self._tracked_target and self._penalty_applied:
-             self._tracked_target.remove_modifiers_by_source("PosturaDefensiva_Penalidade")
-        
-        self._tracked_target = target
-        self._penalty_applied = False
+        if target.char_id not in self._tracked_targets:
+            self._tracked_targets[target.char_id] = False
 
-    def _clear_tracking(self):
-        if self._tracked_target and self._penalty_applied:
-            self._tracked_target.remove_modifiers_by_source("PosturaDefensiva_Penalidade")
-        self._tracked_target = None
-        self._penalty_applied = False
+    def _clear_tracking(self, char_id: str | None = None):
+        chars = {c.char_id: c for c in self.context.get_characters()}
+        if char_id:
+            if char_id in self._tracked_targets:
+                if self._tracked_targets[char_id] and char_id in chars:
+                    chars[char_id].remove_modifiers_by_source("PosturaDefensiva_Penalidade")
+                del self._tracked_targets[char_id]
+        else:
+            for cid, applied in self._tracked_targets.items():
+                if applied and cid in chars:
+                    chars[cid].remove_modifiers_by_source("PosturaDefensiva_Penalidade")
+            self._tracked_targets = {}
 
     def get_hooks(self) -> Dict[str, Callable]:
         from core.Modifiers import EphemeralModifier
@@ -164,21 +167,24 @@ class PosturaDefensiva(BattlePassive):
                 attack_load.history.append(f"[POSTURA] {self.owner.name} está observando {attack_load.target.name}!")
 
         def penalty_hook(attack_load: 'AttackLoad'):
-            if self.is_active and self._tracked_target and attack_load.character.char_id == self._tracked_target.char_id and attack_load.target.char_id == self.owner.char_id:
+            cid = attack_load.character.char_id
+            if self.is_active and cid in self._tracked_targets and attack_load.target.char_id == self.owner.char_id:
                 mod = EphemeralModifier(stat_name='pre', value=-1, source='PosturaDefensiva_Penalidade')
                 attack_load.character.add_modifier(mod)
-                self._penalty_applied = True
+                self._tracked_targets[cid] = True
                 attack_load.history.append(f"[POSTURA] {attack_load.character.name} sofre penalidade de -1 de Precisão contra {self.owner.name}!")
 
         def cleanup_hook(attack_load: 'AttackLoad'):
-            if self._tracked_target and attack_load.character.char_id == self._tracked_target.char_id:
-                if self._penalty_applied:
-                    self._clear_tracking()
+            cid = attack_load.character.char_id
+            if cid in self._tracked_targets:
+                if self._tracked_targets[cid]:
+                    self._clear_tracking(cid)
 
         def turn_end_hook(action_load: 'ActionLoad'):
-            if self._tracked_target and action_load.character.char_id == self._tracked_target.char_id:
-                if not self._penalty_applied:
-                    self._clear_tracking()
+            cid = action_load.character.char_id
+            if cid in self._tracked_targets:
+                if not self._tracked_targets[cid]:
+                    self._clear_tracking(cid)
 
         return {
             'on_gda_modify': hit_hook,
