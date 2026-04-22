@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import Callable, Dict, TYPE_CHECKING
 from core.Enums import RollState, AttackType
 from core.Events import AttackLoad
-from core.BaseClasses import IBattleContext, BattlePassive
+from core.BaseClasses import IBattleContext, BattlePassive, ActionLoad
 from core.CharacterSystem import CharacterSystem
 
 if TYPE_CHECKING:
