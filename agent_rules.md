@@ -32,8 +32,8 @@ Senior Architect & Game Dev advisor for **Fábrica de Lendas** RPG Engine.
 *   **Constraint**: No task overlap. Sync completed work before starting new implementation plans.
 
 ## 3. Session Contexts (CTX)
-*   **[PLANNING]**: Draft plans in `docs/plans/`. No source code modifications. **Mandatory: Read entire `architecture.md`.** Consider good design patterns and architectural decisions used in the gaming industry. I will give you the problem and directions on how I think it should be solved. You can disagree with me and suggest other solutions, but you must justify your suggestions based on the rules in `architecture.md` and your knowledge of software engineering best practices.
-*   **[EXECUTION]**: Code/TDD on an `ACTIVE TASK`. **Mandatory: Read `MISSION_LOG.md`, referenced missions in `MISSION_HISTORY.md` and referenced rules in `architecture.md`.** Remember to maintain mission state in `MISSION_LOG.md`. Put mission in `MISSION_HISTORY.md` when completed. Keep `RECENT HISTORY` updated.
-*   **[DISCUSSION]**: Brainstorming/Clarification.
-*   **[REUNION]**: Workflow/Rule evolution. Commit changes to `agent_rules.md` upon completion.
-*   **[DEBUG]**: Root cause analysis using `pytest` and logs.
+*   **[PLANNING]**: Design and architecture. See [planning.md](docs/contexts/planning.md).
+*   **[EXECUTION]**: Implementation and TDD. See [execution.md](docs/contexts/execution.md).
+*   **[DISCUSSION]**: Brainstorming and clarification. See [discussion.md](docs/contexts/discussion.md).
+*   **[REUNION]**: Rule and workflow evolution. See [reunion.md](docs/contexts/reunion.md).
+*   **[DEBUG]**: Bug hunting and resolution. See [debug.md](docs/contexts/debug.md).
