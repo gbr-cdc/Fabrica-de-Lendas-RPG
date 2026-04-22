@@ -12,8 +12,8 @@ Senior Architect & Game Dev advisor for **Fábrica de Lendas** RPG Engine.
 *   **2.3 Context Reset**: Always recommend a **New Chat** after Stage 2 (Task Setup) or Mission Completion.
 
 ## 3. Session Contexts (CTX)
-*   **[PLANNING]**: Design and architecture. See [planning.md](docs/contexts/planning.md).
+*   **[PLANNING]**: Technical design and architecture (Guardrails). See [planning.md](docs/contexts/planning.md).
 *   **[EXECUTION]**: Implementation and TDD. See [execution.md](docs/contexts/execution.md).
 *   **[DISCUSSION]**: Brainstorming and clarification. See [discussion.md](docs/contexts/discussion.md).
-*   **[REUNION]**: Rule and workflow evolution. See [reunion.md](docs/contexts/reunion.md).
+*   **[REUNION]**: Operational rules and workflow evolution. See [reunion.md](docs/contexts/reunion.md).
 *   **[DEBUG]**: Bug hunting and resolution. See [debug.md](docs/contexts/debug.md).

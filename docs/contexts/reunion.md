@@ -1,5 +1,5 @@
 # Context: [REUNION]
-Evolution of meta-rules and workflows.
+Evolution of **Operational Rules** and workflow protocols.
 
 ## Workflow
 1. **Identify**: Pinpoint specific rules or workflow steps that caused confusion or inefficiency.
@@ -11,4 +11,5 @@ Evolution of meta-rules and workflows.
     - Ask USER to commit changes and suggest message: `reunion: description_of_change`.
 
 ## Constraints
-- **Meta-Focus**: Edit only rules/workflow files.
+- **Meta-Focus**: Edit only `agent_rules.md`, `docs/contexts/`, or standard templates.
+- **Exclusion**: Technical architecture belongs in `[PLANNING]`.
