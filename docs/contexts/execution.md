@@ -2,9 +2,9 @@
 Implement approved plans via TDD. Focus on atomic steps.
 
 ## Mandatory Extraction
-- [MISSION_LOG.md](../../MISSION_LOG.md): Read ONLY the active mission and its steps.
-- [architecture.md](../../architecture.md): Targeted extraction of relevant rules/patterns only.
-- [MISSION_HISTORY.md](../../MISSION_HISTORY.md): Targeted extraction of referenced history entries only.
+- [MISSION_LOG.md](../../MISSION_LOG.md): **Read entirely** (contains only active missions + RECENT HISTORY).
+- [architecture.md](../../architecture.md): Extract only the **ARCH rules** referenced in the active mission (e.g., `ARCH.1.2`, `ARCH.1.5`).
+- [MISSION_HISTORY.md](../../MISSION_HISTORY.md): Extract only the entries linked in `MISSION_LOG.md`'s **RECENT HISTORY** section.
 
 ## Workflow
 1. **Confirm**: Explicitly state target mission from `MISSION_LOG.md`.

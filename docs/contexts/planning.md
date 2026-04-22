@@ -20,5 +20,9 @@ Architectural design and technical rationale. No implementation.
 ## Documentation Standards (MISSION_LOG.md)
 *   **Header Format**: `## MISSION: [Title] ([Status]) [PART X]`.
 *   **Sizing**: 3-5 steps per part. Max 7 steps (split if larger).
-*   **Entry Format**: Summary, Rule References (e.g., `ARCH.1.5`), Plan Link, and Atomic Steps.
+*   **Entry Format**:
+    - **Summary**: 1-2 sentences on technical goal.
+    - **Rule References**: Comma-separated list of ARCH rules from `architecture.md` (e.g., `ARCH.1.2, ARCH.1.5`). *Mandatory for alignment.*
+    - **Plan**: Link to the approved `docs/plans/[task].md`.
+    - **Steps**: Atomic TDD steps.
 *   **Step Format**: `- [ ] Description | Files: path/to/file.py`.

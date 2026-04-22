@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Dict, Callable, TYPE_CHECKING
+from typing import Dict, Callable, TYPE_CHECKING, List
 from core.BaseClasses import BattleAction, IBattleContext
 from core.Events import ActionLoad, AttackLoad
 from core.Structs import AttackActionTemplate
