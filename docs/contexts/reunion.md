@@ -13,3 +13,4 @@ Evolution of **Operational Rules** and workflow protocols.
 ## Constraints
 - **Meta-Focus**: Edit only `agent_rules.md`, `docs/contexts/`, or standard templates.
 - **Exclusion**: Technical architecture belongs in `[PLANNING]`.
+- **NO IMPLEMENTATION**: Do not modify any code in `core/`, `battle/`, `entities/`, etc.

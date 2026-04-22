@@ -23,13 +23,15 @@ Architectural design and technical rationale. No implementation.
 ## Constraints
 - **Scope**: Edit only `docs/plans/` (Feature) or `architecture.md` (Systemic).
 - **Focus**: High-level structure, interface definitions, and state management logic.
+- **NO IMPLEMENTATION**: Do not modify any code in `core/`, `battle/`, `entities/`, etc. Implementations MUST wait for the `[EXECUTION]` context.
 
 ## Documentation Standards (MISSION_LOG.md)
 *   **Header Format**: `## MISSION: [Title] ([Status]) [PART X]`.
 *   **Sizing**: 3-5 steps per part. Max 7 steps (split if larger).
 *   **Entry Format**:
-    - **Summary**: 1-2 sentences on technical goal.
+    - **Summary**: Concise technical overview of the goal. Provide enough context to guide execution without being verbose.
     - **Rule References**: Comma-separated list of ARCH rules from `architecture.md` (e.g., `ARCH.1.2, ARCH.1.5`).
     - **Plan**: Link to the approved `docs/plans/[task].md`.
     - **Steps**: Atomic TDD steps.
 *   **Step Format**: `- [ ] Description | Files: path/to/file.py`.
+    - **Self-Sufficiency**: Steps MUST be descriptive enough to allow an [EXECUTION] agent to work without reading the approved `docs/plans/`. Include technical specifics (method names, logic conditions) in the step description or the MISSION Summary.
