@@ -1,6 +1,30 @@
 # Mission Log History
 <!-- Standard Header: ## YYYY-MM-DD HH:MM: [Title] -->
 
+## 2026-04-23 00:18: Area Attacks Implementation [PART 2]
+**Plan:** [area_attacks.md](docs/plans/area_attacks.md)
+
+**Overall Idea:**
+Completed the core logic for area-effect attacks in the battle engine. Refactored `AttackAction.execute` to implement a "Master Roll" phase where a single attack roll is performed and then shared across all targets. Individual defense rolls and damage resolution are maintained for each target. Added comprehensive tests to verify single-roll distribution and ensure passive safety.
+
+**Steps:**
+- [x] Refactor `AttackAction.execute` to trigger a single attack roll when `self.attack_type == AttackType.AREA` | Files: battle/BattleActions.py | Note: Implemented Master Roll logic that shares one roll across all targets.
+- [x] Implement iterative loop for target defense/damage using the shared attack roll result | Files: battle/BattleActions.py | Note: Targets now resolve individual defense and damage using the shared Master Roll.
+- [x] Create tests validating one attack roll vs multiple defense rolls in area scenarios | Files: tests/battle/test_area_attacks.py | Note: Verified single-roll distribution and safety for passives like Postura Defensiva.
+
+## 2026-04-22 20:33: Area Attacks Implementation [PART 1]
+**Plan:** [area_attacks.md](docs/plans/area_attacks.md)
+
+**Overall Idea:**
+Updated core event infrastructure and passive safety to support area-effect attacks. This included adding the `AREA` attack type, making the `target` field optional in `AttackLoad` (for shared master rolls), and implementing safety checks in `PosturaDefensiva` to prevent crashes when a target is missing. Fixed pre-existing test suite breakages caused by the recent multi-target refactor.
+
+**Steps:**
+- [x] Add `AREA = "area"` to `AttackType` enum | Files: `core/Enums.py` | Note: Added AREA to AttackType enum.
+- [x] Update `AttackLoad` dataclass to allow `target: Character | None = None` (required for shared rolls) | Files: `core/Events.py` | Note: Made target optional in AttackLoad.
+- [x] Audit all `on_roll_modify` hooks. Wrap any logic that accesses `attack_load.target` in an `if attack_load.target is not None:` check. | Files: `battle/BattlePassives.py` | Note: Added safety check to PosturaDefensiva.penalty_hook.
+- [x] Add unit test verifying `AttackLoad` supports optional targets | Files: `tests/core/test_Events.py` | Note: Verified AttackLoad flexibility with new tests.
+
+
 ## 2026-04-22 09:35: Targeting System Refactor
 **Plan:** [targeting_system.md](docs/plans/targeting_system.md)
 
@@ -134,14 +158,3 @@ Reduce token usage by implementing an archiving system for `MISSION_LOG.md`.
 - [x] Archive legacy tasks to `MISSION_HISTORY.md`. | Files: `MISSION_LOG.md`, `MISSION_HISTORY.md`.
 - [x] Implement Log Archiving policy in `agent_rules.md`. | Files: `agent_rules.md`.
 
-## 2026-04-22 20:33: Area Attacks Implementation [PART 1]
-**Plan:** [area_attacks.md](docs/plans/area_attacks.md)
-
-**Overall Idea:**
-Updated core event infrastructure and passive safety to support area-effect attacks. This included adding the `AREA` attack type, making the `target` field optional in `AttackLoad` (for shared master rolls), and implementing safety checks in `PosturaDefensiva` to prevent crashes when a target is missing. Fixed pre-existing test suite breakages caused by the recent multi-target refactor.
-
-**Steps:**
-- [x] Add `AREA = "area"` to `AttackType` enum | Files: `core/Enums.py` | Note: Added AREA to AttackType enum.
-- [x] Update `AttackLoad` dataclass to allow `target: Character | None = None` (required for shared rolls) | Files: `core/Events.py` | Note: Made target optional in AttackLoad.
-- [x] Audit all `on_roll_modify` hooks. Wrap any logic that accesses `attack_load.target` in an `if attack_load.target is not None:` check. | Files: `battle/BattlePassives.py` | Note: Added safety check to PosturaDefensiva.penalty_hook.
-- [x] Add unit test verifying `AttackLoad` supports optional targets | Files: `tests/core/test_Events.py` | Note: Verified AttackLoad flexibility with new tests.

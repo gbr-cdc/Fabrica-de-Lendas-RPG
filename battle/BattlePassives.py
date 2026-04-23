@@ -23,6 +23,8 @@ class GracaDoDuelista(BattlePassive):
                 attack_load.history.append(f"[PASSIVA] Graça do Duelista adicionou +{roll.final_roll} de GdA!")
 
         def reacao_evasao_hook(attack_load: 'AttackLoad') -> None:
+            if attack_load.target is None:
+                return
             if attack_load.target.char_id == self.owner.char_id:
                 if attack_load.gda > (0 + self.owner.grd - attack_load.character.pre):
                     custo_evasao = 2
@@ -59,6 +61,8 @@ class MãosPesadas(BattlePassive):
 
     def get_hooks(self) -> Dict[str, Callable]:
         def effect_hook(attack_load: 'AttackLoad'):
+            if attack_load.target is None:
+                return
             if attack_load.character.char_id == self.owner.char_id:
                 if attack_load.hit:
                     if attack_load.gda > 3:
@@ -74,6 +78,8 @@ class Combo(BattlePassive):
     
     def get_hooks(self) -> Dict[str, Callable]:
         def checar_ataque_bonus(attack_load: 'AttackLoad'):
+            if attack_load.target is None:
+                return
             if attack_load.character.char_id != self.owner.char_id:
                 return
 
