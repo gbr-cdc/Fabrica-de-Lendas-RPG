@@ -10,3 +10,4 @@ Brainstorming and clarification.
 ## Constraints
 - **Non-Destructive**: Do not create or modify any source code or documentation files.
 - **Informational**: Focus on understanding rather than doing.
+- **GDD Access**: You may read the **Modular GDD** (`docs/GDD/`) ONLY if prompted by the USER for brainstorming or clarification. Use targeted `grep` for `[GDD.X.Y]` tags. Do not read the GDD voluntarily.
