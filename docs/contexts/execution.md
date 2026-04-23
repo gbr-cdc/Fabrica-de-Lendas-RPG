@@ -15,7 +15,7 @@ Implement approved plans via TDD. Focus on atomic steps.
     - **Context Cleanup**: Close files opened in this step that are **not** in scope of the next step. Use last step notes as memory.
 4. **MissionComplete**:
     - **Fail Proof**: Ensure all tests pass and 100% test coverage with `pytest --cov`. If not, stop and ask for instructions.
-    - **Archive**: Move mission entry to `MISSION_HISTORY.md`. Update `RECENT HISTORY` in `MISSION_LOG.md`.
+    - **Archive**: Move mission entry to `MISSION_HISTORY.md`. Update `RECENT HISTORY` in `MISSION_LOG.md` (Keep only the 3 most recent links).
     - **History Format**: Standardize header in `MISSION_HISTORY.md` as `## YYYY-MM-DD HH:MM: [Title]`.
     - **Git Message**: `task_name: brief_summary`.
     - **Sync**: Ask to commit changes

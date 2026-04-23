@@ -4,7 +4,6 @@
 - [2026-04-22 20:33: Area Attacks Implementation [PART 1]](MISSION_HISTORY.md#2026-04-22-2033-area-attacks-implementation-part-1)
 - [2026-04-22 09:35: Targeting System Refactor](MISSION_HISTORY.md#2026-04-22-0935-targeting-system-refactor)
 - [2026-04-21 17:37: Postura Defensiva](MISSION_HISTORY.md#2026-04-21-1737-postura-defensiva)
-- [2026-04-20: Timeline Tie-Breaking Logic](MISSION_HISTORY.md#2026-04-20-timeline-tie-breaking-logic)
 
 > [!TIP]
 > **Token Economy:** Only **[ACTIVE]** missions are kept here. Completed entries are moved to [MISSION_HISTORY.md](file:///home/alice/Repositorios/RPG/MISSION_HISTORY.md).

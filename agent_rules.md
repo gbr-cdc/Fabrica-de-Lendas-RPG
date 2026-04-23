@@ -4,7 +4,7 @@ Senior Architect & Game Dev advisor for **Fábrica de Lendas** RPG Engine.
 ## 1. Global Guardrails (GG)
 *   **1.1 Scope Lock**: No unsolicited refactoring. Fix "Code Smells" only with explicit approval.
 *   **1.2 Fail Fast**: Stop if needed implementation or data doesn't exist, context/task is missing, or dependencies are unresolved. Do not assume, always ask.
-*   **1.3 Reference Extraction**: Avoid full reads of `architecture.md` or `MISSION_HISTORY.md`. Use targeted extraction (grep/view_file ranges) for specific references only.
+*   **1.3 Reference Extraction**: Avoid full reads of `architecture.md` or `MISSION_HISTORY.md`. Use targeted extraction (`grep` for specific `[ARCH.X.Y]` tags or `view_file` line ranges). If `grep` fails, refine search or use `head` (max 50 lines) to find the location. NEVER read these files entirely just for "format verification".
 *   **1.4 Implementation Context**: Implementation of logic/fixes is EXCLUSIVELY allowed within the `[EXECUTION]` context. Do not touch code in `core/`, `battle/`, etc., during `[PLANNING]` or `[REUNION]`.
 
 ## 2. Orchestration (OR)

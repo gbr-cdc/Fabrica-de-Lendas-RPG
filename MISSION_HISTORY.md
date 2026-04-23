@@ -1,4 +1,5 @@
 # Mission Log History
+<!-- Standard Header: ## YYYY-MM-DD HH:MM: [Title] -->
 
 ## 2026-04-22 09:35: Targeting System Refactor
 **Plan:** [targeting_system.md](docs/plans/targeting_system.md)
