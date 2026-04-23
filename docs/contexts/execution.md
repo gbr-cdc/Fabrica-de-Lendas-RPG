@@ -9,11 +9,11 @@ Implement approved plans via TDD. Focus on atomic steps.
 ## Workflow
 1. **Confirm**: Explicitly state target mission from `MISSION_LOG.md`.
 2. **Execute (TDD Phases)**:
-    - **RED (Test Scaffolding)**: Pick step -> Create Integration/Scenario Test -> `pytest` (Must Fail).
-    - **GREEN (Logic)**: Implement approved logic -> `pytest` (Must Pass).
+    - **RED (Test Objective)**: Pick a [RED] step -> Create/Update Integration/Scenario Test based on the detailed objective -> `pytest` (Must Fail).
+    - **GREEN (Implementation)**: Pick the corresponding [GREEN] step -> Implement approved logic -> `pytest` (Must Pass).
 3. **StepComplete**:
+    - **Context Cleanup**: Close ALL files (tests and source) opened during this RED/GREEN pair. Use last step notes as memory for the next pair.
     - Append `| Note: 1-sentence technical summary` to the mission step.
-    - **Context Cleanup**: Close files opened in this step that are **not** in scope of the next step. Use last step notes as memory.
 4. **MissionComplete**:
     - **Fail Proof**: Ensure all tests pass and 100% test coverage with `pytest --cov`. If not, stop and ask for instructions.
     - **Archive**: Move mission entry to `MISSION_HISTORY.md`. Update `RECENT HISTORY` in `MISSION_LOG.md` (Keep only the 3 most recent links).

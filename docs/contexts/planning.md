@@ -37,10 +37,12 @@ Reading the **Modular GDD** (`docs/GDD/`) is NOT mandatory. Only read if:
 *   **Sizing**: 3-5 steps per part. Max 7 steps (split if larger).
 *   **Entry Format**:
     - **Summary**: Concise technical overview of the goal. Provide enough context to guide execution.
-    - **Acceptance Criteria (AC)**: Mandatory section. Define the behavior-based scenarios that MUST pass (e.g., "Warrior must reduce damage by X when in Postura Defensiva"). This serves as the blueprint for the [EXECUTION] RED phase.
     - **Rule References**: Comma-separated list of ARCH rules from `architecture.md` (e.g., `ARCH.1.2, ARCH.1.5`).
     - **Plan**: Link to the approved `docs/plans/[task].md`.
-    - **Steps**: Atomic TDD steps, distinguishing between RED (Test) and GREEN (Implementation) when necessary.
-*   **Step Format**: `- [ ] [RED/GREEN] Description | Files: path/to/file.py`.
+    - **Steps**: Atomic TDD steps, organized in pairs of **RED** (Test Objective) and **GREEN** (Implementation).
+*   **Step Format**:
+    - `[RED] [Test Objective]: Detailed description of the behavior to be verified. | Files: tests/path/to/test_file.py`
+    - `[GREEN] [Implementation]: Brief description of the logic to implement. | Files: core/path/to/file.py`
+*   **Step Sequencing**: A mission MUST have a [RED] step followed by its corresponding [GREEN] step. Execution agents will clear context after completing the pair.
     - **Self-Sufficiency**: Steps MUST be descriptive enough to allow an [EXECUTION] agent to work without reading the approved `docs/plans/`.
 

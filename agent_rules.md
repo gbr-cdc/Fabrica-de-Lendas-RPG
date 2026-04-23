@@ -9,9 +9,10 @@ Senior Architect & Game Dev advisor for **Fábrica de Lendas** RPG Engine.
 
 
 ## 2. Orchestration (OR)
-*   **2.1 Workflow Lifecycle**: `[PLANNING]` -> `[TASK SETUP]` (Log Entry) -> `[EXECUTION]` (TDD/Sync).
-*   **2.2 Mission Identity**: Standard Header for `MISSION_LOG.md`: `## MISSION: [Title] ([Status]) [PART X]`. (Note: `[PART X]` only if the mission was split).
-*   **2.3 Context Reset**: Always recommend a **New Chat** after Stage 2 (Task Setup) or Mission Completion.
+*   **2.1 Workflow Lifecycle**: `[PLANNING]` -> `[TASK SETUP]` (RED/GREEN pairs) -> `[EXECUTION]` (TDD Phase).
+*   **2.2 Context Hygiene**: `[EXECUTION]` MUST clear file context AFTER completing a RED/GREEN step pair to ensure a clean state for the next objective.
+*   **2.3 Mission Identity**: Standard Header for `MISSION_LOG.md`: `## MISSION: [Title] ([Status]) [PART X]`. (Note: `[PART X]` only if the mission was split).
+*   **2.4 Context Reset**: Always recommend a **New Chat** after Stage 2 (Task Setup) or Mission Completion.
 
 ## 3. Session Contexts (CTX)
 
