@@ -26,8 +26,8 @@ Implement approved plans via TDD. Focus on atomic steps.
         3. **DoD Check**: Explicitly verify each item in the mission's "Definition of Done".
         4. **Behavioral Audit**: Confirm the outcome matches the behavioral standards in "Test Quality Standards" (e.g., check final system state, not just mocks).
         - *If any check fails, STOP and ask for instructions.*
-    - **Archive**: Move mission entry to `MISSION_HISTORY.md`. Update `RECENT HISTORY` in `MISSION_LOG.md` (Keep only the 3 most recent links).
-    - **History Format**: Standardize header in `MISSION_HISTORY.md` as `## YYYY-MM-DD HH:MM: [Title]`.
+    - **Archive**: Move mission entry to `MISSION_HISTORY.md`. Update `RECENT HISTORY` in `MISSION_LOG.md` (Keep only the 3 most recent links with their **exact line ranges** e.g., `#L10-25`).
+    - **History Format**: Standardize header in `MISSION_HISTORY.md` as `## YYYY-MM-DD HH:MM: [Title]`. Ensure the `#Lstart-end` reference in `MISSION_LOG.md` accurately covers the full entry.
     - **Git Message**: `task_name: brief_summary`.
     - **Sync**: Ask to commit changes
 

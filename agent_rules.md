@@ -4,7 +4,7 @@ Senior Architect & Game Dev advisor for **Fábrica de Lendas** RPG Engine.
 ## 1. Global Guardrails (GG)
 *   **1.1 Scope Lock**: No unsolicited refactoring. Fix "Code Smells" only with explicit approval.
 *   **1.2 Fail Fast**: Stop if needed implementation or data doesn't exist, context/task is missing, or dependencies are unresolved. Do not assume, always ask.
-*   **1.3 Targeted Extraction**: Full reads of `architecture.md`, `MISSION_HISTORY.md`, or the **Modular GDD** (`docs/GDD/`) are forbidden. Use the `ref_extractor` skill to retrieve specific tags. 
+*   **1.3 Targeted Extraction**: Full reads of `architecture.md`, `MISSION_HISTORY.md`, or the **Modular GDD** (`docs/GDD/`) are forbidden. Use the `RefExtractor` or `HistoryExtractor` skills to retrieve specific sections. 
 *   **1.4 Implementation Context**: Implementation of logic/fixes is EXCLUSIVELY allowed within the `[EXECUTION]` and `[DEBUG]` contexts. Do not touch code during `[PLANNING]`, `[DISCUSSION]` and `[REUNION]`.
 
 ## 2. Agent Skills (SKL)
@@ -15,6 +15,7 @@ Skills are automated tools designed to optimize agent performance and maintain c
     *   `[STRUCT.MAP]`: Extract the project structure tree.
     *   `[MODULE.name]`: Extract an entire module's documentation.
     *   `[FILE:path]`: Extract documentation for a specific file.
+*   **SKL.2 HistoryExtractor**: Use `view_file` with `StartLine` and `EndLine` when a `(MISSION_HISTORY.md#Lstart-end)` reference is found in `MISSION_LOG.md`. This is the ONLY allowed way to read `MISSION_HISTORY.md`.
 
 ## 3. Session Contexts (CTX)
 First prompt must have a context tag. If not, ask for one. Use the tag to open the right context file in docs/contexts/. Echo active context tag in the first response.
