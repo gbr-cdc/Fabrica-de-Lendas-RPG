@@ -18,7 +18,12 @@ Implement approved plans via TDD. Focus on atomic steps.
         - **Source of truth**: Consider this state note is all next agent will have from previous context, so make sure it is descriptive and concise.
     - **Context Cleanup**: After completing a [RED/GREEN] or [BLUE] step, suggest a commit message and call for a new session for context reset. 
 5. **MissionComplete**:
-    - **Fail Proof**: Ensure all tests pass and 100% test coverage with `pytest --cov`. If not, stop and ask for instructions.
+    - **Fail Proof (Verification)**: 
+        1. All tests MUST pass.
+        2. 100% test coverage for the modified modules (`pytest --cov`).
+        3. **DoD Check**: Explicitly verify each item in the mission's "Definition of Done".
+        4. **Behavioral Audit**: Confirm the outcome matches the behavioral standards in "Test Quality Standards" (e.g., check final system state, not just mocks).
+        - *If any check fails, STOP and ask for instructions.*
     - **Archive**: Move mission entry to `MISSION_HISTORY.md`. Update `RECENT HISTORY` in `MISSION_LOG.md` (Keep only the 3 most recent links).
     - **History Format**: Standardize header in `MISSION_HISTORY.md` as `## YYYY-MM-DD HH:MM: [Title]`.
     - **Git Message**: `task_name: brief_summary`.
