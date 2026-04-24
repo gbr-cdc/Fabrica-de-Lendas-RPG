@@ -105,3 +105,86 @@ Implementation of the Modifier Stack Pattern. `[ARCH.1.8]`
 - `StatModifier [CLASS:StatModifier]`: Base for all stat changes.
 - `EphemeralModifier`: Changes cleared after combat.
 - `PersistentModifier`: Permanent changes (Equipment, Traits).
+
+---
+
+## 5. Module: Battle [MODULE.battle]
+The `battle` module handles combat orchestration, action resolution, and reactive logic.
+
+### Battle Manager [FILE:battle/BattleManager.py]
+The central orchestrator of the combat engine. `[ARCH.1.3]`
+- `BattleManager [CLASS:BattleManager]`: Manages the timeline (Min-Heap), Event Bus, and battle lifecycle.
+- `run_battle()`: Main loop that advances ticks and executes turns until a judge declares an end state.
+- `emit()`: Triggers events on the Event Bus. Payload modification is the primary way listeners interact. `[ARCH.2.2]`
+- `delay_character()`: Manipulates the timeline to push a character's action further into the future. `[ARCH.2.1]`
+- `resolve_deaths()`: Sweeps the battlefield for characters with 0 HP and moves them to the graveyard.
+
+### Battle Actions [FILE:battle/BattleActions.py]
+Implementations of the Command Pattern for combat. `[ARCH.1.2]`
+- `AttackAction [CLASS:AttackAction]`: Data-driven attack resolution. Handles single-target, multi-target, and AREA attacks. `[ARCH.2.5]`, `[ARCH.2.6]`
+- `GenerateManaAction`: Movement action to manifest mana from the daily reserve into floating mana.
+- `GenerateFocusAction`: Movement action to replenish floating focus.
+- `TogglePosturaDefensiva`: Free action that interacts with the `PosturaDefensiva` passive to switch combat states.
+
+### Battle Passives [FILE:battle/BattlePassives.py]
+Reactive logic and hooks for character abilities. `[ARCH.1.4]`
+- `PosturaDefensiva [CLASS:PosturaDefensiva]`: Complex stateful passive that modifies dice pools and applies precision penalties to tracked targets. `[ARCH.2.7]`
+- `Combo`: Triggers extra attacks on successful hits, scaling with the number of consecutive hits.
+- `GracaDoDuelista`: Provides GdA bonuses and exposes a defensive reaction (Evasão) that costs focus.
+- `ForçaBruta`: Simple GdA multiplier upon successful hits.
+- `MãosPesadas`: Inflicts the `Atordoado` status effect if a hit surpasses a GdA threshold.
+
+### Judges [FILE:battle/Judges.py]
+Victory and defeat condition logic.
+- `BattleJudge [CLASS:BattleJudge]`: Evaluates the current state of characters (Team 1 vs Team 2) to determine the outcome (RUNNING, VICTORY, DEFEAT, DRAW).
+
+### Status Effects [FILE:battle/StatusEffects.py]
+Temporary modifiers and behavioral changes with a duration. `[ARCH.1.8]`
+- `StatusEffect [CLASS:StatusEffect]`: Base for all duration-based effects. Extends `BattlePassive` to use the hook system.
+- `Atordoado [CLASS:Atordoado]`: Stun effect that reduces defense (BDD) and delays the next turn by 50% of the base cost.
+
+---
+
+## 6. Module: Entities [MODULE.entities]
+The `entities` module contains data-only classes representing game objects. `[ARCH.1.9]`
+
+### Characters [FILE:entities/Characters.py]
+The primary data container for actors in the engine.
+- `Character [CLASS:Character]`: Tracks state (HP, MP, Focus), attributes (FIS, HAB, MEN), and dynamic properties.
+- **Modifier Stack**: Implements `modifiers` list and `get_stat_total` to calculate real-time stats. `[ARCH.1.8]`
+- **Status Effects**: Manages active `status_effects` affecting the character.
+
+### Items [FILE:entities/Items.py]
+Definitions for equipment and consumable objects.
+- `Weapon [CLASS:Weapon]`: Dataclass containing damage bonuses, dice types, and properties.
+- `Armor [CLASS:Armor]`: Dataclass containing HP bonuses and protection types.
+
+---
+
+## 7. Module: Controllers [MODULE.controllers]
+The `controllers` module implements the "Decision Loop" for characters, separating AI/Player logic from the engine. `[ARCH.1.1]`
+
+### Character Controller [FILE:controllers/CharacterController.py]
+- `CharacterController [CLASS:CharacterController]`: Abstract interface for turn-based decision making.
+- `choose_action()`: Entry point for selecting a `BattleAction` during the character's turn.
+- `choose_reaction()`: Entry point for deciding whether to activate optional effects (e.g., Evasion) during another character's action resolution.
+- `PvP1v1Controller [CLASS:PvP1v1Controller]`: Reference implementation for automated 1v1 combat.
+
+---
+
+## 8. Module: Data [MODULE.data]
+The `data` module stores the external definitions that drive the engine's behavior. `[ARCH.1.5]`
+
+### Action Definitions [FILE:data/AttackActions.json]
+JSON blueprints for skills and basic attacks, defining costs, types, and embedded effects.
+
+### Character Templates [FILE:data/Characters.json]
+Predefined character archetypes with base attributes and default equipment.
+
+### Combat Styles [FILE:data/CombatStyles.json]
+Definitions for dice pools and main attributes used by different character classes.
+
+### Game Rules [FILE:data/Rules.json]
+Global constants, scaling tables (HP/MP per attribute), and resource generation rules.
+
+
