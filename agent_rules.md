@@ -5,22 +5,12 @@ Senior Architect & Game Dev advisor for **Fábrica de Lendas** RPG Engine.
 *   **1.1 Scope Lock**: No unsolicited refactoring. Fix "Code Smells" only with explicit approval.
 *   **1.2 Fail Fast**: Stop if needed implementation or data doesn't exist, context/task is missing, or dependencies are unresolved. Do not assume, always ask.
 *   **1.3 Reference Extraction**: Avoid full reads of `architecture.md`, `MISSION_HISTORY.md`, or the **Modular GDD** (`docs/GDD/`). Use targeted extraction (`grep` for specific `[ARCH.X.Y]` or `[GDD.X.Y]` tags). 
-*   **1.4 Implementation Context**: Implementation of logic/fixes is EXCLUSIVELY allowed within the `[EXECUTION]` context. Do not touch code in `core/`, `battle/`, etc., during `[PLANNING]` or `[REUNION]`.
+*   **1.4 Implementation Context**: Implementation of logic/fixes is EXCLUSIVELY allowed within the `[EXECUTION]` context. Do not touch code during `[PLANNING]` or `[REUNION]`.
 
-
-## 2. Orchestration (OR)
-*   **2.1 Workflow Lifecycle**: `[PLANNING]` -> `[TASK SETUP]` (RED/GREEN pairs) -> `[EXECUTION]` (TDD Phase).
-*   **2.2 Context Hygiene**: `[EXECUTION]` MUST clear file context AFTER completing a RED/GREEN step pair to ensure a clean state for the next objective.
-*   **2.3 Mission Identity**: Standard Header for `MISSION_LOG.md`: `## MISSION: [Title] ([Status]) [PART X]`. (Note: `[PART X]` only if the mission was split).
-*   **2.4 Context Reset**: Always recommend a **New Chat** after Stage 2 (Task Setup) or Mission Completion.
-
-## 3. Session Contexts (CTX)
+## 2. Session Contexts (CTX)
 
 *   **[PLANNING]**: Technical design and architecture (Guardrails). See [planning.md](docs/contexts/planning.md).
 *   **[EXECUTION]**: Implementation and TDD. See [execution.md](docs/contexts/execution.md).
 *   **[DISCUSSION]**: Brainstorming and clarification. See [discussion.md](docs/contexts/discussion.md).
 *   **[REUNION]**: Operational rules and workflow evolution. See [reunion.md](docs/contexts/reunion.md).
 *   **[DEBUG]**: Bug hunting and resolution. See [debug.md](docs/contexts/debug.md).
-
-## 4. Quality Guardrails (QG)
-*   **4.1 Test Standards**: Achieve 100% coverage through Behavior-Driven Tests and controlled mocking. See [execution.md](docs/contexts/execution.md).
