@@ -39,10 +39,11 @@ Reading the **Modular GDD** (`docs/GDD/`) is NOT mandatory. Only read if:
     - **Summary**: Concise technical overview of the goal. Provide enough context to guide execution.
     - **Rule References**: Comma-separated list of ARCH rules from `architecture.md` (e.g., `ARCH.1.2, ARCH.1.5`).
     - **Plan**: Link to the approved `docs/plans/[task].md`.
-    - **Steps**: Atomic TDD steps, organized in pairs of **RED** (Test Objective) and **GREEN** (Implementation).
+    - **Steps**: Atomic TDD steps, organized in pairs of **RED** (Test Objective) and **GREEN** (Implementation), or independent **BLUE** (Implementation) steps if not TDD.
 *   **Step Format**:
     - `[RED] [Test Objective]: Detailed description of the behavior to be verified. | Files: tests/path/to/test_file.py`
-    - `[GREEN] [Implementation]: Brief description of the logic to implement. | Files: core/path/to/file.py`
-*   **Step Sequencing**: A mission MUST have a [RED] step followed by its corresponding [GREEN] step. Execution agents will clear context after completing the pair.
+    - `[GREEN] [Implementation]: Brief, but self contained description of the logic to implement. | Files: core/path/to/file.py`
+    - `[BLUE] [Implementation]: Brief, but self contained description of the logic to implement. | Files: core/path/to/file.py`
+*   **Step Sequencing**: [RED] steps must be followed by its corresponding [GREEN] step and vice-versa. [BLUE] steps can be executed independently.
     - **Self-Sufficiency**: Steps MUST be descriptive enough to allow an [EXECUTION] agent to work without reading the approved `docs/plans/`.
 

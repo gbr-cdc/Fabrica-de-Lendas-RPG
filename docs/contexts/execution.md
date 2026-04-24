@@ -11,10 +11,13 @@ Implement approved plans via TDD. Focus on atomic steps.
 2. **Execute (TDD Phases)**:
     - **RED (Test Objective)**: Pick a [RED] step -> Create/Update Integration/Scenario Test based on the detailed objective -> `pytest` (Must Fail).
     - **GREEN (Implementation)**: Pick the corresponding [GREEN] step -> Implement approved logic -> `pytest` (Must Pass).
-3. **StepComplete**:
-    - **Context Cleanup**: Close ALL files (tests and source) opened during this RED/GREEN pair. Use last step notes as memory for the next pair.
-    - Append `| Note: 1-sentence technical summary` to the mission step.
-4. **MissionComplete**:
+3. **Execute (Non-TDD Phases)**:
+    - **BLUE (Implementation)**: Pick the corresponding [BLUE] step -> Implement approved logic -> pytest (Regression: Full suite must pass)
+4. **StepComplete ([RED/GREEN] or [BLUE])**:
+    - Append `| State: description of step results with all information summarized for the next step` to the mission step.
+        - **Source of truth**: Consider this state note is all next agent will have from previous context, so make sure it is descriptive and concise.
+    - **Context Cleanup**: After completing a [RED/GREEN] or [BLUE] step, suggest a commit message and call for a new session for context reset. 
+5. **MissionComplete**:
     - **Fail Proof**: Ensure all tests pass and 100% test coverage with `pytest --cov`. If not, stop and ask for instructions.
     - **Archive**: Move mission entry to `MISSION_HISTORY.md`. Update `RECENT HISTORY` in `MISSION_LOG.md` (Keep only the 3 most recent links).
     - **History Format**: Standardize header in `MISSION_HISTORY.md` as `## YYYY-MM-DD HH:MM: [Title]`.
