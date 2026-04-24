@@ -3,21 +3,23 @@ Implement approved plans via TDD. Focus on atomic steps.
 
 ## Mandatory Extraction
 - [MISSION_LOG.md](../../MISSION_LOG.md): **Read entirely**.
-- [architecture.md](../../architecture.md): Extract only the **ARCH rules** referenced in the active mission (e.g., `ARCH.1.2`, `ARCH.1.5`).
+- [architecture.md](../../architecture.md): Extract only the **ARCH rules** referenced in the active mission (e.g., `[ARCH.1.2]`, `[ARCH.1.5]`).
 - [MISSION_HISTORY.md](../../MISSION_HISTORY.md): Extract only the entries linked in `MISSION_LOG.md`'s **RECENT HISTORY** section.
 
 ## Workflow
 1. **Confirm**: Explicitly state target mission from `MISSION_LOG.md`.
-2. **Execute (TDD Phases)**:
+2. **State Check**: Check last State Note in previous completed step for guidance(if exists).
+3. **Execute (TDD Phases)**:
     - **RED (Test Objective)**: Pick a [RED] step -> Create/Update Integration/Scenario Test based on the detailed objective -> `pytest` (Must Fail).
     - **GREEN (Implementation)**: Pick the corresponding [GREEN] step -> Implement approved logic -> `pytest` (Must Pass).
-3. **Execute (Non-TDD Phases)**:
+4. **Execute (Non-TDD Phases)**:
     - **BLUE (Implementation)**: Pick the corresponding [BLUE] step -> Implement approved logic -> pytest (Regression: Full suite must pass)
-4. **StepComplete ([RED/GREEN] or [BLUE])**:
-    - Append `| State: description of step results with all information summarized for the next step` to the mission step.
+5. **PhaseComplete ([RED/GREEN] or [BLUE])**:
+    - Mark completed steps [ ] -> [x]
+    - Append `| State: description of step results with all information summarized for the next step` to the [GREEN] or [BLUE] step.
         - **Source of truth**: Consider this state note is all next agent will have from previous context, so make sure it is descriptive and concise.
-    - **Context Cleanup**: After completing a [RED/GREEN] or [BLUE] step, suggest a commit message and call for a new session for context reset. 
-5. **MissionComplete**:
+    - **Context Cleanup**: After completing a [RED/GREEN] or [BLUE] phase, suggest a commit message and call for a new session for context reset. 
+6. **MissionComplete**:
     - **Fail Proof (Verification)**: 
         1. All tests MUST pass.
         2. 100% test coverage for the modified modules (`pytest --cov`).

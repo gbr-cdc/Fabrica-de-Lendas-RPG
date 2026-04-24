@@ -11,7 +11,7 @@
 
 ## MISSION: Core Module Integrity (ACTIVE) [PART 1]
 - **Summary**: Refactor foundational tests in the `core` module to eliminate mock abuse. Replace `MagicMock` with real object instances (`Character`, `StatModifier`, `GameRules`) to verify behavioral outcomes and system integrity.
-- **Rule References**: ARCH.1.5, ARCH.1.8, ARCH.1.9
+- **Rule References**: [ARCH.1.5], [ARCH.1.8], [ARCH.1.9]
 - **Definition of Done**: Core tests pass using real object instances instead of mocks. Internal logic is verified via state assertions.
 - **Plan**: [test_quality_improvement.md](docs/plans/test_quality_improvement.md)
 - **Steps**:
@@ -22,7 +22,7 @@
 
 ## MISSION: Battle Orchestration & Logic (ACTIVE) [PART 1]
 - **Summary**: Refactor `battle/` module tests to verify combat outcomes using real objects. Eliminate `MagicMock` for Characters, Actions, and Judges in favor of integration scenarios.
-- **Rule References**: ARCH.1.2, ARCH.1.3, ARCH.2.1, ARCH.2.2
+- **Rule References**: [ARCH.1.2], [ARCH.1.3], [ARCH.2.1], [ARCH.2.2]
 - **Definition of Done**: Combat outcomes (damage, timeline, status) are verified via integration tests with real entities.
 - **Plan**: [test_quality_improvement.md](docs/plans/test_quality_improvement.md)
 - **Steps**:
@@ -33,7 +33,7 @@
 
 ## MISSION: Controllers, Entities & Data (ACTIVE) [PART 1]
 - **Summary**: Grouped refactor for smaller modules. Ensure `CharacterController` decision loops and entity stat calculations are verified as system behaviors.
-- **Rule References**: ARCH.1.1, ARCH.1.5, ARCH.1.9
+- **Rule References**: [ARCH.1.1], [ARCH.1.5], [ARCH.1.9]
 - **Definition of Done**: AI controllers and entity stats are verified through behavior tests. JSON definitions are validated against Python structs.
 - **Plan**: [test_quality_improvement.md](docs/plans/test_quality_improvement.md)
 - **Steps**:
@@ -43,7 +43,7 @@
 
 ## MISSION: System Integration & Regression (ACTIVE) [PART 1]
 - **Summary**: Final verification of engine stability through full combat scenarios and invariant assertions.
-- **Rule References**: ARCH.GLOBAL
+- **Rule References**: [ARCH.GLOBAL]
 - **Definition of Done**: Engine stability is confirmed via end-to-end battle scenarios and continuous invariant assertions.
 - **Plan**: [test_quality_improvement.md](docs/plans/test_quality_improvement.md)
 - **Steps**:

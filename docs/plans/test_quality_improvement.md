@@ -46,6 +46,6 @@ Shift the testing strategy to:
 ---
 
 ## Architecture Compliance
-- **ARCH.1.1 (Game-MVC)**: Tests must verify Model behavior without relying on specific View/Controller implementations.
-- **ARCH.1.5 (Data-Driven)**: Tests must use `DataManager` to load real templates for Characters and Actions.
-- **ARCH.1.8 (Modifier Stack)**: Verification must assert the correctness of the character's final stat totals after modifiers are applied.
+- **[ARCH.1.1] (Game-MVC)**: Tests must verify Model behavior without relying on specific View/Controller implementations.
+- **[ARCH.1.5] (Data-Driven)**: Tests must use `DataManager` to load real templates for Characters and Actions.
+- **[ARCH.1.8] (Modifier Stack)**: Verification must assert the correctness of the character's final stat totals after modifiers are applied.

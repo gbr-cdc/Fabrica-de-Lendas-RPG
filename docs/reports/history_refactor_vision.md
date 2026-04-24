@@ -5,7 +5,7 @@
 **Context:** [DISCUSSION] regarding MVC Purity and Agentic Verification.
 
 ## 1. Problem Statement
-The current implementation of the `history` list in `ActionLoad` and `AttackLoad` violates the **ARCH.1.1 (Game-MVC)** guardrail. It stores narrative, human-readable strings (e.g., *"Warrior hit for 10 damage!"*) within the Model layer. 
+The current implementation of the `history` list in `ActionLoad` and `AttackLoad` violates the **[ARCH.1.1] (Game-MVC)** guardrail. It stores narrative, human-readable strings (e.g., *"Warrior hit for 10 damage!"*) within the Model layer. 
 
 ### Issues:
 *   **Leakage:** The Model is responsible for View-level presentation logic.

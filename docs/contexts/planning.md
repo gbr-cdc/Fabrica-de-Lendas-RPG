@@ -37,7 +37,7 @@ Reading the **Modular GDD** (`docs/GDD/`) is NOT mandatory. Only read if:
 *   **Sizing**: 3-5 steps per part. Max 7 steps (split if larger).
 *   **Entry Format**:
     - **Summary**: Concise technical overview of the goal. Provide enough context to guide execution.
-    - **Rule References**: Comma-separated list of ARCH rules from `architecture.md` (e.g., `ARCH.1.2, ARCH.1.5`).
+    - **Rule References**: Comma-separated list of ARCH rules from `architecture.md` (e.g., `[ARCH.1.2], [ARCH.1.5]`).
     - **Definition of Done**: Precise, objective criteria that must be satisfied for mission completion (e.g., "Unit HP never drops below 0", "Logs correctly capture critical hits").
     - **Plan**: Link to the approved `docs/plans/[task].md`.
     - **Steps**: Atomic TDD steps, organized in pairs of **RED** (Test Objective) and **GREEN** (Implementation), or independent **BLUE** (Implementation) steps if not TDD.
