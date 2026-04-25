@@ -5,13 +5,6 @@ Architectural design and technical rationale. No implementation.
 - [architecture.md](../../architecture.md): Entire file (guardrails).
 - Relevant code: Current state/compatibility.
 
-## GDD References (Conditional)
-Reading the **Modular GDD** (`docs/GDD/`) is NOT mandatory. Only read if:
-1.  Explicitly prompted by the USER.
-2.  Implementing a mechanic that requires rule translation into technical steps.
-*   **Targeted Reading**: Use `grep` to find specific `[GDD.X.Y]` tags. Never read the entire directory.
-*   **Dependency Resolution**: If a mechanic has `[DEPENDS: GDD.X.Y]`, you MUST resolve those dependencies to ensure the resulting `MISSION_LOG.md` steps are technically sound and architecturally compliant.
-
 ## Workflow (Feature Planning)
 1. **Understand**: Problem statement and User's desired outcome/technical preference.
 2. **Analyze**: Validate against architecture.md guardrails and common gaming design patterns.
