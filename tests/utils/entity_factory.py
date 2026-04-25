@@ -54,12 +54,16 @@ def create_dummy_character(
     attributes: Optional[List[int]] = None,
     combat_style: Optional[CombatStyle] = None,
     rules: Optional[GameRules] = None,
-    team: int = 0
+    team: int = 0,
+    weapon: Optional[Weapon] = None,
+    armor: Optional[Armor] = None,
+    equipped: bool = False
 ) -> Character:
     """
     Creates a Character instance for testing. 
     If attributes are not provided, they are randomized between 0-15 [GDD.CORE.ATTR].
     If rules are not provided, GDD defaults are used.
+    If 'equipped' is True or items are provided, it uses CharacterSystem to equip them.
     """
     if attributes is None:
         attributes = [random.randint(0, 15) for _ in range(3)]
@@ -79,4 +83,33 @@ def create_dummy_character(
         )
         
     char = Character(char_id, name, attributes, combat_style, rules, team)
+
+    if equipped or weapon or armor:
+        equip_dummy_character(char, weapon, armor)
+
     return char
+
+def equip_dummy_character(
+    character: Character, 
+    weapon: Optional[Weapon] = None, 
+    armor: Optional[Armor] = None,
+    tier: int = 1
+) -> Character:
+    """
+    Utility to equip a character using CharacterSystem logic.
+    If weapon/armor are not provided, creates tier-appropriate dummy items 
+    compatible with the character's CombatStyle.
+    """
+    from core.CharacterSystem import CharacterSystem
+
+    if weapon is None:
+        weapon = create_dummy_weapon(tier=tier, weapon_type=character.combat_style.weapon_type)
+    
+    if armor is None:
+        armor = create_dummy_armor(tier=tier, armor_type=character.combat_style.armor_type)
+        
+    # We ignore the success/message return for dummy setup, assuming valid types
+    CharacterSystem.equip_weapon(character, weapon)
+    CharacterSystem.equip_armor(character, armor)
+    
+    return character
