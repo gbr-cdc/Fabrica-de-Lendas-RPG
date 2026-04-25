@@ -7,7 +7,9 @@ Implement approved plans via TDD. Focus on atomic steps.
 - [MISSION_HISTORY.md](../../MISSION_HISTORY.md): Extract only the entries linked in `MISSION_LOG.md`'s **RECENT HISTORY** section.
 
 ## Workflow
-1. **Confirm**: Explicitly state target mission from `MISSION_LOG.md`.
+1. **Initialize**: Read `agent_rules.md` followed IMMEDIATELY by this context file.
+2. **Confirm**: Explicitly state target mission from `MISSION_LOG.md`.
+
 2. **State Check**: Check last State Notes in previous completed steps if available.
 3. **Execute (TDD Phases)**:
     - **RED (Test Objective)**: Pick a [RED] step -> Create/Update Integration/Scenario Test based on the detailed objective -> `pytest` (Must Fail).

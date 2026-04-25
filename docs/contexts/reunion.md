@@ -2,7 +2,9 @@
 Evolution of **Operational Rules** and workflow protocols.
 
 ## Workflow
-1. **Identify**: Pinpoint specific rules or workflow steps that caused confusion or inefficiency.
+1. **Initialize**: Read `agent_rules.md` followed IMMEDIATELY by this context file.
+2. **Identify**: Pinpoint specific rules or workflow steps that caused confusion or inefficiency.
+
 2. **Propose**: Draft `agent_rules.md` or `docs/contexts/` changes.
 3. **Formalize**: Implement upon USER approval.
 4. **Report & Sync**:

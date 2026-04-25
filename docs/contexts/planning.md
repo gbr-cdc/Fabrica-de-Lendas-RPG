@@ -6,15 +6,18 @@ Architectural design and technical rationale. No implementation.
 - Relevant code: Current state/compatibility.
 
 ## Workflow (Feature Planning)
-1. **Understand**: Problem statement and User's desired outcome/technical preference.
-2. **Analyze**: Validate against architecture.md guardrails and common gaming design patterns.
-3. **Propose**: Create/edit `docs/plans/[task].md`. (Challenge User direction if justified).
-4. **Iterate**: Refine via feedback.
-5. **Finalize**: Approved plan leads to `[TASK SETUP]`.
-6. **[TASK SETUP]**: Translate the approved Plan into a specific `MISSION_LOG.md` entry with atomic steps.
+1. **Initialize**: Read `agent_rules.md` followed IMMEDIATELY by this context file.
+2. **Understand**: Problem statement and User's desired outcome/technical preference.
+3. **Analyze**: Validate against architecture.md guardrails and common gaming design patterns.
+4. **Propose**: Create/edit `docs/plans/[task].md`. (Challenge User direction if justified).
+5. **Iterate**: Refine via feedback.
+6. **Finalize**: Approved plan leads to `[TASK SETUP]`.
+7. **[TASK SETUP]**: Translate the approved Plan into a specific `MISSION_LOG.md` entry with atomic steps.
 
 ## Workflow (Systemic Planning)
-1. **Discuss**: High-level architectural changes or new patterns.
+1. **Initialize**: Read `agent_rules.md` followed IMMEDIATELY by this context file.
+2. **Discuss**: High-level architectural changes or new patterns.
+
 2. **Refine**: Validate against existing guardrails (check for breaking changes).
 3. **Apply**: Edit `architecture.md` with new/updated ARCH rules.
 4. **Impact Analysis**: Determine if existing code needs a migration mission.
