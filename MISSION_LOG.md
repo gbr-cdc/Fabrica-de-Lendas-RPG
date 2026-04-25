@@ -15,7 +15,7 @@
 - **Definition of Done**: Core tests pass using real object instances instead of mocks. Internal logic is verified via state assertions.
 - **Plan**: [test_quality_improvement.md](docs/plans/test_quality_improvement.md)
 - **Steps**:
-    - [ ] [BLUE] [Implementation]: Refactor `test_Modifiers.py` to use real `Character` and `StatModifier` instances. Assert final stat totals instead of internal list modifications. | Files: tests/core/test_Modifiers.py
+    - [x] [BLUE] [Implementation]: Refactor `test_Modifiers.py` to use real `Character` and `StatModifier` instances. Assert final stat totals instead of internal list modifications. | Files: tests/core/test_Modifiers.py | State: Modifiers verified with real Character objects loaded via DataManager. Behavioral assertions replaced mock-based logic. All 6 tests passing.
     - [ ] [BLUE] [Implementation]: Refactor `test_DataManager.py` to verify data loading from real `data/` JSONs, ensuring structural integrity between files and objects. | Files: tests/core/test_DataManager.py
     - [ ] [BLUE] [Implementation]: Refactor `test_DiceManager.py` to use deterministic roll scheduling for behavior verification without mocking the manager's logic. | Files: tests/core/test_DiceManager.py
     - [ ] [BLUE] [Implementation]: Update `test_BaseClasses.py` and `test_Structs.py` to ensure core data containers and interfaces are verified as behavior-driving entities. | Files: tests/core/test_BaseClasses.py, tests/core/test_Structs.py
