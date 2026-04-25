@@ -33,7 +33,7 @@ Implement approved plans via TDD. Focus on atomic steps.
 
 ## Test Quality Standards
 - **Behavior over Implementation**: Tests MUST verify the outcome (e.g., final HP, logs, state changes) rather than internal implementation details (e.g., checking specific list indices or private method calls).
-- **Controlled Mocking**: Use real instances for domain logic (Entities, Systems). Mock ONLY system boundaries (I/O, UI) or to enforce determinism (RNG, Timers). If a component provides test hooks (e.g., `DiceManager.schedule_result()`), use them instead of mocking the entire object.
+- **Controlled Mocking**: Use real instances for domain logic (Entities, Systems). Mock ONLY system boundaries (I/O, UI) or to enforce determinism. Use `DiceManager.schedule_result()` for simulating dice rolls.
 - **Standardized Setup**: Use `tests.utils.entity_factory` for dummies or `DataManager` for integration tests. Avoid manual instantiation of `Character`, `Weapon`, or `Armor` to ensure GDD compliance `[ARCH.1.5]`.
 - **Decoupling**: Ensure tests do not break upon internal refactors if the public behavior remains unchanged.
 - **Invariants**: Assert that system state remains valid according to ARCH rules (e.g., stats calculated via the Modifier Stack `[ARCH.1.8]`, no negative HP).
