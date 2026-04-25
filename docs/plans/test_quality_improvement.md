@@ -7,11 +7,13 @@ Current tests rely heavily on `MagicMock` for core entities (`Character`, `Battl
 1.  **False Positives**: Tests pass because mocks are called, not because logic is correct.
 2.  **Implementation Coupling**: Tests break on internal refactoring even if public behavior is unchanged.
 3.  **Low Confidence**: 100% coverage does not guarantee system integrity.
+4.  **Dependency on Static Data**: Loading entities from `data/` JSONs for testing assumes the existence of specific templates, which may change or not exist, making tests fragile.
 
 ## Proposed Solution
 Shift the testing strategy to:
 - **Behavior over Implementation**: Assert final states (HP, MP, Event logs) instead of method call counts.
-- **Controlled Mocking**: Use real object instances initialized via `DataManager`. Mocks are restricted to I/O and external Controllers.
+- **Controlled Mocking**: Use real object instances. Mocks are restricted to I/O and external Controllers.
+- **Dynamic Entity Generation**: Implement a `create_dummy_entity` utility in `tests/utils/` that generates random but valid `Character`, `Weapon`, and `Armor` objects based on GDD rules ([GDD.CORE.ATTR], [GDD.CORE.PROG], [GDD.EQUIP.TIERS]). This ensures tests are self-contained and resilient to changes in `data/`.
 - **Scenario-Based Testing**: Test complete action cycles (e.g., Attack -> Defense Passive -> Damage Apply).
 
 ---
