@@ -16,7 +16,7 @@ This module defines how attacks are resolved, damage is calculated, and equipmen
 ---
 
 ## 2. Damage Calculation [GDD.COMBAT.DAMAGE]
-[DEPENDS: GDD.COMBAT.GDA, GDD.EQUIP.TIERS]
+[DEPENDS: GDD.COMBAT.GDA, GDD.EQUIP.TIERS.WEAPONS]
 
 *   **Damage Formula:** `PdA + (GdA * MdA)`
 *   **Attack Power (PdA):** Weapon Base Damage(DB) + Primary Attribute
@@ -33,7 +33,7 @@ This module defines how attacks are resolved, damage is calculated, and equipmen
 
 ## 4. Equipment Tiers [GDD.EQUIP.TIERS]
 
-### Weapons
+### Weapons [GDD.EQUIP.TIERS.WEAPONS]
 
 | Tier | Base Damage (DB) | Multiplier (MdA) |
 | :---: | :---: | :---: |
@@ -43,7 +43,7 @@ This module defines how attacks are resolved, damage is calculated, and equipmen
 | **4** | 10 | 2 |
 | **5** | 15 | 3 |
 
-### Armaduras
+### Armaduras [GDD.EQUIP.TIERS.ARMOR]
 
 | Tier | Cloak | Light | Heavy |
 | :---: | :---: | :---: | :---: |
