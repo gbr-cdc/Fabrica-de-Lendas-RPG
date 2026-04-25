@@ -5,6 +5,9 @@ from core.Structs import GameRules, CombatStyle
 from entities.Characters import Character
 from entities.Items import Weapon, Armor
 
+# [RULE]: Use this factory for unit/behavioral tests to avoid dependency on external data/ JSON files.
+# For integration tests verifying DataManager logic, use DataManager directly.
+
 # GDD values based on [GDD.CORE.PROG]
 HP_TABLE = {str(i): v for i, v in enumerate([10, 20, 30, 40, 50, 65, 80, 95, 115, 135, 155, 180, 205, 230, 270, 310])}
 ACTION_COST_TABLE = {str(i): v for i, v in enumerate([60, 50, 40, 36, 32, 28, 25, 22, 20, 18, 16, 14, 13, 12, 11, 10])}
