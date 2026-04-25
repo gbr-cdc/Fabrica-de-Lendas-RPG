@@ -1,15 +1,11 @@
 import pytest
-from core.DataManager import DataManager
 from core.Modifiers import StatModifier, EphemeralModifier, PersistentModifier
+from tests.utils.entity_factory import create_dummy_character
 
 @pytest.fixture
 def character():
-    """Returns a real Character instance loaded from data files."""
-    dm = DataManager()
-    dm.load_game_rules("data/Rules.json")
-    dm.load_combat_styles("data/CombatStyles.json")
-    dm.load_characters("data/Characters.json")
-    return dm.get_character("Cavaleiro")
+    """Returns a real Character instance created via entity_factory."""
+    return create_dummy_character(name="Test Hero")
 
 def test_modifier_unique_id():
     """Technical: IDs must be unique even for identical data."""
