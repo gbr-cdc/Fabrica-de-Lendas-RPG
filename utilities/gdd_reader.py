@@ -120,10 +120,11 @@ def resolve_gdd(tag, gdd_dir='docs/GDD', resolved_tags=None):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python gdd_reader.py [TAG]")
+        print("Usage: python gdd_reader.py [TAG1] [TAG2] ...")
         sys.exit(1)
     
-    tag = sys.argv[1]
+    tags = sys.argv[1:]
     gdd_dir = 'docs/GDD'
     
-    print(resolve_gdd(tag, gdd_dir))
+    for tag in tags:
+        print(resolve_gdd(tag, gdd_dir))

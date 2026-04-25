@@ -9,14 +9,14 @@ Senior Architect & Game Dev advisor for **Fábrica de Lendas** RPG Engine.
 
 ## 2. Agent Skills (SKL)
 Skills are automated tools designed to optimize agent performance and maintain context hygiene.
-*   **SKL.1 RefExtractor**: Use `python3 utilities/ref_extractor.py "[TAG]"` to extract sections from `architecture.md`. 
+*   **SKL.1 RefExtractor**: Use `python3 utilities/ref_extractor.py "[TAG1]" "[TAG2]" ...` to extract sections from `architecture.md`. 
     *   `[ARCH.GLOBAL]`: Extract all global guardrails.
     *   `[ARCH.X.Y]`: Extract a specific rule.
     *   `[STRUCT.MAP]`: Extract the project structure tree.
     *   `[MODULE.name]`: Extract an entire module's documentation.
     *   `[FILE:path]`: Extract documentation for a specific file.
 *   **SKL.2 HistoryExtractor**: Use `view_file` with `StartLine` and `EndLine` when a `(MISSION_HISTORY.md#Lstart-end)` reference is found in `MISSION_LOG.md`. This is the ONLY allowed way to read `MISSION_HISTORY.md`.
-*   **SKL.3 GDDReader**: Use `python3 utilities/gdd_reader.py "[GDD.X.Y]"` to extract sections from `docs/GDD/`.
+*   **SKL.3 GDDReader**: Use `python3 utilities/gdd_reader.py "[GDD.X.Y]" "[GDD.A.B]" ...` to extract sections from `docs/GDD/`.
     *   This skill performs **Targeted Reading** and automatic **Dependency Resolution** (resolves `[DEPENDS: ...]` tags).
     *   It is the ONLY allowed way to read the Modular GDD.
 

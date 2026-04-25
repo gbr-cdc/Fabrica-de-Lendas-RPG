@@ -40,10 +40,23 @@ def extract_reference(tag, file_path='architecture.md'):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python ref_extractor.py [TAG] [FILE_PATH]")
+        print("Usage: python ref_extractor.py [TAG1] [TAG2] ... [FILE_PATH]")
         sys.exit(1)
     
-    tag = sys.argv[1]
-    file_path = sys.argv[2] if len(sys.argv) > 2 else 'architecture.md'
+    args = sys.argv[1:]
+    tags = []
+    file_path = 'architecture.md'
     
-    print(extract_reference(tag, file_path))
+    # Check if the last argument is a file that exists and isn't a tag
+    if len(args) > 1:
+        last_arg = args[-1]
+        if os.path.exists(last_arg) and not (last_arg.startswith('[') and last_arg.endswith(']')):
+            file_path = last_arg
+            tags = args[:-1]
+        else:
+            tags = args
+    else:
+        tags = args
+
+    for tag in tags:
+        print(extract_reference(tag, file_path))
