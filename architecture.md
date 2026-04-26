@@ -59,52 +59,59 @@ These rules are context-exclusive and MUST be referenced in `MISSION_LOG.md` whe
 The `core` module contains the fundamental building blocks of the engine.
 
 ### Enums [FILE:core/Enums.py]
-Centralized enumerations to ensure type safety and consistency.
-- `RollState`: `ADVANTAGE`, `DISADVANTAGE`, `NEUTRAL`.
-- `AttributeType`: `FIS`, `HAB`, `MEN`.
-- `AttackType`: `BASIC_ATTACK`, `SKILL`, `AREA`, `EXTRA_ATTACK`.
-- `BattleActionType`: `MOVE_ACTION`, `STANDARD_ACTION`, `FREE_ACTION`.
+Centralized enumerations to ensure type safety and consistency across the engine.
+- `RollState`: Defines dice roll modifiers: `ADVANTAGE` (take highest), `DISADVANTAGE` (take lowest), or `NEUTRAL`.
+- `ArmorType`: Categories for physical protection: `ROBE`, `LIGHT`, `HEAVY`.
+- `WeaponType`: Categories for offensive equipment, including `GREAT_WEAPON`, `RANGED_WEAPON`, and `MAGICAL_FOCUS`.
+- `AttributeType`: The three primary stats: `FIS` (Physical), `HAB` (Skill), `MEN` (Mental).
+- `StatusEffectType`: Identifiers for active conditions like `ATORDOADO` or `QUEIMADO`.
+- `AttackType`: Classification of offensive maneuvers: `BASIC_ATTACK`, `SKILL`, `AREA`, `EXTRA_ATTACK`.
+- `BattleActionType`: Action economy categories: `MOVE_ACTION`, `STANDARD_ACTION`, `FREE_ACTION`.
+- `BattleState`: High-level combat outcomes: `VICTORY`, `DEFEAT`, `DRAW`, `RUNNING`, `ERROR`.
 
 ### Structs [FILE:core/Structs.py]
-Data containers for passing structured information.
-- `GameRules`: Progression tables (HP/MP/Cost) and resource limits.
-- `RollResult`: Detailed dice roll info (final value, individual dice, state).
-- `CombatStyle`: Blueprint for a character's fighting style (dice used, main stat).
-- `AttackActionTemplate`: Data-driven blueprint for actions loaded from JSON.
+Data containers for passing structured information across modules.
+- `GameRules [CLASS:GameRules]`: Configuration for global mechanics. Includes `hp_table` and `mp_table` for level scaling, `action_cost_table` for turn delay, and resource multipliers for Focus and Mana (MEN-based). `[ARCH.1.5]`
+- `RollResult [CLASS:RollResult]`: Encapsulates a dice roll outcome. Tracks the `final_roll`, individual dice (`roll1`, `roll2` for advantage/disadvantage), and `RollState`. Used by `DiceManager` and the Event Bus.
+- `BattleResult [CLASS:BattleResult]`: Summary of a finished combat. Contains the execution `history` (log of events), lists of `winners` and `losers`, `duration` in ticks, and per-character action statistics.
+- `CombatStyle [CLASS:CombatStyle]`: Archetype definition for a character's fighting method. Defines attack/defense dice (e.g., d20, d12), the `main_stat` for bonuses, and required weapon/armor types. Loaded from `CombatStyles.json`.
+- `AttackEffects [CLASS:AttackEffects]`: Data structure for individual components of an attack (e.g., "Lifesteal", "Stun"). Contains an `id` and a dictionary of `parameters` used by the resolution logic.
+- `AttackActionTemplate [CLASS:AttackActionTemplate]`: Blueprint for complex actions. Combines action/attack types, resource costs (Focus), and a list of `AttackEffects`. Used as the base for instantiating `AttackAction`. `[ARCH.1.5]`
 
 ### Events [FILE:core/Events.py]
-Payload objects for the Event Bus and results transmission.
-- `ActionLoad [CLASS:ActionLoad]`: Base payload containing character and history.
-- `AttackLoad [CLASS:AttackLoad]`: Specialized payload for attack resolution. Carries `target`, `gda`, `damage`, and roll states.
+Mutable payload objects for the Event Bus, allowing listeners to influence action outcomes. `[ARCH.2.2]`
+- `ActionLoad [CLASS:ActionLoad]`: Base payload for all battle actions. Tracks the `character` performing the action, an execution `history` (log), and a `success` flag.
+- `AttackLoad [CLASS:AttackLoad]`: Specialized payload for offensive resolution. Carries the `target`, `battle_context`, `attack_type`, and states (`attack_state`, `defense_state`). Critical fields for modification: `gda` (Degree of Success), `damage`, and `hit` (boolean).
 
 ### Base Classes [FILE:core/BaseClasses.py]
-The foundational interfaces of the engine.
-- `GameAction [CLASS:GameAction]`: Abstract base for the Command Pattern. `[ARCH.1.2]`
-- `BattleAction [CLASS:BattleAction]`: specialized `GameAction` for combat. Manages `targets` and `IBattleContext`. `[ARCH.2.5]`
-- `BattlePassive [CLASS:BattlePassive]`: Base for reactive logic. Hooks are exposed via `get_hooks()`. `[ARCH.1.4]`
-- `IBattleContext [CLASS:IBattleContext]`: Protocol defining the interface for battle interaction (emit events, subscribe, delay characters). `[ARCH.1.10]`
+Foundational abstract classes and interfaces ensuring modularity and decoupling.
+- `GameAction [CLASS:GameAction]`: Abstract base for the Command Pattern. Defines `can_execute()` and `execute()`. `[ARCH.1.2]`
+- `BattleAction [CLASS:BattleAction]`: Specialized `GameAction` for combat. Injected with `IBattleContext`, `targets`, and `action_type`. It provides a `target` property for single-target convenience. `[ARCH.2.5]`
+- `BattlePassive [CLASS:BattlePassive]`: Base for reactive logic. Holds a reference to the `owner` and `IBattleContext`. Subclasses MUST implement `get_hooks()` to return event subscriptions. `[ARCH.1.4]`
+- `IBattleContext [PROTOCOL:IBattleContext]`: Structural typing (Protocol) for the battle orchestrator. Provides methods for `emit()`, `subscribe()`, `delay_character()`, and accessing character/controller registries. `[ARCH.1.10]`
 
 ### Character System [FILE:core/CharacterSystem.py]
-Stateless logic for manipulating `Character` entities. `[ARCH.1.9]`
-- `take_damage()`: Direct HP modification. `[ARCH.1.7]`
-- `generate_focus() / generate_mana()`: Resource replenishment logic.
-- `equip_weapon() / equip_armor()`: Equipment application and base stat calculation.
+Stateless domain logic for manipulating `Character` entities. Isolates rule-heavy operations from data containers. `[ARCH.1.9]`
+- `take_damage()`: Direct HP modification with a floor of 0. `[ARCH.1.7]`
+- `generate_focus() / generate_mana()`: Replenishes floating resources based on the character's `MEN` attribute and `GameRules` limits.
+- `spend_focus() / spend_mana()`: Validates and consumes resources for actions; returns success status.
+- `equip_weapon() / equip_armor()`: Validates item types against `CombatStyle` and updates derived stats like `base_pda` or `max_hp`.
 
 ### Dice Manager [FILE:core/DiceManager.py]
-Random number generation and deterministic roll scheduling.
-- `roll_dice()`: Core rolling logic with support for Advantage/Disadvantage.
-- `schedule_result()`: Used in tests to force specific outcomes.
+Random number generation and deterministic roll scheduling for combat resolution.
+- `roll_dice()`: Core rolling logic supporting single die or 2d20-style Advantage/Disadvantage. Returns a `RollResult`.
+- `schedule_result()`: Injects a predefined integer into a queue, forcing the next `roll_dice()` call to return that value. Critical for deterministic testing.
 
 ### Data Manager [FILE:core/DataManager.py]
-Central registry for loading and accessing data-driven templates. `[ARCH.1.5]`
-- `load_combat_styles()`, `load_game_rules()`, `load_characters()`.
-- `get_action_template()`: Accesses `AttackActionTemplate` by ID.
+Central registry for loading and accessing data-driven templates from JSON files. `[ARCH.1.5]`
+- `load_combat_styles() / load_game_rules() / load_characters() / load_action_templates()`: Methods to populate the internal registries from JSON data.
+- `get_action_template() / get_character() / get_combat_style()`: Methods to retrieve hydrated templates or entities by their unique IDs.
 
 ### Modifiers [FILE:core/Modifiers.py]
-Implementation of the Modifier Stack Pattern. `[ARCH.1.8]`
-- `StatModifier [CLASS:StatModifier]`: Base for all stat changes.
-- `EphemeralModifier`: Changes cleared after combat.
-- `PersistentModifier`: Permanent changes (Equipment, Traits).
+Implementation of the Modifier Stack Pattern for dynamic stat calculation. `[ARCH.1.8]`
+- `StatModifier [CLASS:StatModifier]`: Base for all stat changes. Tracks `stat_name`, `value`, and `source` with a unique UUID.
+- `EphemeralModifier [CLASS:EphemeralModifier]`: Short-term changes intended to be cleared after combat or specific effect durations.
+- `PersistentModifier [CLASS:PersistentModifier]`: Long-term changes typically originating from equipment, traits, or permanent conditions.
 
 ---
 
@@ -112,36 +119,37 @@ Implementation of the Modifier Stack Pattern. `[ARCH.1.8]`
 The `battle` module handles combat orchestration, action resolution, and reactive logic.
 
 ### Battle Manager [FILE:battle/BattleManager.py]
-The central orchestrator of the combat engine. `[ARCH.1.3]`
-- `BattleManager [CLASS:BattleManager]`: Manages the timeline (Min-Heap), Event Bus, and battle lifecycle.
-- `run_battle()`: Main loop that advances ticks and executes turns until a judge declares an end state.
-- `emit()`: Triggers events on the Event Bus. Payload modification is the primary way listeners interact. `[ARCH.2.2]`
-- `delay_character()`: Manipulates the timeline to push a character's action further into the future. `[ARCH.2.1]`
-- `resolve_deaths()`: Sweeps the battlefield for characters with 0 HP and moves them to the graveyard.
+The central orchestrator of the combat engine, managing time and event propagation. `[ARCH.1.3]`
+- `BattleManager [CLASS:BattleManager]`: Manages the `timeline` (Min-Heap), the `listeners` registry (Event Bus), and the character lifecycle. Tracks `current_tick` and maintains a `graveyard`.
+- `run_battle()`: The main engine loop. Executes characters' turns in tick order, managing the "Free Action -> Move/Standard Action" cycle and ensuring `resolve_deaths()` and `judge.rule()` are checked. `[ARCH.2.4]`
+- `emit()`: Triggers events on the Event Bus. Listeners modify the `ActionLoad` or `AttackLoad` payload objects directly. `[ARCH.2.2]`
+- `subscribe() / unsubscribe()`: Manages dynamic listener registration, used by Passives and Status Effects. `[ARCH.1.6]`
+- `delay_character()`: Pushes a character's next turn further into the future on the timeline (e.g., due to Stun). `[ARCH.2.1]`
+- `resolve_deaths()`: Identifies characters at 0 HP, removes them from active play, and moves them to the `graveyard`.
 
 ### Battle Actions [FILE:battle/BattleActions.py]
-Implementations of the Command Pattern for combat. `[ARCH.1.2]`
-- `AttackAction [CLASS:AttackAction]`: Data-driven attack resolution. Handles single-target, multi-target, and AREA attacks. `[ARCH.2.5]`, `[ARCH.2.6]`
-- `GenerateManaAction`: Movement action to manifest mana from the daily reserve into floating mana.
-- `GenerateFocusAction`: Movement action to replenish floating focus.
-- `TogglePosturaDefensiva`: Free action that interacts with the `PosturaDefensiva` passive to switch combat states.
+Implementations of the Command Pattern for combat maneuvers. `[ARCH.1.2]`
+- `AttackAction [CLASS:AttackAction]`: Generic data-driven offensive resolution. Implements the complete attack flow (Roll -> Hit Check -> GdA -> Damage -> Application). Supports `AttackType.AREA` with a Master Roll. `[ARCH.2.5]`, `[ARCH.2.6]`
+- `GenerateManaAction [CLASS:GenerateManaAction]`: A Move Action that manifest mana from the daily reserve into `floating_mp`. `[ARCH.1.1]`
+- `GenerateFocusAction [CLASS:GenerateFocusAction]`: A Move Action that replenishes the `floating_focus` pool.
+- `TogglePosturaDefensiva [CLASS:TogglePosturaDefensiva]`: A Free Action that interacts with the `PosturaDefensiva` passive to toggle combat stances.
 
 ### Battle Passives [FILE:battle/BattlePassives.py]
-Reactive logic and hooks for character abilities. `[ARCH.1.4]`
-- `PosturaDefensiva [CLASS:PosturaDefensiva]`: Complex stateful passive that modifies dice pools and applies precision penalties to tracked targets. `[ARCH.2.7]`
-- `Combo`: Triggers extra attacks on successful hits, scaling with the number of consecutive hits.
-- `GracaDoDuelista`: Provides GdA bonuses and exposes a defensive reaction (Evasão) that costs focus.
-- `ForçaBruta`: Simple GdA multiplier upon successful hits.
-- `MãosPesadas`: Inflicts the `Atordoado` status effect if a hit surpasses a GdA threshold.
+Reactive logic and hooks for character-specific traits and abilities. `[ARCH.1.4]`
+- `PosturaDefensiva [CLASS:PosturaDefensiva]`: A stateful stance that modifies the owner's dice pools and applies persistent `EphemeralModifier` penalties to enemies it has previously hit. `[ARCH.2.7]`
+- `GracaDoDuelista [CLASS:GracaDoDuelista]`: Grants GdA bonuses on `on_gda_modify` and provides an optional defensive reaction (Evasão) that uses `choose_reaction()`.
+- `Combo [CLASS:Combo]`: Monitors `on_attack_end` to trigger recursive `AttackAction` executions (Extra Attacks) upon successful hits.
+- `ForçaBruta [CLASS:ForçaBruta]`: A simple multiplier applied during the `on_gda_modify` phase.
+- `MãosPesadas [CLASS:MãosPesadas]`: Triggers the application of `Atordoado` status if GdA exceeds a threshold during hit resolution.
 
 ### Judges [FILE:battle/Judges.py]
-Victory and defeat condition logic.
-- `BattleJudge [CLASS:BattleJudge]`: Evaluates the current state of characters (Team 1 vs Team 2) to determine the outcome (RUNNING, VICTORY, DEFEAT, DRAW).
+Victory and defeat condition logic, called at the start of every turn and after every standard action.
+- `BattleJudge [CLASS:BattleJudge]`: Evaluates the presence of living characters in each team to determine the `BattleState`.
 
 ### Status Effects [FILE:battle/StatusEffects.py]
-Temporary modifiers and behavioral changes with a duration. `[ARCH.1.8]`
-- `StatusEffect [CLASS:StatusEffect]`: Base for all duration-based effects. Extends `BattlePassive` to use the hook system.
-- `Atordoado [CLASS:Atordoado]`: Stun effect that reduces defense (BDD) and delays the next turn by 50% of the base cost.
+Temporary modifiers and behavioral changes with a turn-based duration. `[ARCH.1.8]`
+- `StatusEffect [CLASS:StatusEffect]`: Abstract base that extends `BattlePassive`. Implements `apply()` and `remove()` logic, including `EphemeralModifier` management.
+- `Atordoado [CLASS:Atordoado]`: Stun effect. Upon application, it immediately calls `delay_character()`. It subscribes to `on_turn_start` to decrement duration or expire.
 
 ---
 
@@ -149,15 +157,16 @@ Temporary modifiers and behavioral changes with a duration. `[ARCH.1.8]`
 The `entities` module contains data-only classes representing game objects. `[ARCH.1.9]`
 
 ### Characters [FILE:entities/Characters.py]
-The primary data container for actors in the engine.
-- `Character [CLASS:Character]`: Tracks state (HP, MP, Focus), attributes (FIS, HAB, MEN), and dynamic properties.
-- **Modifier Stack**: Implements `modifiers` list and `get_stat_total` to calculate real-time stats. `[ARCH.1.8]`
-- **Status Effects**: Manages active `status_effects` affecting the character.
+The primary data container for actors, designed as an anemic entity with a reactive modifier stack. `[ARCH.1.9]`
+- `Character [CLASS:Character]`: Tracks core state: `current_hp`, `current_mp`, `floating_mp`, and `floating_focus`. Maintains references to `CombatStyle`, `Weapon`, and `Armor`.
+- **Modifier Stack**: Uses a `modifiers` list and `get_stat_total()` to compute real-time values for stats like `rank`, `bda`, `bdd`, `pre`, `grd`, `pda`, and `mda`. This ensures stats are never mutated directly. `[ARCH.1.8]`
+- **Dynamic Dice**: Properties `atk_die` and `def_die` allow the modifier stack to influence the character's dice pool sizes (e.g., d12 -> d10).
+- **Status Effects**: Tracks active `StatusEffect` instances that influence behavior via event hooks.
 
 ### Items [FILE:entities/Items.py]
-Definitions for equipment and consumable objects.
-- `Weapon [CLASS:Weapon]`: Dataclass containing damage bonuses, dice types, and properties.
-- `Armor [CLASS:Armor]`: Dataclass containing HP bonuses and protection types.
+Data structures for equipment, used by `CharacterSystem` to populate character stats.
+- `Weapon [CLASS:Weapon]`: Dataclass defining offensive traits. Includes `db` (Damage Bonus), `mda` (Degree of Success multiplier), and `type` (for compatibility checks).
+- `Armor [CLASS:Armor]`: Dataclass defining defensive traits. Includes `hp_bonus` and `type`.
 
 ---
 
@@ -165,26 +174,27 @@ Definitions for equipment and consumable objects.
 The `controllers` module implements the "Decision Loop" for characters, separating AI/Player logic from the engine. `[ARCH.1.1]`
 
 ### Character Controller [FILE:controllers/CharacterController.py]
-- `CharacterController [CLASS:CharacterController]`: Abstract interface for turn-based decision making.
-- `choose_action()`: Entry point for selecting a `BattleAction` during the character's turn.
-- `choose_reaction()`: Entry point for deciding whether to activate optional effects (e.g., Evasion) during another character's action resolution.
-- `PvP1v1Controller [CLASS:PvP1v1Controller]`: Reference implementation for automated 1v1 combat.
+The "Decision Loop" interface that separates character behavior (AI or Player) from engine mechanics. `[ARCH.1.1]`
+- `CharacterController [CLASS:CharacterController]`: Abstract base class. Defines the interface for tactical decision-making.
+- `choose_action()`: Called at the start of a turn. Analyzes the `IBattleContext` and returns a `BattleAction` command. Supports re-decision if the previous action failed validation (via `action_load`). `[ARCH.2.4]`
+- `choose_reaction()`: Called during action resolution (e.g., `on_defense_reaction`). Allows the controller to opt-in to conditional effects (like Evasion) based on the current `AttackLoad`.
+- `PvP1v1Controller [CLASS:PvP1v1Controller]`: Reference implementation for automated combat. Prioritizes Skills over Basic Attacks if Focus is available.
 
 ---
 
 ## 8. Module: Data [MODULE.data]
-The `data` module stores the external definitions that drive the engine's behavior. `[ARCH.1.5]`
+The `data` module stores external JSON definitions that drive engine behavior and character scaling. `[ARCH.1.5]`
 
 ### Action Definitions [FILE:data/AttackActions.json]
-JSON blueprints for skills and basic attacks, defining costs, types, and embedded effects.
+Blueprints for all combat maneuvers. Defines `focus_cost`, `action_type`, `attack_type` (e.g., AREA), and a list of `AttackEffects` (e.g., "add_gda").
 
 ### Character Templates [FILE:data/Characters.json]
-Predefined character archetypes with base attributes and default equipment.
+Hydration templates for characters. Defines base attributes (`FIS`, `HAB`, `MEN`), starting `Weapon` and `Armor`, and initial lists of `Abilities` and `Passives`.
 
 ### Combat Styles [FILE:data/CombatStyles.json]
-Definitions for dice pools and main attributes used by different character classes.
+Archetype definitions that govern dice pool sizes (`atq_die`, `def_die`), the `main_stat` for damage calculation, and equipment requirements (`ArmorType`, `WeaponType`).
 
 ### Game Rules [FILE:data/Rules.json]
-Global constants, scaling tables (HP/MP per attribute), and resource generation rules.
+Global constants and progression tables. Defines `limite_foco`/`limite_mana` multipliers and scaling tables for HP, MP, and `action_cost` based on attribute scores.
 
 
