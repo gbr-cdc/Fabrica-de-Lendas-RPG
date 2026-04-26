@@ -5,104 +5,42 @@ from core.DataManager import DataManager
 from core.Structs import CombatStyle, GameRules, AttackActionTemplate
 from core.Enums import AttributeType, ArmorType, WeaponType, BattleActionType, AttackType
 
-@pytest.fixture
-def dummy_combat_styles_json():
-    return {
-        "Guerreiro": {
-            "name": "Guerreiro",
-            "atq_die": 20,
-            "def_die": 20,
-            "main_stat": "FIS",
-            "armor_type": "heavy",
-            "weapon_type": "great_weapon"
-        }
-    }
-
-@pytest.fixture
-def dummy_game_rules_json():
-    return {
-        "regras_progressao": {
-            "tabela_hp": {"10": 50},
-            "tabela_mp": {"10": 20},
-            "tabela_custos": {"10": 1}
-        },
-        "limite_foco": 3,
-        "limite_mana": 2
-    }
-
-@pytest.fixture
-def dummy_attack_actions_json():
-    return {
-        "BasicAttack": {
-            "nome": "Ataque Basico",
-            "action_type": "standard_action",
-            "attack_type": "basic_attack",
-            "focus_cost": 0,
-            "effects": [
-                {
-                    "id": "add_gda",
-                    "parameters": {"amount": 2}
-                }
-            ]
-        }
-    }
-
-@pytest.fixture
-def dummy_characters_json():
-    return {
-        "char_01": {
-            "Nome": "Arthur",
-            "CombatStyle": "Guerreiro",
-            "controller": "1v1Controller",
-            "FIS": 10,
-            "HAB": 10,
-            "MEN": 10,
-            "Weapon": {
-                "name": "Sword",
-                "db": 2,
-                "mda": 0,
-                "type": "great_weapon"
-            },
-            "Armor": {
-                "name": "Chainmail",
-                "hp_bonus": 10,
-                "type": "heavy"
-            },
-            "Abilities": ["BasicAttack"],
-            "Passives": ["ForçaBruta"]
-        }
-    }
-
-def test_load_combat_styles(dummy_combat_styles_json):
+def test_load_combat_styles():
     dm = DataManager()
-    with patch('builtins.open', mock_open()), patch('json.load', return_value=dummy_combat_styles_json):
-        dm.load_combat_styles('dummy.json')
+    dm.load_combat_styles('data/CombatStyles.json')
         
-    style = dm.get_combat_style("Guerreiro")
-    assert style.name == "Guerreiro"
+    style = dm.get_combat_style("Destruidor")
+    assert style.name == "Destruidor"
     assert style.main_stat == AttributeType.FIS
     assert style.armor_type == ArmorType.HEAVY
+    
+    style = dm.get_combat_style("Duelista")
+    assert style.name == "Duelista"
+    assert style.main_stat == AttributeType.HAB
+    assert style.armor_type == ArmorType.LIGHT
 
-def test_load_game_rules(dummy_game_rules_json):
+def test_load_game_rules():
     dm = DataManager()
-    with patch('builtins.open', mock_open()), patch('json.load', return_value=dummy_game_rules_json):
-        dm.load_game_rules('dummy.json')
+    dm.load_game_rules('data/Rules.json')
         
-    assert dm._game_rules.limite_foco == 3
-    assert dm._game_rules.hp_table == {"10": 50}
+    assert dm._game_rules.limite_foco == 5
+    assert dm._game_rules.hp_table["10"] == 155
 
-def test_load_action_templates(dummy_attack_actions_json):
+def test_load_action_templates():
     dm = DataManager()
-    with patch('builtins.open', mock_open()), patch('json.load', return_value=dummy_attack_actions_json):
-        dm.load_action_templates('dummy.json')
+    dm.load_action_templates('data/AttackActions.json')
         
     template = dm.get_action_template("BasicAttack")
-    assert template.nome == "Ataque Basico"
+    assert template.nome == "Ataque Básico"
     assert template.action_type == BattleActionType.STANDARD_ACTION
     assert template.attack_type == AttackType.BASIC_ATTACK
+    assert len(template.effects) == 0
+    
+    template = dm.get_action_template("SkillN1")
+    assert template.nome == "Habilidade Nível 1"
     assert len(template.effects) == 1
     assert template.effects[0].id == "add_gda"
-    assert template.effects[0].parameters["amount"] == 2
+    assert template.effects[0].parameters["amount"] == 5
 
 def test_get_action_template_key_error():
     dm = DataManager()
@@ -121,33 +59,30 @@ def test_get_combat_style_key_error():
     with pytest.raises(KeyError, match="não foi encontrado"):
         dm.get_combat_style("Invalido")
 
-def test_load_characters_success(dummy_combat_styles_json, dummy_game_rules_json, dummy_characters_json):
+def test_load_characters_success():
     dm = DataManager()
-    with patch('builtins.open', mock_open()), patch('json.load', return_value=dummy_combat_styles_json):
-        dm.load_combat_styles('dummy.json')
-    with patch('builtins.open', mock_open()), patch('json.load', return_value=dummy_game_rules_json):
-        dm.load_game_rules('dummy.json')
-    with patch('builtins.open', mock_open()), patch('json.load', return_value=dummy_characters_json):
-        dm.load_characters('dummy.json')
+    dm.load_combat_styles('data/CombatStyles.json')
+    dm.load_game_rules('data/Rules.json')
+    dm.load_characters('data/Characters.json')
     
-    char = dm.get_character("char_01")
-    assert char.name == "Arthur"
-    assert char.weapon.name == "Sword"
-    assert char.armor.name == "Chainmail"
+    char = dm.get_character("Destruidor")
+    assert char.name == "Destruidor"
+    assert char.weapon.name == "Espada Larga"
+    assert char.armor.name == "Armadura Pesada"
     assert "BasicAttack" in char.active_abilities
 
 def test_load_characters_missing_prereqs():
     dm = DataManager()
     with pytest.raises(KeyError, match="GameRules"):
-        dm.load_characters("dummy.json")
+        dm.load_characters("data/Characters.json")
     
-    dm._game_rules = GameRules([], [], [], 0, 0)
+    dm._game_rules = GameRules({}, {}, {}, 0, 0)
     with pytest.raises(KeyError, match="CombatStyles"):
-        dm.load_characters("dummy.json")
+        dm.load_characters("data/Characters.json")
 
 def test_load_characters_invalid_style():
     dm = DataManager()
-    dm._game_rules = GameRules([], [], [], 0, 0)
+    dm._game_rules = GameRules({}, {}, {}, 0, 0)
     dm._combat_styles = {"Outro": None}
     
     bad_data = {"char_1": {"CombatStyle": "Guerreiro"}}
