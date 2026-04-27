@@ -106,7 +106,7 @@ def update_section(tag, new_content, file_path):
     
     return True, f"Successfully updated tag [{tag}] in {file_path}."
 
-def create_section(content, file_path, after_tag=None):
+def create_section(content, file_path, after_tag=None, target_tag=None):
     """
     Creates a new section or line in a markdown file.
     """
@@ -124,6 +124,28 @@ def create_section(content, file_path, after_tag=None):
             insert_idx = end
         else:
             return False, f"Error: Position tag [{after_tag}] not found."
+    elif target_tag:
+        # Smart placement: find the last occurrence of the pattern FILE_ID.(path)
+        norm_target = target_tag.strip('[]')
+        parts = norm_target.split('.')
+        if len(parts) > 1:
+            pattern = ".".join(parts[:-1]) + "."
+            last_matching_tag = None
+            # Search backwards for the last tag matching the pattern
+            for line in reversed(lines):
+                # Updated regex to include a-z, :, /
+                matches = re.findall(r'\[([a-zA-Z0-9._:/]+)\]', line)
+                for m in reversed(matches):
+                    if m.startswith(pattern):
+                        last_matching_tag = m
+                        break
+                if last_matching_tag:
+                    break
+            
+            if last_matching_tag:
+                start, end, is_header = find_tag_range(last_matching_tag, lines)
+                if start is not None:
+                    insert_idx = end
 
     content_to_insert = content.strip() + '\n'
     
@@ -168,7 +190,7 @@ def resolve_tag(tag, resolved_tags=None, parent_file=None):
 
     # If the tag is in a session (line starts with #), mark all tags in the session as resolved
     if content.startswith('#'):
-        for itag in re.findall(r'\[([A-Z0-9._]+)\]', content):
+        for itag in re.findall(r'\[([a-zA-Z0-9._:/]+)\]', content):
             if itag not in ("DEPENDS", "FROM"):
                 ipath = get_path_for_tag(itag)
                 if ipath:
@@ -263,7 +285,7 @@ if __name__ == "__main__":
                 if "--after" in sys.argv:
                     after_tag = sys.argv[sys.argv.index("--after") + 1]
                 
-                success, message = create_section(new_content, path, after_tag)
+                success, message = create_section(new_content, path, after_tag, target_tag)
             
             print(message)
             sys.exit(0 if success else 1)
