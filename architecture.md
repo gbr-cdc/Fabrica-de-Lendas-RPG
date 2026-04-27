@@ -2,12 +2,8 @@
 
 This document serves as the primary technical reference for the **Fábrica de Lendas** RPG Engine. It combines high-level architectural rules with detailed module documentation to guide both human developers and AI agents.
 
----
-
 ## Project Vision [ARCH.VISION]
 **Fábrica de Lendas** is a data-driven, modular RPG engine designed for tactical combat simulation. It follows a strict **Game-MVC** pattern, where rules and logic are decoupled from presentation. The engine uses an **Event-Driven** architecture to handle complex interactions (Passives, Effects) through an Event Bus.
-
----
 
 ## Architectural Guardrails [ARCH.RULES]
 
@@ -34,8 +30,6 @@ These rules are context-exclusive and MUST be referenced in `MISSION_LOG.md` whe
 **Defensive Payload Auditing [ARCH.RULES.ENGINE.PAYLOAD_TARGET_CHECK]:** Any hook that accesses `AttackLoad.target` MUST perform a null-check if the event it listens to could potentially be emitted during a Master Roll phase or a targetless context.
 - **Lifecycle Safety [ARCH.RULES.CORE.EPHEMERAL]**: Ephemeral hooks (valid for 1 action cycle) MUST be wrapped in `try...finally` within the Orchestrator to guarantee unsubscription.
 
----
-
 ## Project Structure [ARCH.STRUCT_MAP]
 
 ```text
@@ -49,8 +43,6 @@ These rules are context-exclusive and MUST be referenced in `MISSION_LOG.md` whe
 ├── tests/               # Pytest suite (Red/Green TDD)
 └── pvp_simulator/       # Main entry point for simulation
 ```
-
----
 
 ## Module: Core [ARCH.MODULE.core]
 The `core` module contains the fundamental building blocks of the engine.
@@ -110,8 +102,6 @@ Implementation of the Modifier Stack Pattern for dynamic stat calculation. `[ARC
 - `EphemeralModifier [ARCH.MODULE.core.CLASS:EphemeralModifier]`: Short-term changes intended to be cleared after combat or specific effect durations.
 - `PersistentModifier [ARCH.MODULE.core.CLASS:PersistentModifier]`: Long-term changes typically originating from equipment, traits, or permanent conditions.
 
----
-
 ## Module: Battle [ARCH.MODULE.battle]
 The `battle` module handles combat orchestration, action resolution, and reactive logic.
 
@@ -148,8 +138,6 @@ Temporary modifiers and behavioral changes with a turn-based duration. `[ARCH.RU
 - `StatusEffect [ARCH.MODULE.battle.CLASS:StatusEffect]`: Abstract base that extends `BattlePassive`. Implements `apply()` and `remove()` logic, including `EphemeralModifier` management.
 - `Atordoado [ARCH.MODULE.battle.CLASS:Atordoado]`: Stun effect. Upon application, it immediately calls `delay_character()`. It subscribes to `on_turn_start` to decrement duration or expire.
 
----
-
 ## Module: Entities [ARCH.MODULE.entities]
 The `entities` module contains data-only classes representing game objects. `[ARCH.RULES.CORE.ENTITIES]`
 
@@ -165,8 +153,6 @@ Data structures for equipment, used by `CharacterSystem` to populate character s
 - `Weapon [ARCH.MODULE.entities.CLASS:Weapon]`: Dataclass defining offensive traits. Includes `db` (Damage Bonus), `mda` (Degree of Success multiplier), and `type` (for compatibility checks).
 - `Armor [ARCH.MODULE.entities.CLASS:Armor]`: Dataclass defining defensive traits. Includes `hp_bonus` and `type`.
 
----
-
 ## Module: Controllers [ARCH.MODULE.controllers]
 The `controllers` module implements the "Decision Loop" for characters, separating AI/Player logic from the engine. `[ARCH.RULES.CORE.MVC]`
 
@@ -176,8 +162,6 @@ The "Decision Loop" interface that separates character behavior (AI or Player) f
 - `choose_action()`: Called at the start of a turn. Analyzes the `IBattleContext` and returns a `BattleAction` command. Supports re-decision if the previous action failed validation (via `action_load`). `[ARCH.RULES.ENGINE.DECISION]`
 - `choose_reaction()`: Called during action resolution (e.g., `on_defense_reaction`). Allows the controller to opt-in to conditional effects (like Evasion) based on the current `AttackLoad`.
 - `PvP1v1Controller [ARCH.MODULE.controllers.CLASS:PvP1v1Controller]`: Reference implementation for automated combat. Prioritizes Skills over Basic Attacks if Focus is available.
-
----
 
 ## Module: Data [ARCH.MODULE.data]
 The `data` module stores external JSON definitions that drive engine behavior and character scaling. `[ARCH.RULES.CORE.DATA]`
@@ -194,8 +178,6 @@ Archetype definitions that govern dice pool sizes (`atq_die`, `def_die`), the `m
 ### Game Rules [ARCH.MODULE.data.FILE:data/Rules.json]
 Global constants and progression tables. Defines `limite_foco`/`limite_mana` multipliers and scaling tables for HP, MP, and `action_cost` based on attribute scores.
 
----
-
 ## Module: Utilities [ARCH.MODULE.utilities]
 The `utilities` module provides cross-cutting tools for documentation management, system operations, and agent assistance.
 
@@ -211,12 +193,9 @@ The central tool for targeted documentation extraction, recursive dependency res
   - **Extraction:** `python3 utilities/ref_manager.py [TAG1] [TAG2]`
   - **Update:** `python3 utilities/ref_manager.py --update [TAG] "Content" [--from-file path]`
   - **Creation:** `python3 utilities/ref_manager.py --create [NEW_TAG] "Content" [--after TAG]`
-
----
+  - **Deletion:** `python3 utilities/ref_manager.py --delete [TAG]`
 
 ## Test Quality Standards [ARCH.TEST_QUALITY]
-
----
 
 - **Behavior over Implementation [ARCH.TEST_QUALITY.TEST_BEHAVIOR]:** Tests MUST verify the outcome (e.g., final HP, logs, state changes) rather than internal implementation details (e.g., checking specific list indices or private method calls).
 - **Controlled Mocking [ARCH.TEST_QUALITY.MOCKING]:** Use real instances for domain logic (Entities, Systems). Mock ONLY system boundaries (I/O, UI) or to enforce determinism. Use `DiceManager.schedule_result()` for simulating dice rolls.
@@ -224,19 +203,14 @@ The central tool for targeted documentation extraction, recursive dependency res
 - **Decoupling [ARCH.TEST_QUALITY.DECOUPLING]:** Ensure tests do not break upon internal refactors if the public behavior remains unchanged.
 - **Invariants [ARCH.TEST_QUALITY.INVARIANTS]:** Assert that system state remains valid according to ARCH rules (e.g., stats calculated via the Modifier Stack `[ARCH.1.8]`, no negative HP).
 
----
-
 ## Documentation Standards [ARCH.DOC_STANDARDS]
 
-
 ### MISSION [ARCH.DOC_STANDARDS.MISSION]
-
----
 
 #### ENTRY FORMAT [ARCH.DOC_STANDARDS.MISSION.ENTRY]
 
 ```
-- **Header:** `## MISSION: [Title] ([Status]) [PART X]`. Add `[PART X]` only if mission have more parts.
+- **Header:** ## MISSION: [Title] [PART X] [MISSION.ACTIVE.TITLE_OF_MISSION]. Add `[PART X]` only if mission have more parts.
 - **Summary**: Concise technical overview of the goal. Provide enough context to guide execution.
 - **Rule References**: Comma-separated list ARCH.RULES tags of architectural rules relevant to the mission`.
 - **Definition of Done**: Precise, objective criteria that must be satisfied for mission completion.
@@ -249,8 +223,6 @@ The central tool for targeted documentation extraction, recursive dependency res
 - `[BLUE]: Brief, but self contained description of the logic to implement. | Files: path/to/file.py`
 ```
 
----
-
 #### ARCHIVED FORMAT [ARCH.DOC_STANDARDS.MISSION.ARCHIVED]
 
 ```
@@ -260,9 +232,7 @@ The central tool for targeted documentation extraction, recursive dependency res
 - **Steps**: List of completed steps.
 ```
 
----
-
 #### Rules [ARCH.DOC_STANDARDS.MISSION.RULES]
 **Sizing [ARCH.DOC_STANDARDS.MISSION.RULES.SIZING]:** 3-5 steps per part. Max 7 steps (split if larger).
 **Step Sequencing [ARCH.DOC_STANDARDS.MISSION.RULES.SEQUENCING]:** [RED] steps must be followed by its corresponding [GREEN] step and vice-versa. [BLUE] steps can be executed independently.
-**Self-Sufficiency[ARCH.DOC_STANDARDS.MISSION.RULES.SUFFICIENCY]:** Steps MUST be descriptive enough to allow an agent to work without reading the approved `docs/plans/`.
+**Self-Sufficiency[ARCH.DOC_STANDARDS.MISSION.RULES.SUFFICIENCY]:** Steps MUST be descriptive enough to allow an agent to work without reading the approved `docs/plans/`
