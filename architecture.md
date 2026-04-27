@@ -236,3 +236,19 @@ The central tool for targeted documentation extraction, recursive dependency res
 **Sizing [ARCH.DOC_STANDARDS.MISSION.RULES.SIZING]:** 3-5 steps per part. Max 7 steps (split if larger).
 **Step Sequencing [ARCH.DOC_STANDARDS.MISSION.RULES.SEQUENCING]:** [RED] steps must be followed by its corresponding [GREEN] step and vice-versa. [BLUE] steps can be executed independently.
 **Self-Sufficiency[ARCH.DOC_STANDARDS.MISSION.RULES.SUFFICIENCY]:** Steps MUST be descriptive enough to allow an agent to work without reading the approved `docs/plans/`
+
+### MODULE [ARCH.DOC_STANDARDS.MODULE]
+
+```
+## MODULE: Module_name [ARCH.MODULE.module_name]
+Short description of the module and a list of relevant architectural rules. `[ARCH.RULE.(...)]`, ...
+
+### File Name [ARCH.MODULE.module_name.FILE:filepath]
+Short description of the file and a list of relevant architectural rules. `[ARCH.RULE.(...)]`, ...
+
+- function_name() [ARCH.MODULE.module_name.(filepath).function]: function description with parameters, what it returns and internal logic.
+
+#### ClassName [ARCH.MODULE.module_name.CLASS:Classname] 
+Class description.
+- method_name() [ARCH.MODULE.module_name.METHOD:Class.method]: method description with parameters, what it returns and internal logic.
+```
