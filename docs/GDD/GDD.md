@@ -2,35 +2,25 @@
 
 Fundamental mechanics governing character attributes and the passage of time in combat.
 
----
-
 ## Attributes [GDD.CORE.ATTR]
 **Físico (FIS) [GDD.CORE.ATTR.FIS]:** Strength and Resistance. Defines Max Hit Points(PV).
 **Habilidade (HAB) [GDD.CORE.ATTR.HAB]:** Agility and Precision. Defines Base Action Cost.
 **Mente (MEN) [GDD.CORE.ATTR.MEN]:** Focus and Spirit. Defines Max Mana and Focus/Mana generation.
 
----
-
 ## The Time Engine [GDD.CORE.TIME]
 [DEPENDS: GDD.CORE.PROG.HAB]
 Combat uses a continuous flow of "Ticks" instead of rounds.
-
----
 
 ### Action Types [GDD.CORE.TIME.ACTION.TYPES]
 [DEPENDS: GDD.CORE.PROG.HAB]
 **Standard Action:** Used for attack actions, skill use, abilities, and spells. The cost of the action is determined by HAB progression table.
 **Movement action:** Used for moving, using items, and quick actions. The cost of the action is equal to half the cost of a standard action.
 
----
-
 ### Initiative, Scheduling and Turn Order [GDD.CORE.TIME.FLOW]
 [DEPENDS: GDD.CORE.TIME.ACTION.TYPES]
 **Initiative [GDD.CORE.TIME.INIT]:** Characters start with a tick counter equal to their Action Cost. Lowest counter acts first. 
 **Scheduling [GDD.CORE.TIME.SCHE]:** After an action, add the action cost to the character's tick counter depending on the action type. The character with the lowest counter acts next.
 **Draw Resolution [GDD.CORE.TIME.DRAW]:** If two characters have the same tick counter value, the one with the higher HAB value acts first. If the HAB values ​​are equal, the tie must be resolved with a d10 die; the higher value wins. If the die values ​​are tied, roll again.
-
----
 
 ## Attribute Scale [GDD.CORE.SCALE]
 | Value | Scale | Description |
@@ -42,13 +32,9 @@ Combat uses a continuous flow of "Ticks" instead of rounds.
 | 10-12 | Epic | Semi-god level. |
 | 13-15 | Divine | Reality warping, light speed. |
 
----
-
 ## Progression Tables [GDD.CORE.PROG]
 [DEPENDS: GDD.CORE.ATTR]
 Attributes progression tables.
-
----
 
 ### Físico (PV) [GDD.CORE.PROG.FIS]
 [DEPENDS: GDD.CORE.ATTR.FIS]
@@ -71,8 +57,6 @@ Attributes progression tables.
 | 14 | 270 |
 | 15 | 310 |
 
----
-
 ### Habilidade (Action Cost) [GDD.CORE.PROG.HAB]
 [DEPENDS: GDD.CORE.ATTR.HAB]
 | Habilidade | Action Cost |
@@ -93,8 +77,6 @@ Attributes progression tables.
 | 13 | 12 |
 | 14 | 11 |
 | 15 | 10 |
-
----
 
 ### Mente (Mana) [GDD.CORE.PROG.MEN]
 [DEPENDS: GDD.CORE.ATTR.MEN]
@@ -117,13 +99,9 @@ Attributes progression tables.
 | 14 | 260 |
 | 15 | 300 |
 
----
-
 # GDD Module: Combat Resolution [GDD.COMBAT]
 
 This module defines how attacks are resolved, damage is calculated, and equipment tiers are scaled.
-
----
 
 ## Attack Resolution [GDD.COMBAT.FLOW]
 [DEPENDS: GDD.STYLES.DEFINITION]
@@ -141,20 +119,14 @@ This module defines how attacks are resolved, damage is calculated, and equipmen
 **Guard (GRD) [GDD.COMBAT.FLOW.GRD]:** Causes a hit to miss even if GdA is positive.
 **Hit Formula [GDD.COMBAT.FLOW.HIT]:** GdA + Pre - Grd. If result > 0 attack hits, else attack miss.
 
----
-
 ## Damage Calculation [GDD.COMBAT.DAMAGE]
 [DEPENDS: GDD.COMBAT.FLOW, GDD.EQUIP.TIERS.WEAPONS, GDD.STYLES.DEFINITION]
 **Attack Power (PdA) [GDD.COMBAT.DAMAGE.PDA]:** Weapon Base Damage(DB) + Primary Attribute
 **Attack Multiplier (MdA) [GDD.COMBAT.DAMAGE.MDA]:** Multiplies GdA in damage formula. Defined by weapon (Default: 1)
 **Damage Formula [GDD.COMBAT.DAMAGE.FORMULA]:** `PdA + (GdA * MdA)`
 
----
-
 # GDD Module: Equipments [GDD.EQUIP]
 Informations about equipments in the game like types, progression table by tiers and effects table
-
----
 
 ## Equipment Types [GDD.EQUIP.TYPES]
 
@@ -168,11 +140,7 @@ Informations about equipments in the game like types, progression table by tiers
 **Magical Focus [GDD.EQUIP.TYPES.WEAPONS.MAGICAL]:**
 Objects used as arcane focus, such as Staves, Orbs, or Grimoires.
 
----
-
 ## Equipment Tiers [GDD.EQUIP.TIERS]
-
----
 
 ### Weapons [GDD.EQUIP.TIERS.WEAPONS]
 
@@ -184,8 +152,6 @@ Objects used as arcane focus, such as Staves, Orbs, or Grimoires.
 | **4** | 10 | 2 |
 | **5** | 15 | 3 |
 
----
-
 ### Armors [GDD.EQUIP.TIERS.ARMOR]
 
 | Tier | Cloak | Light | Heavy |
@@ -196,14 +162,10 @@ Objects used as arcane focus, such as Staves, Orbs, or Grimoires.
 | **4** | 35 | 70 | 110 |
 | **5** | 55 | 110 | 160 |
 
----
-
 # GDD Module: Combat Styles [GDD.STYLES]
 
 ## Introduction [GDD.STYLES.DEFINITION]
 The combat style represents how the character fights, what equipment they use, and what combat skills they possess. Combat styles define the attack die, defense die, weapon and armor type the character can use, and their main attribute, used in damage calculation.
-
----
 
 ## Destruidor [GDD.STYLES.DESTRUIDOR]
 [DEPENDS: GDD.CORE.ATTR, GDD.COMBAT, GDD.STATUS.ATORDOADO]
@@ -220,8 +182,6 @@ The combat style represents how the character fights, what equipment they use, a
 **Alcance [GDD.STYLES.DESTRUIDOR.ALCANCE]:** While using a GREAT_WEAPON, spend 2 Focus to attack all targets in melee range. [AttackType = AREA]
 **Postura Defensiva [GDD.STYLES.DESTRUIDOR.POSTURA_DEFENSIVA]:** Switch dice to d10/d10. Alcance cost reduced to 1 Focus. Hits apply a -1 Precision penalty to the target's next action against you.
 
----
-
 ## Defensor [GDD.STYLES.DEFENSOR]
 [DEPENDS: GDD.CORE.ATTR, GDD.COMBAT.FLOW, GDD.STATUS.ATORDOADO]
 
@@ -236,8 +196,6 @@ The combat style represents how the character fights, what equipment they use, a
 **Golpe de Escudo [GDD.STYLES.DEFENSOR.GOLPE_ESCUDO]:** Spend 2 Focus to attack using defense die. Damage halved, GdA treated as 0. If GdA > 3, target is ATORDOADO.
 **Pressionar [GDD.STYLES.DEFENSOR.PRESSIONAR]:** Spend 2 Focus to gain advantage on menace tests. Every time you succeed in a menace test you gain advantage to attack that target in your next action.
 **Proteger [GDD.STYLES.DEFENSOR.PROTEGER]:** Spend 2 Focus to redirect a melee attack from an adjacent ally to yourself. Does not work against SKILL or MAGIC.
-
----
 
 ## Duelista [GDD.STYLES.DUELISTA]
 [DEPENDS: GDD.CORE.ATTR, GDD.STATUS.DESEQUILIBRADO, GDD.COMBAT.FLOW]
@@ -254,8 +212,6 @@ The combat style represents how the character fights, what equipment they use, a
 **Contra Ataque [GDD.STYLES.DUELISTA.CONTRA_ATAQUE]:** If GdA < 0, spend 2 Focus to counter-attack.
 **Pés Ligeiros [GDD.STYLES.DUELISTA.PES_LIGEIROS]:** Spend 2 Focus during movement for +50% distance bonus or advantage on disengage tests. Melee hits gives the target -1 Precision against you on their next action.
 
----
-
 ## Mestre das Armas [GDD.STYLES.MESTRE_ARMAS]
 [DEPENDS: GDD.CORE.ATTR, GDD.COMBAT.FLOW]
 
@@ -270,8 +226,6 @@ The combat style represents how the character fights, what equipment they use, a
 **Ataque Concentrado [GDD.STYLES.MESTRE_ARMAS.CONCENTRADO]:** Spend movement action to prepare. Grants you advantage in attacks on your next action against one target. If in Defensive posture, switch to Offensive before attacking. Grants opportunity attack if target leaves range.
 **Ataque Desarmante [GDD.STYLES.MESTRE_ARMAS.DESARMANTE]:** Spend 2 Focus. On hit, target has disadvantage on their next action. GdA treated as 0 for damage.
 **Dança da Batalha [GDD.STYLES.MESTRE_ARMAS.VITAIS]:** Spend 2 Focus to gain +50% movement or gain advnatage in menace tests. Every time you roll a 10 to attack, this attack counts as a movement action.
-
----
 
 ## Retalhador [GDD.STYLES.RETALHADOR]
 [DEPENDS: GDD.CORE.ATTR, GDD.COMBAT.FLOW]
@@ -288,8 +242,6 @@ The combat style represents how the character fights, what equipment they use, a
 **Pressionar [GDD.STYLES.RETALHADOR.PRESSIONAR]:** Spend 2 Focus to gain advantage on menace tests. Success grants advantage on attack against that target on your next action. Every time you hit a target, that target gains (TO BE DONE)
 **Barreira de Lâminas [GDD.STYLES.RETALHADOR.BARREIRA]:** Attacks apply Precision penalty to target against you. Penalty doubles on hit.
 
----
-
 ## Lutador [GDD.STYLES.LUTADOR]
 [DEPENDS: GDD.CORE.ATTR, GDD.COMBAT.FLOW, GDD.STATUS.ATORDOADO, GDD.STATUS.DERRUBADO]
 
@@ -305,8 +257,6 @@ The combat style represents how the character fights, what equipment they use, a
 **Balão [GDD.STYLES.LUTADOR.BALAO]:** Replace attack with grapple roll. On hit, FIS contest to throw. Target is Knocked Down and takes PdA damage.
 **Evasão [GDD.STYLES.LUTADOR.EVASAO]:** Spend 2 Focus to add 1d4 to defense when targeted.
 
----
-
 ## Atirador [GDD.STYLES.ATIRADOR]
 [DEPENDS: GDD.CORE.ATTR, GDD.COMBAT.FLOW]
 
@@ -321,8 +271,6 @@ The combat style represents how the character fights, what equipment they use, a
 **Mirar [GDD.STYLES.ATIRADOR.MIRAR]:** If outside melee, spend Movement to Aim. Next action has advantage (unless damaged first).
 **Versátil [GDD.STYLES.ATIRADOR.VERSATIL]:** Can use primary ability of a second HAB-based style. Can switch styles at start of turn if equipped correctly.
 **Escorregadio [GDD.STYLES.ATIRADOR.ESCORREGADIO]:** Spend 2 Focus during movement for +50% distance or advantage on disengage tests.
-
----
 
 ## Conjurador [GDD.STYLES.CONJURADOR]
 [DEPENDS: GDD.CORE.ATTR, GDD.COMBAT.FLOW]
@@ -340,13 +288,9 @@ The combat style represents how the character fights, what equipment they use, a
 **Bateria de Mana [GDD.STYLES.CONJURADOR.BATERIA]:** Can store Mana equal to MEN even outside combat.
 **Resoluto [GDD.STYLES.CONJURADOR.RESOLUTO]:** Above 50% HP, gain advantage on MEN checks to maintain Mana.
 
----
-
 # GDD Module: Resources [GDD.RESOURCES]
 
 List of resources used in the game.
-
----
 
 ## Mana [GDD.RESOURCES.MANA]
 [DEPENDS: GDD.CORE.ATTR.MEN, GDD.CORE.TIME.ACTION.TYPES]
@@ -355,8 +299,6 @@ List of resources used in the game.
 **Floating Mana** Mana available to cast spells.
 **Usage:** Must turn mana into floating mana to use it. Floating mana is used to cast spells. Dissipates at the end of combat.
 **Concentration:** Taking damage requires a MEN test (DC 5 + source main attribute) to avoid losing manifested mana.
-
----
 
 ## Focus [GDD.RESOURCES.FOCUS]
 [DEPENDS: GDD.CORE.ATTR.MEN, GDD.CORE.TIME.ACTION.TYPES]
@@ -367,16 +309,12 @@ List of resources used in the game.
 **Cumulative Costs:** Abilities with cumulative costs double the cost for each subsequent use. The cost resets at the start of your next action.
 **Conversion:** For hybrid martial/magic styles, a Movement Action can convert Focus to Mana.
 
----
-
 ## Hit Points (PV)[GDD.RESOURCES.PV]
 [DEPENDS: CORE.ATTR.FIS, CORE.PROG.FIS]
 
 **Capacity:** Defined by the FIS attribute.
 **Use:** Represents the character's health. If the value reaches equal or below zero, the character is incapacitated.
 **Recovery:** Characters recover health through spells, items, or by resting in a safe place. Incapacitated characters need specific itens or a full rest ro recover.
-
----
 
 # GDD Module: Status Effects [GDD.STATUS]
 [DEPENDS: GDD.CORE.TIME, GDD.COMBAT.FLOW]
