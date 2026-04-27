@@ -8,6 +8,9 @@ PATH_MAPPING = {
     "ARCH.": "architecture.md",
     "GDD.": "docs/GDD/GDD.md",
     "WORKFLOWS.": "workflows.md",
+    "MISSION.": "MISSION_LOG.md",
+    "AGENT.": "agent_rules.md",
+    "TESTE.": "tests/test.md",
 }
 
 def get_path_for_tag(tag):
@@ -133,8 +136,8 @@ def create_section(content, file_path, after_tag=None, target_tag=None):
             last_matching_tag = None
             # Search backwards for the last tag matching the pattern
             for line in reversed(lines):
-                # Updated regex to include a-z, :, /
-                matches = re.findall(r'\[([a-zA-Z0-9._:/]+)\]', line)
+                # Updated regex to include \w for Unicode support
+                matches = re.findall(r'\[([\w._:/]+)\]', line)
                 for m in reversed(matches):
                     if m.startswith(pattern):
                         last_matching_tag = m
@@ -149,12 +152,59 @@ def create_section(content, file_path, after_tag=None, target_tag=None):
 
     content_to_insert = content.strip() + '\n'
     
+    # Ensure there's a blank line before the new content if it's not at the beginning
+    if insert_idx > 0:
+        if not lines[insert_idx-1].endswith('\n'):
+            lines[insert_idx-1] += '\n\n'
+        elif lines[insert_idx-1] != '\n':
+            content_to_insert = '\n' + content_to_insert
+    
     new_lines = lines[:insert_idx] + [content_to_insert] + lines[insert_idx:]
 
     with open(file_path, 'w', encoding='utf-8') as f:
         f.writelines(new_lines)
     
     return True, f"Successfully created content in {file_path}."
+
+def delete_section(tag, file_path):
+    """
+    Deletes a specific section or line in a markdown file based on a [TAG].
+    """
+    if not os.path.isfile(file_path):
+        return False, f"Error: File {file_path} not found."
+
+    with open(file_path, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+
+    start, end, is_header = find_tag_range(tag, lines)
+    if start is None:
+        return False, f"Error: Tag [{tag}] not found in {file_path}."
+
+    # Remove the section
+    del lines[start:end]
+
+    # Clean up blank lines
+    # 1. If we deleted the first lines, remove leading blank lines
+    if start == 0:
+        while lines and lines[0].strip() == "":
+            lines.pop(0)
+    # 2. If we deleted middle lines, we might have doubled blank lines
+    # Or if we deleted the last lines, we might have trailing blank lines
+    else:
+        # Check if we left doubled blank lines at the deletion point
+        # After deletion, 'lines[start]' was previously 'lines[end]'
+        while start < len(lines) and start > 0 and lines[start].strip() == "" and lines[start-1].strip() == "":
+            lines.pop(start)
+        
+        # If we are now at the end of the file, remove trailing blank lines
+        if start >= len(lines):
+            while lines and lines[-1].strip() == "":
+                lines.pop()
+
+    with open(file_path, 'w', encoding='utf-8') as f:
+        f.writelines(lines)
+    
+    return True, f"Successfully deleted tag [{tag}] from {file_path}."
 
 def resolve_tag(tag, resolved_tags=None, parent_file=None):
     """
@@ -190,7 +240,7 @@ def resolve_tag(tag, resolved_tags=None, parent_file=None):
 
     # If the tag is in a session (line starts with #), mark all tags in the session as resolved
     if content.startswith('#'):
-        for itag in re.findall(r'\[([a-zA-Z0-9._:/]+)\]', content):
+        for itag in re.findall(r'\[([\w._:/]+)\]', content):
             if itag not in ("DEPENDS", "FROM"):
                 ipath = get_path_for_tag(itag)
                 if ipath:
@@ -235,13 +285,17 @@ if __name__ == "__main__":
         print("  Extraction: python ref_manager.py [TAG1] [TAG2] ...")
         print("  Update:     python ref_manager.py --update [TAG] \"New Content\" [--from-file path]")
         print("  Creation:   python ref_manager.py --create [TAG_TO_FIND_FILE] \"New Content\" [--after TAG]")
+        print("  Deletion:   python ref_manager.py --delete [TAG]")
         sys.exit(1)
     
-    # Handle Update/Creation Modes
-    if any(arg in sys.argv for arg in ("--update", "-u", "--create", "-c")):
+    # Handle Update/Creation/Deletion Modes
+    if any(arg in sys.argv for arg in ("--update", "-u", "--create", "-c", "--delete", "-d")):
         try:
-            mode = "update" if any(arg in sys.argv for arg in ("--update", "-u")) else "create"
-            flag = next(arg for arg in sys.argv if arg in ("--update", "-u", "--create", "-c"))
+            mode = "update"
+            if any(arg in sys.argv for arg in ("--create", "-c")): mode = "create"
+            if any(arg in sys.argv for arg in ("--delete", "-d")): mode = "delete"
+            
+            flag = next(arg for arg in sys.argv if arg in ("--update", "-u", "--create", "-c", "--delete", "-d"))
             flag_idx = sys.argv.index(flag)
             
             if len(sys.argv) < flag_idx + 2:
@@ -250,24 +304,25 @@ if __name__ == "__main__":
             
             target_tag = sys.argv[flag_idx + 1]
             
-            # Content source
-            new_content = ""
-            if "--from-file" in sys.argv:
-                ff_idx = sys.argv.index("--from-file")
-                if len(sys.argv) < ff_idx + 2:
-                    print("Error: Missing file path for --from-file.")
-                    sys.exit(1)
-                ff_path = sys.argv[ff_idx + 1]
-                if not os.path.isfile(ff_path):
-                    print(f"Error: Content file '{ff_path}' not found.")
-                    sys.exit(1)
-                with open(ff_path, 'r', encoding='utf-8') as f:
-                    new_content = f.read()
-            else:
-                if len(sys.argv) < flag_idx + 3:
-                    print(f"Error: Missing content for {mode}.")
-                    sys.exit(1)
-                new_content = sys.argv[flag_idx + 2]
+            if mode != "delete":
+                # Content source
+                new_content = ""
+                if "--from-file" in sys.argv:
+                    ff_idx = sys.argv.index("--from-file")
+                    if len(sys.argv) < ff_idx + 2:
+                        print("Error: Missing file path for --from-file.")
+                        sys.exit(1)
+                    ff_path = sys.argv[ff_idx + 1]
+                    if not os.path.isfile(ff_path):
+                        print(f"Error: Content file '{ff_path}' not found.")
+                        sys.exit(1)
+                    with open(ff_path, 'r', encoding='utf-8') as f:
+                        new_content = f.read()
+                else:
+                    if len(sys.argv) < flag_idx + 3:
+                        print(f"Error: Missing content for {mode}.")
+                        sys.exit(1)
+                    new_content = sys.argv[flag_idx + 2]
             
             if not target_tag.startswith('['):
                 print(f"Error: '{target_tag}' is not a valid tag.")
@@ -280,17 +335,19 @@ if __name__ == "__main__":
             
             if mode == "update":
                 success, message = update_section(target_tag, new_content, path)
-            else:
+            elif mode == "create":
                 after_tag = None
                 if "--after" in sys.argv:
                     after_tag = sys.argv[sys.argv.index("--after") + 1]
                 
                 success, message = create_section(new_content, path, after_tag, target_tag)
+            else: # mode == "delete"
+                success, message = delete_section(target_tag, path)
             
             print(message)
             sys.exit(0 if success else 1)
         except (ValueError, IndexError):
-            print("Error: Invalid arguments for update/creation.")
+            print("Error: Invalid arguments for update/creation/deletion.")
             sys.exit(1)
 
     tags = sys.argv[1:]
