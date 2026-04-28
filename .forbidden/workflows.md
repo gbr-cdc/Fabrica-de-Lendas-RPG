@@ -21,7 +21,7 @@
 3. **Iterate:** Wait for User approval.
 4. **Implement:** Execute the plan.
 5. **Test:** Test if implementation have correctly achieved the desired outcome.
-6. **Document:** For all implementation files created or modified, check for documentation using patterns in [AGENT.REF_MANAGER.CONVENTIONS]. **Verify parent hierarchy** (Module > File > Class) before using `ref_manager.py` to --update or --create sections following [ARCH.DOC_STANDARDS.MODULE].
+6. **Document:** Go to [WORKFLOWS.DOC_MODULES] workflow.
 
 ## FLASH EXECUTION [WORKFLOWS.FLASH_EXECUTION]
 1. **Understand:** Undestand the objective of the execution and what needs to be done.
@@ -54,13 +54,19 @@
         - Mark completed steps [ ] -> [x]
         - Append `| State: description of step results with all information summarized for the next step` to the [GREEN] or [BLUE] step.
             - **Source of truth**: Consider this state note is all next agent will have from previous context, so make sure it is descriptive and concise.
-    2. **Document:** For all implementation files created or modified, check for documentation using patterns in [AGENT.REF_MANAGER.CONVENTIONS]. **Verify parent hierarchy** (Module > File > Class) before using `ref_manager.py` to --update or --create sections following [ARCH.DOC_STANDARDS.MODULE].
-    3. **Context Cleanup**: After completing a [RED/GREEN] or [BLUE] phase, suggest a commit message and call for a new session for context reset.
+    2. **Context Cleanup**: After completing a [RED/GREEN] or [BLUE] phase, suggest a commit message and call for a new session for context reset.
 
 ### Mission Completion
 1. All tests MUST pass.
 2. 100% test coverage for the modified modules (`pytest --cov`).
 3. **DoD Check**: Explicitly verify each item in the mission's "Definition of Done".
 4. **Archive**: Fetch [ARCH.DOC_STANDARDS.MISSION.ARCHIVED]. Delete [MISSION.(...)]. Create [MISSION.ARCHIVE.(...)] following [ARCH.DOC_STANDARDS.MISSION.ARCHIVED].
-5. **Git Message**: `task_name: brief_summary`.
-6. **Sync**: Ask to commit changes
+5. **Document**: Go to [WORKFLOWS.DOC_MODULES] workflow.
+
+## DOCUMENT MODULES [WORKFLOWS.DOC_MODULES]
+1. **Get template**: Fetch [ARCH.DOC_STANDARDS.MODULE] for documentation template.
+2. **Filter**: Identify modified implementation files. For completed missions, check all files referenced in completed steps. Exclude `tests/`, root files, and `docs/`. 
+3. **Identify**: Use [AGENT.REF_MANAGER.CONVENTIONS] to create the tags for modified files documentations. 
+4. **Evaluate**: Fetch each file documentation. Check for missing elements or discrepancies vs [ARCH.DOC_STANDARDS.MODULE] based on recent changes (public APIs, state transitions, or core logic).
+5. **Sync**: Use `ref_manager.py --update` or `--create` to align the module documentation with the code.
+    - If `--create` fails with `"Error: Parent tag [ARCH.module_name] not found."`, default to creating the missing module documentation (`[ARCH.module_name]`) with file documentation (`[ARCH.module_name.FileName]) inside, following [ARCH.DOC_STANDARDS.MODULE].
