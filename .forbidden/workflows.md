@@ -12,27 +12,33 @@
 ## ARCHITECTURAL ANALYSIS [WORKFLOWS.ARCH_ANALYSIS]
 1. **Receive:** Fetch [ARCH.(...)] tags user wants to discuss. If you didn't received any, aks for tags.
 2. **Discuss**: Discuss architectural problems and needed changes based on the information received.
-3. **Apply**: Updated, create or delete [ARCH.(...)] according with desired changes.
+3. **Apply**: Updated, create or delete [ARCH.(...)] tags according with desired changes.
 4. **Impact Analysis**: Determine if existing code needs a migration mission.
 
 ## INDEPENDENT EXECUTION [WORKFLOWS.INDEPENDENT_EXECUTION]
-1. **Understand:** Problem statement and User's desired outcome/technical preference. Challange user directions if you have better solutions to the problem.
+1. **Understand:** Problem statement and user's desired outcome/technical preference. Challange user directions if you have better solutions to the problem.
 2. **Propose:** Create/edit `docs/plans/[IE_task_description].md` with a execution plan.
 3. **Iterate:** Wait for User approval.
 4. **Implement:** Execute the plan.
 5. **Test:** Test if implementation have correctly achieved the desired outcome.
+6. **Document:** For all implementation files created or modified, check for documentation using patterns in [AGENT.REF_MANAGER.CONVENTIONS]. **Verify parent hierarchy** (Module > File > Class) before using `ref_manager.py` to --update or --create sections following [ARCH.DOC_STANDARDS.MODULE].
 
-## OPERATIONAL CHANGES
+## FLASH EXECUTION [WORKFLOWS.FLASH_EXECUTION]
+1. **Understand:** Undestand the objective of the execution and what needs to be done.
+2. **Execute:** Follow the instructions given by the user.
+3. **Verify:** Check if all objectives were achieved and if implementations done works as intended.
+
+## OPERATIONAL CHANGES [WORKFLOWS.OPERATIONAL_CHANGES]
 1. **Receive:** Fetch [WORKFLOWS.GLOBAL]
-2. **Identify**: Pinpoint specific workflow and steps that caused confusion or inefficiency.
-3. **Propose**: Propose the updates tha should be applied to specifc [WORKFLOWS.(...)] tags.
+2. **Identify**: Pinpoint specific workflow and steps that caused confusion or inefficiency, or new elements that need to be implemented.
+3. **Propose**: Propose the updates tha should be applied to specifc [WORKFLOWS.(...)] or [AGENT.(...)] tags.
 4. **Iterate**: Wait for user approval.
 5. **Update**: Applay updates.
 6. **Report & Sync**:
     - Generate a reunion report in `docs/reports/reunion_YYYY-MM-DD_HH:MM.md` summarizing: problems identified, changes made, files modified.
     - Ask USER to commit changes and suggest message: `reunion: description_of_change`.
 
-## MISSION EXECUTION
+## MISSION EXECUTION [WORKFLOWS.MISSION_EXECUTION]
 1. **Receive:** Fetch a [MISSION.ACITVE.(...)] tag. If you didn't received one, ask for one. If mission have no steps to complete, stop and inform the problem.
 2. **State Check:** Check last `State: (...)` notes in previous completed steps if available for context.
 3. **Phase Execution:** Select a project phase to execute.
@@ -48,7 +54,8 @@
         - Mark completed steps [ ] -> [x]
         - Append `| State: description of step results with all information summarized for the next step` to the [GREEN] or [BLUE] step.
             - **Source of truth**: Consider this state note is all next agent will have from previous context, so make sure it is descriptive and concise.
-    2. **Context Cleanup**: After completing a [RED/GREEN] or [BLUE] phase, suggest a commit message and call for a new session for context reset.
+    2. **Document:** For all implementation files created or modified, check for documentation using patterns in [AGENT.REF_MANAGER.CONVENTIONS]. **Verify parent hierarchy** (Module > File > Class) before using `ref_manager.py` to --update or --create sections following [ARCH.DOC_STANDARDS.MODULE].
+    3. **Context Cleanup**: After completing a [RED/GREEN] or [BLUE] phase, suggest a commit message and call for a new session for context reset.
 
 ### Mission Completion
 1. All tests MUST pass.
