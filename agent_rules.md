@@ -15,6 +15,8 @@ Agents must use `python3 utilities/ref_manager.py` for all documentation operati
 
 ### Reference Conventions [AGENT.REF_MANAGER.CONVENTIONS]
 Considering filepath = module_name/FileName.py
+- **Module Documentation:** To access documentation for a specific module, use the pattern: `[ARCH.module_name]`
+    - Example: `[ARCH.core]`
 - **File Documentation:** To access documentation for a specific file, use the pattern: `[ARCH.module_name.FileName]`
     - Example: `[ARCH.core.BaseClasses]`
 - **Class Documentation:** To access documentation for a class, use: `[ARCH.module_name.FileName.CLASS:ClassName]`
