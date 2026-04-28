@@ -267,7 +267,7 @@ The central tool for targeted documentation extraction, recursive dependency res
 - resolve_tag() [ARCH.utilities.ref_manager.FUNCTION:resolve_tag]: The primary recursive solver. It fetches a tag's content and iteratively resolves all nested "DEPENDS:" tags. It maintains a `resolved_tags` registry to prevent circular dependencies. When a tag is found in a header (session), all other tags within that session are automatically marked as resolved to ensure clean extraction.
 - extract_section() [ARCH.utilities.ref_manager.FUNCTION:extract_section]: The parsing engine. It searches for a tag (prioritizing headers) and extracts the corresponding block of text. If the tag is found in a header, it captures all content until a header of equal or higher level is encountered.
 - update_section() [ARCH.utilities.ref_manager.FUNCTION:update_section]: The modification engine. Locates a tag and replaces its entire section (if a header) or line with new content. Supports reading content from a string or an external file via `--from-file`.
-- create_section() [ARCH.utilities.ref_manager.FUNCTION:create_section]: The creation engine. Implements **Smart Placement**: if no `--after` tag is provided, it matches the new tag's hierarchical pattern (e.g., `ARCH.data.`) and appends after the last occurrence of a related entry. Supports manual positioning via `--after [TAG]`.
+- create_section() [ARCH.utilities.ref_manager.FUNCTION:create_section]: The creation engine. Implements **Smart Placement** and **Fail-Fast Validation**: it prevents duplicate tags and ensures hierarchical integrity. New tags are placed after their parent or last sibling based on prefix matching. It fails if a parent tag is missing (returning `"Error: Parent tag [prefix] not found."` for 3+ component tags) or if the file identifier is missing (for 2 component tags), ensuring documentation structure is maintained. Supports manual positioning via `--after [TAG]`.
 - get_path_for_tag() [ARCH.utilities.ref_manager.FUNCTION:get_path_for_tag]: A utility that normalizes tags and determines the correct source file path by matching the tag's prefix against the `PATH_MAPPING`.
 
 #### CLI Usage [ARCH.utilities.ref_manager.CLI]
@@ -350,11 +350,3 @@ Description of command-line usage.
 - Never invent variables/functions just to satisfy the template
 - Preserve existing tags when updating
 - Prefer extending over rewriting
-
-## MODULE: tests [ARCH.tests]
-Testing suite and utilities for the project, adhering to testing standards. `[ARCH.TEST_QUALITY]`
-
-### json_integrity_checker [ARCH.tests.utils.json_integrity_checker]
-Utility for dynamically extracting top-level keys from JSON files, primarily used for test parametrization.
-
-- get_json_keys() [ARCH.tests.utils.json_integrity_checker.FUNCTION:get_json_keys]: Automatically reads the top-level keys from a JSON file to provide a list of valid IDs dynamically. This avoids hardcoding keys in unit tests and supports the behavior-driven testing standard `[ARCH.TEST_QUALITY]`.
