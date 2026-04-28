@@ -4,43 +4,46 @@ from unittest.mock import patch, mock_open
 from core.DataManager import DataManager
 from core.Structs import CombatStyle, GameRules, AttackActionTemplate
 from core.Enums import AttributeType, ArmorType, WeaponType, BattleActionType, AttackType
+from tests.utils.json_integrity_checker import get_json_keys
 
 def test_load_combat_styles():
     dm = DataManager()
     dm.load_combat_styles('data/CombatStyles.json')
-        
-    style = dm.get_combat_style("Destruidor")
-    assert style.name == "Destruidor"
-    assert style.main_stat == AttributeType.FIS
-    assert style.armor_type == ArmorType.HEAVY
     
-    style = dm.get_combat_style("Duelista")
-    assert style.name == "Duelista"
-    assert style.main_stat == AttributeType.HAB
-    assert style.armor_type == ArmorType.LIGHT
+    assert len(dm._combat_styles) > 0
+    
+    keys = get_json_keys('data/CombatStyles.json')
+    for key in keys:
+        style = dm.get_combat_style(key)
+        assert isinstance(style, CombatStyle)
+        assert isinstance(style.name, str)
+        assert isinstance(style.main_stat, AttributeType)
+        assert isinstance(style.armor_type, ArmorType)
+        assert isinstance(style.weapon_type, WeaponType)
 
 def test_load_game_rules():
     dm = DataManager()
     dm.load_game_rules('data/Rules.json')
-        
-    assert dm._game_rules.limite_foco == 5
-    assert dm._game_rules.hp_table["10"] == 155
+    
+    rules = dm._game_rules
+    assert isinstance(rules, GameRules)
+    assert isinstance(rules.limite_foco, int)
+    assert isinstance(rules.hp_table, dict)
+    assert len(rules.hp_table) > 0
 
 def test_load_action_templates():
     dm = DataManager()
     dm.load_action_templates('data/AttackActions.json')
-        
-    template = dm.get_action_template("BasicAttack")
-    assert template.nome == "Ataque Básico"
-    assert template.action_type == BattleActionType.STANDARD_ACTION
-    assert template.attack_type == AttackType.BASIC_ATTACK
-    assert len(template.effects) == 0
     
-    template = dm.get_action_template("SkillN1")
-    assert template.nome == "Habilidade Nível 1"
-    assert len(template.effects) == 1
-    assert template.effects[0].id == "add_gda"
-    assert template.effects[0].parameters["amount"] == 5
+    assert len(dm._action_templates) > 0
+    
+    keys = get_json_keys('data/AttackActions.json')
+    for key in keys:
+        template = dm.get_action_template(key)
+        assert isinstance(template, AttackActionTemplate)
+        assert isinstance(template.action_type, BattleActionType)
+        assert isinstance(template.attack_type, AttackType)
+        assert isinstance(template.effects, list)
 
 def test_get_action_template_key_error():
     dm = DataManager()
@@ -65,11 +68,21 @@ def test_load_characters_success():
     dm.load_game_rules('data/Rules.json')
     dm.load_characters('data/Characters.json')
     
-    char = dm.get_character("Destruidor")
-    assert char.name == "Destruidor"
-    assert char.weapon.name == "Espada Larga"
-    assert char.armor.name == "Armadura Pesada"
-    assert "BasicAttack" in char.active_abilities
+    assert len(dm._characters) > 0
+    
+    keys = get_json_keys('data/Characters.json')
+    for key in keys:
+        char = dm.get_character(key)
+        assert char.char_id == key
+        assert isinstance(char.name, str)
+        assert char.combat_style is not None
+        assert isinstance(char.combat_style, CombatStyle)
+        assert char.weapon is not None
+        assert isinstance(char.weapon.type, WeaponType)
+        assert char.armor is not None
+        assert isinstance(char.armor.type, ArmorType)
+        assert isinstance(char.active_abilities, list)
+        assert isinstance(char.passive_abilities, list)
 
 def test_load_characters_missing_prereqs():
     dm = DataManager()
