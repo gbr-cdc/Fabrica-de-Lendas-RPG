@@ -32,17 +32,28 @@ def find_tag_range(tag, lines):
     found_idx = -1
     
     # PASS 1: Look for the tag in a header
+    in_code_block = False
     for i, line in enumerate(lines):
         clean_line = line.strip()
-        if search_tag in line and 'DEPENDS:' not in clean_line:
+        if clean_line.startswith('```'):
+            in_code_block = not in_code_block
+            continue
+            
+        if not in_code_block and search_tag in line and 'DEPENDS:' not in clean_line:
             if clean_line.startswith('#'):
                 found_idx = i
                 break
     
     if found_idx == -1:
         # PASS 2: Fallback to any line
+        in_code_block = False
         for i, line in enumerate(lines):
-            if search_tag in line and 'DEPENDS:' not in line.strip():
+            clean_line = line.strip()
+            if clean_line.startswith('```'):
+                in_code_block = not in_code_block
+                continue
+                
+            if not in_code_block and search_tag in line and 'DEPENDS:' not in clean_line:
                 found_idx = i
                 break
 
@@ -55,10 +66,17 @@ def find_tag_range(tag, lines):
     if header_match:
         level = len(header_match.group(1))
         end_idx = found_idx + 1
+        in_code_block = False
         for i in range(found_idx + 1, len(lines)):
-            next_line = lines[i].strip()
-            if next_line.startswith('#'):
-                next_header_match = re.match(r'^(#+)', next_line)
+            line = lines[i]
+            clean_line = line.strip()
+            
+            # Toggle code block state
+            if clean_line.startswith('```'):
+                in_code_block = not in_code_block
+                
+            if not in_code_block and clean_line.startswith('#'):
+                next_header_match = re.match(r'^(#+)', clean_line)
                 next_level = len(next_header_match.group(1))
                 if next_level <= level:
                     break
@@ -119,6 +137,27 @@ def create_section(content, file_path, after_tag=None, target_tag=None):
     with open(file_path, 'r', encoding='utf-8') as f:
         lines = f.readlines()
 
+    # 1. Existence Check
+    norm_target = target_tag.strip('[]') if target_tag else None
+    
+    all_tags = []
+    tag_positions = [] # List of (tag, line_idx)
+    in_code_block = False
+    for i, line in enumerate(lines):
+        clean_line = line.strip()
+        if clean_line.startswith('```'):
+            in_code_block = not in_code_block
+            continue
+        if not in_code_block:
+            matches = re.findall(r'\[([\w._:/]+)\]', line)
+            for m in matches:
+                if m not in ("DEPENDS", "FROM"):
+                    all_tags.append(m)
+                    tag_positions.append((m, i))
+    
+    if norm_target and norm_target in all_tags:
+        return False, f"Error: Tag [{norm_target}] already exists."
+
     insert_idx = len(lines)
     
     if after_tag:
@@ -128,27 +167,27 @@ def create_section(content, file_path, after_tag=None, target_tag=None):
         else:
             return False, f"Error: Position tag [{after_tag}] not found."
     elif target_tag:
-        # Smart placement: find the last occurrence of the pattern FILE_ID.(path)
-        norm_target = target_tag.strip('[]')
         parts = norm_target.split('.')
         if len(parts) > 1:
-            pattern = ".".join(parts[:-1]) + "."
+            prefix = ".".join(parts[:-1])
             last_matching_tag = None
-            # Search backwards for the last tag matching the pattern
-            for line in reversed(lines):
-                # Updated regex to include \w for Unicode support
-                matches = re.findall(r'\[([\w._:/]+)\]', line)
-                for m in reversed(matches):
-                    if m.startswith(pattern):
-                        last_matching_tag = m
-                        break
-                if last_matching_tag:
+            
+            # Search backwards for the last tag matching the prefix or its children
+            for m, idx in reversed(tag_positions):
+                if m == prefix or m.startswith(prefix + "."):
+                    last_matching_tag = m
                     break
             
             if last_matching_tag:
                 start, end, is_header = find_tag_range(last_matching_tag, lines)
                 if start is not None:
                     insert_idx = end
+            else:
+                # Fail-Fast Validation
+                if len(parts) >= 3:
+                    return False, f"Error: Parent tag [{prefix}] not found."
+                else:
+                    return False, f"Error: File identifier [{prefix}] not found. The target file is missing its root documentation tag."
 
     content_to_insert = content.strip() + '\n'
     
@@ -240,11 +279,19 @@ def resolve_tag(tag, resolved_tags=None, parent_file=None):
 
     # If the tag is in a session (line starts with #), mark all tags in the session as resolved
     if content.startswith('#'):
-        for itag in re.findall(r'\[([\w._:/]+)\]', content):
-            if itag not in ("DEPENDS", "FROM"):
-                ipath = get_path_for_tag(itag)
-                if ipath:
-                    resolved_tags.add(f"{ipath}:{itag}")
+        in_code_block = False
+        for line in content.split('\n'):
+            clean_line = line.strip()
+            if clean_line.startswith('```'):
+                in_code_block = not in_code_block
+                continue
+            
+            if not in_code_block:
+                for itag in re.findall(r'\[([\w._:/]+)\]', line):
+                    if itag not in ("DEPENDS", "FROM"):
+                        ipath = get_path_for_tag(itag)
+                        if ipath:
+                            resolved_tags.add(f"{ipath}:{itag}")
 
     # Look for dependency lines: [DEPENDS: tag1, tag2]
     dep_match = re.search(r'\[DEPENDS:\s*([^\]]+)\]', content)

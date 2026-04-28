@@ -175,3 +175,61 @@ def test_delete_section_non_existent():
     success, msg = ref_manager.delete_section("[TESTE.NON_EXISTENT]", TEST_FILE)
     assert success is False
     assert "Error: Tag [[TESTE.NON_EXISTENT]] not found" in msg
+
+def test_extract_section_code_block():
+    content = ref_manager.extract_section("[TESTE.CODE_BLOCK]", TEST_FILE)
+    assert "## Code Block Test [TESTE.CODE_BLOCK]" in content
+    assert "## This should not be a header [TESTE.INSIDE_CODE]" in content
+    assert "Final line of section." in content
+    assert "```markdown" in content
+
+def test_resolve_tag_code_block_session():
+    resolved = set()
+    ref_manager.resolve_tag("[TESTE.CODE_BLOCK]", resolved_tags=resolved)
+    
+    # TESTE.CODE_BLOCK should be resolved
+    assert f"{TEST_FILE}:TESTE.CODE_BLOCK" in resolved
+    # TESTE.INSIDE_CODE should NOT be resolved because it's in a code block
+    assert f"{TEST_FILE}:TESTE.INSIDE_CODE" not in resolved
+
+def test_create_section_duplicate():
+    tag = "[TESTE.BASIC]"
+    content = "## Duplicate [TESTE.BASIC]\nContent."
+    success, msg = ref_manager.create_section(content, TEST_FILE, target_tag=tag)
+    assert success is False
+    assert "Error: Tag [TESTE.BASIC] already exists" in msg
+
+def test_create_section_fail_fast_parent_missing():
+    # TESTE.NON_EXISTENT.CHILD should fail because TESTE.NON_EXISTENT is missing
+    tag = "[TESTE.NON_EXISTENT.CHILD]"
+    content = "### Child [TESTE.NON_EXISTENT.CHILD]\nContent."
+    success, msg = ref_manager.create_section(content, TEST_FILE, target_tag=tag)
+    assert success is False
+    assert "Error: Parent tag [TESTE.NON_EXISTENT] not found" in msg
+
+def test_create_section_fail_fast_identifier_missing():
+    tag = "[INVALID.NEW]"
+    # Ensure PATH_MAPPING has INVALID.
+    original_mapping = ref_manager.PATH_MAPPING.copy()
+    ref_manager.PATH_MAPPING["INVALID."] = TEST_FILE # Pointing to TEST_FILE which has no INVALID tags
+    try:
+        content = "## Invalid [INVALID.NEW]\nContent."
+        success, msg = ref_manager.create_section(content, TEST_FILE, target_tag=tag)
+        assert success is False
+        assert "Error: File identifier [INVALID] not found" in msg
+    finally:
+        ref_manager.PATH_MAPPING = original_mapping
+
+def test_smart_placement_new_hierarchy():
+    # [TESTE.PARENT.NEW_CHILD] should be placed after [TESTE.CHILD] (which is a child of PARENT)
+    tag = "[TESTE.PARENT.NEW_CHILD]"
+    content = "### New Child [TESTE.PARENT.NEW_CHILD]\nNew child content."
+    success, msg = ref_manager.create_section(content, TEST_FILE, target_tag=tag)
+    assert success is True
+    
+    with open(TEST_FILE, 'r', encoding='utf-8') as f:
+        text = f.read()
+    
+    # In test.md, [TESTE.CHILD] is the only child of [TESTE.PARENT]
+    # It ends with a horizontal rule '---' and some blank lines.
+    assert "### Child Section [TESTE.CHILD]\nChild content.\n\n---\n\n### New Child [TESTE.PARENT.NEW_CHILD]" in text

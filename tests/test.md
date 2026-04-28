@@ -37,6 +37,14 @@ Inner content 1.
 [TESTE.INNER_2]
 Inner content 2.
 
+## Code Block Test [TESTE.CODE_BLOCK]
+This section contains a code block.
+```markdown
+## This should not be a header [TESTE.INSIDE_CODE]
+Content inside code block.
+```
+Final line of section.
+
 ## Smart Placement Test [TESTE.SMART_1]
 Content 1.
 
