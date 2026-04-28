@@ -22,7 +22,7 @@ def setup_test_file():
 
 def test_get_path_for_tag():
     assert ref_manager.get_path_for_tag("[TESTE.BASIC]") == TEST_FILE
-    assert ref_manager.get_path_for_tag("ARCH.DOC") == "architecture.md"
+    assert ref_manager.get_path_for_tag("ARCH.DOC") == ".forbidden/architecture.md"
     assert ref_manager.get_path_for_tag("[INVALID.TAG]") is None
 
 def test_find_tag_range_basic():
