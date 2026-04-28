@@ -5,10 +5,10 @@ import os
 # Configuration: Tag prefixes mapped to their respective files
 # This makes it easy to update the documentation structure.
 PATH_MAPPING = {
-    "ARCH.": "architecture.md",
-    "GDD.": "docs/GDD/GDD.md",
-    "WORKFLOWS.": "workflows.md",
-    "MISSION.": "MISSION_LOG.md",
+    "ARCH.": ".forbidden/architecture.md",
+    "GDD.": ".forbidden/GDD.md",
+    "WORKFLOWS.": ".forbidden/workflows.md",
+    "MISSION.": ".forbidden/MISSION_LOG.md",
     "AGENT.": "agent_rules.md",
     "TESTE.": "tests/test.md",
 }
