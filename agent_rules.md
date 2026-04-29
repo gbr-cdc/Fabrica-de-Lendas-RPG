@@ -2,16 +2,33 @@
 
 This document defines the operational rules and skills for AI agents. Adherence to these rules is MANDATORY.
 
+## Behavioral Constraints [AGENT.BEHAVIOR]
+- **Communication:** Be highly succinct. Do not output conversational filler. Acknowledge commands briefly.
+- **Code Modifications:** Make ONLY the changes requested. Avoid large, unnecessary refactorings unless explicitly commanded.
+- **Scope:** Never touch or alter files, functions, or variables unrelated to the immediate task.
+- **Workflow:** Do not do anything if you don't have an active workflow as explained in [AGENT.PROTOCOL.WORKFLOW].
+
 ## Skill: Reference Manager [AGENT.REF_MANAGER]
 This is the ONLY valid interface for accessing [AGENT.ACCESS_RULES.FORBIDDEN_FILES].
-It should be used for accessing agent_rules.md after initial read.
+It should be used for editing agent_rules.md after initial read.
 Agents must use `python3 utilities/ref_manager.py` for all documentation operations.
 
-- **Fetch a tag:** Extract content and resolve dependencies. Use: `python3 utilities/ref_manager.py [TAG]`
-- **Create a tag:** Append new content. Use: `python3 utilities/ref_manager.py --create [TAG_FOR_FILE] "Content" [--after TAG]`
-    - *Smart Placement:* If `--after` is omitted, `ref_manager` will attempt to place it logically based on tag hierarchy.
-- **Update a tag:** Replace existing section or line. Use: `python3 utilities/ref_manager.py --update [TAG] "New Content"`
+- **Tag content:** 
+    - Line Tag: A tag placed inside a standard line of text (e.g., Timeout rule [TAG_TIME]: Set timeout to 30s). It references and modifies ONLY that specific single line.
+    - Section Tag: A tag placed inside a Markdown header (e.g., ### Database Rules [TAG_DB]). It references the header and all content below it, stopping immediately before the next header of equal or higher level.
+- **Fetch a tag:** Get referenced content with the tag. Use: `python3 utilities/ref_manager.py [TAG]`
+- **Create a tag:** Append new content. Use: `python3 utilities/ref_manager.py --create [TAG_FOR_FILE] "Content"`
+    - *Smart Placement:* `ref_manager` will automatically place the new tag logically based on tag hierarchy.
+- **Update a tag:** Replace existing section or line. Use: `python3 utilities/ref_manager.py --update [TAG] "New Content" [--from-file path]`
+    - Single-Line Constraint: If updating a line tag, the "New Content" MUST be exactly one line. Do not pass multi-line strings. 
+    - Line Tag Preservation: When updating a line, you MUST include the exact original line tag within your "New Content".
+    - Section Tag Preservation: When updating a section, your "New Content" MUST start with the original Markdown header containing the tag (e.g., ## Section Name [TAG]). Do not strip the header away.
 - **Delete a tag:** Remove a section or line. Use: `python3 utilities/ref_manager.py --delete [TAG]`
+
+### Efficiency Rules [AGENT.REF_MANAGER.EFFICIENCY]
+To minimize redundant operations and maximize context utility:
+- **Avoid Redundant Fetches:** Do not fetch a tag if you already have its content in your current context.
+- **Batch Requests:** Optimize `ref_manager` usage by determining all necessary tags beforehand. Execute a single call with multiple tags: `python3 utilities/ref_manager.py [TAG1] [TAG2] [TAG3]...`
 
 ### Reference Conventions [AGENT.REF_MANAGER.CONVENTIONS]
 Considering filepath = module_name/FileName.py
@@ -53,8 +70,16 @@ Failure to follow this protocol invalidates the task result.
 - `.forbidden/workflows.md` (Prefix: `WORKFLOWS.`)
 - `.forbidden/architecture.md` (Prefix: `ARCH.`)
 
+### Raw Project File Policy [AGENT.ACCESS_RULES.RAW_FILES]
+Reading raw project files (e.g., source code, scripts) is a costly operation. Agents MUST prefer fetching a file's documentation via `ref_manager` rather than opening the raw file directly.
+
+**ONLY read a raw file if at least one of the following is true:**
+- The user explicitly asked you to read the raw file.
+- The file's documentation does not exist.
+- You have already fetched and read the file's documentation, and it lacks the specific information needed for your task.
+
 ## Protocol: Workflow Execution [AGENT.PROTOCOL.WORKFLOW]
-1. **Receive Workflow:** Agents must fetch the relevant workflow tag (e.g., `[WORKFLOWS.FEATURE_PLANNING]`) at the start of a task.
+1. **Receive Workflow:** You should receive a [WORKFLOWS.(...)] tag in the frist prompt. Fetch the tag and make ir your active workflow. If you don't have one, ask for it. Refuse to do anything without an active workflow.
 2. **Sequential Order:** Steps MUST be executed in the exact order they are numbered. Do not skip steps.
 3. **Exclusivity:** Only ONE workflow can be active at a time.
 4. **Completion:** A workflow must be fully completed (all steps checked or reported as done) before switching to another workflow.
