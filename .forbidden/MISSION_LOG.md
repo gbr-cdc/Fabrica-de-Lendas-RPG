@@ -2,48 +2,6 @@
 
 ## ACTIVE MISSIONS [MISSION.ACTIVE]
 
-### MISSION: Core Module Integrity [MISSION.ACTIVE.CORE_MODULE_INTEGRITY]
-- **Summary**: Refactor foundational tests in the `core` module to eliminate mock abuse. Replace `MagicMock` with real object instances (`Character`, `StatModifier`, `GameRules`) to verify behavioral outcomes and system integrity.
-- **Rule References**: [ARCH.RULES.CORE.DATA_DRIVEN], [ARCH.RULES.CORE.MODIFIER], [ARCH.RULES.CORE.ENTITIES]
-- **Definition of Done**: Core tests pass using real object instances instead of mocks. Internal logic is verified via state assertions.
-- **Plan**: [test_quality_improvement.md](docs/plans/test_quality_improvement.md)
-- **Steps**:
-    - [x] [BLUE] [Implementation]: Refactor `test_Modifiers.py` to use real `Character` and `StatModifier` instances. Assert final stat totals instead of internal list modifications. | Files: tests/core/test_Modifiers.py | State: Modifiers verified with real Character objects loaded via DataManager. Behavioral assertions replaced mock-based logic. All 6 tests passing.
-    - [x] [BLUE] [Implementation]: Implement `create_dummy_entity` utility to generate valid random entities (Characters, Weapons, Armor) for testing based on [GDD.CORE.ATTR], [GDD.CORE.PROG], and [GDD.EQUIP.TIERS]. | Files: tests/utils/entity_factory.py | State: Utility implemented and verified. Successfully generates Characters, Weapons, and Armor with GDD-compliant stats scaled by attributes and tiers.
-    - [x] [BLUE] [Implementation]: Correct modifications made in the first mission step in tests/core/test_Modifiers.py to use the create_dummy_entity utility instead of DataManager to create characters. | Files: tests/core/test_Modifiers.py tests/utils/entity_factory.py | State: Refactor verified. DataManager dependency removed from test_Modifiers.py; characters now created via create_dummy_character. All 6 tests passing.
-    - [x] [BLUE] [Implementation]: Refactor `test_DataManager.py` to verify data loading from real `data/` JSONs, ensuring structural integrity between files and objects. | Files: tests/core/test_DataManager.py | State: DataManager tests refactored to use real data/ JSONs for happy paths, ensuring integration with actual project data. 11 tests passing.
-    - [ ] [BLUE] [Implementation]: Update `test_BaseClasses.py` and `test_Structs.py` to ensure core data containers and interfaces are verified as behavior-driving entities. | Files: tests/core/test_BaseClasses.py, tests/core/test_Structs.py
-
-### MISSION: Battle Orchestration & Logic [MISSION.ACTIVE.BATTLE_ORCHESTRATION_AND_LOGIC]
-- **Summary**: Refactor `battle/` module tests to verify combat outcomes using real objects. Eliminate `MagicMock` for Characters, Actions, and Judges in favor of integration scenarios.
-- **Rule References**: [ARCH.RULES.CORE.COMMAND], [ARCH.RULES.CORE.OBSERVER], [ARCH.ENGINE.TIMELINE], [ARCH.ENGINE.PAYLOAD]
-- **Definition of Done**: Combat outcomes (damage, timeline, status) are verified via integration tests with real entities.
-- **Plan**: [test_quality_improvement.md](docs/plans/test_quality_improvement.md)
-- **Steps**:
-    - [ ] [BLUE] [Implementation]: Refactor `test_BattleManager.py` to replace `MagicMock` characters with real `Character` instances and verify timeline/tick logic. | Files: tests/battle/test_BattleManager.py
-    - [ ] [BLUE] [Implementation]: Refactor `test_BattleActions.py` to assert behavioral outcomes (damage, resource cost) instead of `execute()` call counts. | Files: tests/battle/test_BattleActions.py
-    - [ ] [BLUE] [Implementation]: Refactor `test_BattlePassives.py` to verify event-driven triggers with real payloads and state modifications. | Files: tests/battle/test_BattlePassives.py
-    - [ ] [BLUE] [Implementation]: Refactor `test_StatusEffects.py` and `test_Judges.py` to verify duration-based modifications and win/loss conditions with real entities. | Files: tests/battle/test_StatusEffects.py, tests/battle/test_Judges.py
-
-### MISSION: Controllers, Entities & Data [MISSION.ACTIVE.CONTROLLERS_ENTITIES_DATA]
-- **Summary**: Grouped refactor for smaller modules. Ensure `CharacterController` decision loops and entity stat calculations are verified as system behaviors.
-- **Rule References**: [ARCH.RULES.CORE.MVC], [ARCH.RULES.CORE.DATA], [ARCH.RULES.CORE.ENTITIES]
-- **Definition of Done**: AI controllers and entity stats are verified through behavior tests. JSON definitions are validated against Python structs.
-- **Plan**: [test_quality_improvement.md](docs/plans/test_quality_improvement.md)
-- **Steps**:
-    - [ ] [BLUE] [Implementation]: Refactor `test_CharacterController.py` to verify `PvP1v1Controller` decisions in real scenarios without mocking internal logic. | Files: tests/controllers/test_CharacterController.py
-    - [ ] [BLUE] [Implementation]: Refactor `test_Characters.py` to verify complex modifier stacks and `get_stat_total` accuracy with real data. | Files: tests/entities/test_Characters.py
-    - [ ] [BLUE] [Implementation]: Implement a Data Integrity Test to validate all JSON files in `data/` against their Python struct definitions. | Files: tests/core/test_DataManager.py
-
-### MISSION: System Integration & Regression (ACTIVE) [MISSION.ACTIVE.SYSTEM_INTEGRATION_AND_REGRESSION]
-- **Summary**: Final verification of engine stability through full combat scenarios and invariant assertions.
-- **Rule References**: [ARCH.GLOBAL]
-- **Definition of Done**: Engine stability is confirmed via end-to-end battle scenarios and continuous invariant assertions.
-- **Plan**: [test_quality_improvement.md](docs/plans/test_quality_improvement.md)
-- **Steps**:
-    - [ ] [BLUE] [Implementation]: Create high-level scenario tests (e.g., Duel Scenarios) that run battles from start to finish and assert final outcomes. | Files: tests/battle/test_EngineEdgeCases.py
-    - [ ] [BLUE] [Implementation]: Implement invariant checks (e.g., non-negative HP, sorted timeline) to be run across all combat integration tests. | Files: tests/battle/test_BattleManager.py
-
 ## ARCHIVED MISSIONS [MISSION.ARCHIVE]
 
 ### 2026-04-23 00:18: Area Attacks Implementation [PART 2] [MISSION.ARCHIVE.AREA_ATTACKS_IMPLEMENTATION_PART_2]
