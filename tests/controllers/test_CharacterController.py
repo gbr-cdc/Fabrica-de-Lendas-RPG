@@ -1,90 +1,63 @@
 import pytest
-from unittest.mock import MagicMock, patch
 from controllers.CharacterController import PvP1v1Controller
+from tests.utils.entity_factory import create_dummy_character
+from tests.utils.test_context import BattleTestContext
+from battle.BattleActions import AttackAction
 
 def test_pvp1v1_controller_no_target():
     ctrl = PvP1v1Controller()
-    actor = MagicMock()
-    context = MagicMock()
-    # Context only returns the actor, no enemies
-    context.get_characters.return_value = [actor]
+    actor = create_dummy_character(char_id="hero")
+    context = BattleTestContext(characters=[actor])
     
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError) as excinfo:
         ctrl.choose_action(actor, context)
+    assert "não conseguiu achar um alvo" in str(excinfo.value)
 
-def test_pvp1v1_controller_with_target_no_focus():
+def test_pvp1v1_controller_chooses_basic_attack_when_no_focus():
     ctrl = PvP1v1Controller()
-    actor = MagicMock()
+    actor = create_dummy_character(char_id="hero")
     actor.floating_focus = 0
-    target = MagicMock()
-    context = MagicMock()
-    context.get_characters.return_value = [actor, target]
+    target = create_dummy_character(char_id="enemy")
+    context = BattleTestContext(characters=[actor, target])
     
-    # Setup mock templates
-    basic_atk = MagicMock()
-    skill_atk = MagicMock()
-    skill_atk.focus_cost = 5
+    action = ctrl.choose_action(actor, context)
     
-    def mock_get_template(name):
-        if name == "BasicAttack":
-            return basic_atk
-        return skill_atk
-    
-    context.get_template.side_effect = mock_get_template
-    
-    with patch('battle.BattleActions.registry') as mock_registry:
-        mock_action_class = MagicMock()
-        mock_registry.__getitem__.return_value = mock_action_class
-        
-        ctrl.choose_action(actor, context)
-        
-        # It should have chosen BasicAttack because floating_focus (0) < cost (5)
-        mock_registry.__getitem__.assert_called_with("AttackAction")
-        mock_action_class.assert_called_with(basic_atk, actor, [target], context)
+    assert isinstance(action, AttackAction)
+    assert action.template.id == "BasicAttack"
+    assert action.targets == [target]
 
-def test_pvp1v1_controller_with_target_with_focus():
+def test_pvp1v1_controller_chooses_skill_when_has_focus():
     ctrl = PvP1v1Controller()
-    actor = MagicMock()
+    actor = create_dummy_character(char_id="hero")
     actor.floating_focus = 10
-    target = MagicMock()
-    context = MagicMock()
-    context.get_characters.return_value = [actor, target]
+    target = create_dummy_character(char_id="enemy")
+    context = BattleTestContext(characters=[actor, target])
     
-    # Setup mock templates
-    basic_atk = MagicMock()
-    skill_atk = MagicMock()
-    skill_atk.focus_cost = 5
+    action = ctrl.choose_action(actor, context)
     
-    def mock_get_template(name):
-        if name == "BasicAttack":
-            return basic_atk
-        return skill_atk
-    
-    context.get_template.side_effect = mock_get_template
-    
-    with patch('battle.BattleActions.registry') as mock_registry:
-        mock_action_class = MagicMock()
-        mock_registry.__getitem__.return_value = mock_action_class
-        
-        ctrl.choose_action(actor, context)
-        
-        # It should have chosen SkillN1 because floating_focus (10) >= cost (5)
-        mock_registry.__getitem__.assert_called_with("AttackAction")
-        mock_action_class.assert_called_with(skill_atk, actor, [target], context)
+    assert isinstance(action, AttackAction)
+    assert action.template.id == "SkillN1"
+    assert action.targets == [target]
 
-def test_pvp1v1_controller_with_action_load():
+def test_pvp1v1_controller_with_action_load_chooses_basic_attack():
+    # When action_load is provided (e.g. reaction or specific trigger), 
+    # the controller logic currently always falls back to BasicAttack in PvP1v1Controller
     ctrl = PvP1v1Controller()
-    actor = MagicMock()
-    target = MagicMock()
-    context = MagicMock()
-    context.get_characters.return_value = [actor, target]
-    action_load = MagicMock() # Not None
+    actor = create_dummy_character(char_id="hero")
+    target = create_dummy_character(char_id="enemy")
+    context = BattleTestContext(characters=[actor, target])
+    action_load = object() # Dummy non-None action_load
     
-    basic_atk = MagicMock()
-    context.get_template.return_value = basic_atk
+    action = ctrl.choose_action(actor, context, action_load)
     
-    with patch('battle.BattleActions.registry') as mock_registry:
-        mock_action_class = MagicMock()
-        mock_registry.__getitem__.return_value = mock_action_class
-        ctrl.choose_action(actor, context, action_load)
-        mock_action_class.assert_called_with(basic_atk, actor, [target], context)
+    assert isinstance(action, AttackAction)
+    assert action.template.id == "BasicAttack"
+    assert action.targets == [target]
+
+def test_pvp1v1_controller_reaction_always_true():
+    ctrl = PvP1v1Controller()
+    actor = create_dummy_character()
+    context = BattleTestContext()
+    action_load = object()
+    
+    assert ctrl.choose_reaction(actor, "any_id", action_load, context) is True

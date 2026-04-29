@@ -1,25 +1,15 @@
 import pytest
-from unittest.mock import MagicMock
-from entities.Characters import Character
-from core.Structs import GameRules, CombatStyle
 from core.Enums import AttributeType, ArmorType, WeaponType
 from entities.Items import Weapon, Armor
 from core.Modifiers import EphemeralModifier, PersistentModifier
 from core.CharacterSystem import CharacterSystem
+from core.Structs import CombatStyle
+from tests.utils.entity_factory import create_dummy_character, create_dummy_weapon, create_dummy_armor, get_default_rules
 
 @pytest.fixture
-def dummy_rules():
-    return GameRules(
-        hp_table={"10": 50},
-        mp_table={"10": 10},
-        action_cost_table={"10": 100},
-        limite_foco=3,
-        limite_mana=2
-    )
-
-@pytest.fixture
-def dummy_style():
-    return CombatStyle(
+def dummy_char():
+    """Returns a controlled Character instance for testing core systems."""
+    style = CombatStyle(
         name="Guerreiro",
         atq_die=20,
         def_die=20,
@@ -27,29 +17,26 @@ def dummy_style():
         armor_type=ArmorType.HEAVY,
         weapon_type=WeaponType.GREAT_WEAPON
     )
-
-@pytest.fixture
-def dummy_char(dummy_rules, dummy_style):
-    return Character(
-        char_id="char_01",
+    # Using fixed attributes for predictable tests
+    return create_dummy_character(
         name="Arthur",
         attributes=[10, 10, 10], # FIS, HAB, MEN
-        combat_style=dummy_style,
-        rules=dummy_rules
+        combat_style=style
     )
 
 def test_character_starts_alive_with_max_hp(dummy_char):
     assert CharacterSystem.is_alive(dummy_char) is True
-    assert dummy_char.current_hp == 50
-    assert dummy_char.max_hp == 50
+    assert dummy_char.current_hp == dummy_char.max_hp
+    assert dummy_char.current_hp > 0
 
 def test_character_take_damage_reduces_hp(dummy_char):
+    initial_hp = dummy_char.current_hp
     CharacterSystem.take_damage(dummy_char, 30)
-    assert dummy_char.current_hp == 20
+    assert dummy_char.current_hp == initial_hp - 30
     assert CharacterSystem.is_alive(dummy_char) is True
 
 def test_character_death(dummy_char):
-    CharacterSystem.take_damage(dummy_char, 100)
+    CharacterSystem.take_damage(dummy_char, dummy_char.max_hp + 10)
     assert dummy_char.current_hp == 0
     assert CharacterSystem.is_alive(dummy_char) is False
 
@@ -67,14 +54,15 @@ def test_character_equip_weapon_invalid_type(dummy_char):
     assert return_value[0] == False
 
 def test_character_equip_armor(dummy_char):
+    initial_hp = dummy_char.max_hp
     a = Armor(name="Placas", hp_bonus=10, type=ArmorType.HEAVY)
     CharacterSystem.equip_armor(dummy_char, a)
     assert dummy_char.armor == a
-    assert dummy_char.max_hp == 60 # 50 base + 10
+    assert dummy_char.max_hp == initial_hp + 10
     
     a2 = Armor(name="Placas Mágicas", hp_bonus=20, type=ArmorType.HEAVY)
     CharacterSystem.equip_armor(dummy_char, a2)
-    assert dummy_char.max_hp == 70 # 50 base + 20 (replaced 10)
+    assert dummy_char.max_hp == initial_hp + 20 # replaced 10
 
 def test_character_equip_armor_invalid_type(dummy_char):
     a = Armor(name="Farrapos", hp_bonus=0, type=ArmorType.LIGHT)
@@ -83,7 +71,7 @@ def test_character_equip_armor_invalid_type(dummy_char):
     assert "não pode equipar" in msg
 
 def test_character_generate_focus(dummy_char):
-    max_focus = dummy_char.rules.limite_foco * dummy_char.men # 3 * 10 = 30
+    max_focus = dummy_char.rules.limite_foco * dummy_char.men
     assert dummy_char.floating_focus == 0
     
     generated = CharacterSystem.generate_focus(dummy_char)
@@ -91,19 +79,19 @@ def test_character_generate_focus(dummy_char):
     assert dummy_char.floating_focus == generated
     
     # Fill to max
-    for _ in range(10):
+    for _ in range(20):
         CharacterSystem.generate_focus(dummy_char)
     assert dummy_char.floating_focus == max_focus
 
 def test_character_generate_mana(dummy_char):
-    # Dummy char max mp is 10
-    dummy_char.current_mp = 5
-    max_floating = dummy_char.rules.limite_mana * dummy_char.men # 2 * 10 = 20
+    # Prepare current mp
+    dummy_char.current_mp = 10
+    max_floating = dummy_char.rules.limite_mana * dummy_char.men
     
     CharacterSystem.generate_mana(dummy_char)
     # It drains from current_mp to add to floating_mp
     assert dummy_char.floating_mp > 0
-    assert dummy_char.current_mp < 5
+    assert dummy_char.current_mp < 10
 
 def test_character_spend_focus(dummy_char):
     dummy_char.floating_focus = 10
@@ -143,10 +131,14 @@ def test_character_stat_properties_with_modifiers(dummy_char):
     assert dummy_char.bda == dummy_char.base_bda + 3
 
 def test_character_status_effects(dummy_char):
-    effect = MagicMock()
-    dummy_char.add_status_effect(effect)
+    from tests.utils.test_context import BattleTestContext
+    from battle.StatusEffects import StatusEffect
+    
+    context = BattleTestContext()
+    effect = StatusEffect("TestEffect", 1, dummy_char, context)
+    
     assert effect in dummy_char.status_effects
-    dummy_char.remove_status_effect(effect)
+    effect.remove()
     assert effect not in dummy_char.status_effects
 
 def test_character_clear_ephemeral_modifiers(dummy_char):

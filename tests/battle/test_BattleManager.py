@@ -1,18 +1,21 @@
 import pytest
-from unittest.mock import MagicMock
 from battle.BattleManager import BattleManager
+from battle.Judges import BattleJudge
+from core.DiceManager import DiceManager
+from tests.utils.entity_factory import create_dummy_character
 from core.Enums import BattleState, BattleActionType
 from core.Events import ActionLoad
+from unittest.mock import MagicMock
+from core.CharacterSystem import CharacterSystem
 
 def test_battle_manager_add_and_get_actor():
-    dm = MagicMock()
-    judge = MagicMock()
-    bm = BattleManager(dice_service=MagicMock(), data_service=dm, judge=judge)
+    dice = DiceManager(seed=42)
+    # schedule a roll for tie-break in add_character
+    dice.schedule_result(5) 
     
-    char = MagicMock()
-    char.char_id = "c1"
-    char.current_hp = 10
-    char.passive_abilities = []
+    bm = BattleManager(dice_service=dice, data_service=MagicMock(), judge=BattleJudge())
+    
+    char = create_dummy_character(char_id="c1", attributes=[10, 10, 10])
     
     bm.add_character(char, controller=MagicMock(), start_tick=10)
     
@@ -22,20 +25,21 @@ def test_battle_manager_add_and_get_actor():
     assert bm.current_tick == 10
 
 def test_battle_manager_delay_character():
-    bm = BattleManager(dice_service=MagicMock(), data_service=MagicMock(), judge=MagicMock())
+    dice = DiceManager(seed=42)
+    # schedule rolls for tie-breaks
+    dice.schedule_result(5) # char1
+    dice.schedule_result(6) # char2
     
-    char1 = MagicMock()
-    char1.char_id = "c1"
-    char1.current_hp = 10
-    char1.passive_abilities = []
+    bm = BattleManager(dice_service=dice, data_service=MagicMock(), judge=BattleJudge())
     
-    char2 = MagicMock()
-    char2.char_id = "c2"
-    char2.current_hp = 10
-    char2.passive_abilities = []
+    char1 = create_dummy_character(char_id="c1")
+    char2 = create_dummy_character(char_id="c2")
     
     bm.add_character(char1, controller=MagicMock(), start_tick=10)
     bm.add_character(char2, controller=MagicMock(), start_tick=20)
+    
+    # schedule roll for delay_character
+    dice.schedule_result(7)
     
     # Delay char1 by 15 ticks, so char1 goes to tick 25
     bm.delay_character(char1, 15)
@@ -46,7 +50,7 @@ def test_battle_manager_delay_character():
     assert bm.current_tick == 20
 
 def test_battle_manager_pub_sub():
-    bm = BattleManager(dice_service=MagicMock(), data_service=MagicMock(), judge=MagicMock())
+    bm = BattleManager(dice_service=MagicMock(), data_service=MagicMock(), judge=BattleJudge())
     
     callback_called = False
     def my_callback(payload):
@@ -54,43 +58,52 @@ def test_battle_manager_pub_sub():
         callback_called = True
         
     bm.subscribe("on_turn_start", my_callback)
-    bm.emit("on_turn_start", MagicMock())
+    bm.emit("on_turn_start", ActionLoad(character=MagicMock()))
     assert callback_called is True
     
     callback_called = False
     bm.unsubscribe("on_turn_start", my_callback)
-    bm.emit("on_turn_start", MagicMock())
+    bm.emit("on_turn_start", ActionLoad(character=MagicMock()))
     assert callback_called is False
 
 def test_battle_manager_try_finally_hooks():
-    judge = MagicMock()
-    judge.rule.side_effect = [BattleState.RUNNING, BattleState.VICTORY]
+    dice = DiceManager(seed=42)
+    dice.schedule_result(5) # char1 add
+    dice.schedule_result(6) # char2 add
     
-    bm = BattleManager(dice_service=MagicMock(), data_service=MagicMock(), judge=judge)
+    char1 = create_dummy_character(char_id="c1", team=1)
+    char2 = create_dummy_character(char_id="c2", team=2)
     
-    actor = MagicMock()
-    actor.char_id = "c1"
-    actor.current_hp = 10
-    actor.passive_abilities = []
+    bm = BattleManager(dice_service=dice, data_service=MagicMock(), judge=BattleJudge())
     
     controller_mock = MagicMock()
     # Mock controller to return an action
     action = MagicMock()
-    action_load = MagicMock()
+    action.action_type = BattleActionType.STANDARD_ACTION
+    action_load = ActionLoad(character=char1)
     action_load.success = True
     action.execute_if_possible.return_value = action_load
     
     # Provide hooks for the action
-    hook_called = False
+    action_hook_called = False
     def action_hook(payload):
-        pass
+        nonlocal action_hook_called
+        action_hook_called = True
+    
     action.get_hooks.return_value = {"on_turn_end": action_hook}
     
-    controller_mock.choose_action.return_value = action
+    # When choose_action is called, we kill char2 to end the battle after one turn
+    def side_effect(*args, **kwargs):
+        CharacterSystem.take_damage(char2, 9999)
+        return action
     
-    bm.add_character(actor, controller=controller_mock, start_tick=10)
+    controller_mock.choose_action.side_effect = side_effect
+    
+    bm.add_character(char1, controller=controller_mock, start_tick=10)
+    bm.add_character(char2, controller=MagicMock(), start_tick=100) 
     
     bm.run_battle()
     
     # Ensure hook is not permanently in listeners after battle completes
     assert action_hook not in bm.listeners["on_turn_end"]
+

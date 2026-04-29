@@ -1,33 +1,26 @@
 import pytest
-from unittest.mock import MagicMock
 from battle.StatusEffects import Atordoado
 from core.Modifiers import EphemeralModifier
 from core.Events import ActionLoad
+from tests.utils.entity_factory import create_dummy_character
+from unittest.mock import MagicMock
 
 def test_atordoado_apply():
-    target = MagicMock()
+    target = create_dummy_character()
     context = MagicMock()
-    context.delay_character = MagicMock()
     
     # Applying Atordoado should add an EphemeralModifier to BDD with -1
     effect = Atordoado(duration=1, target=target, context=context)
     
-    assert len(effect.modifiers) == 1
-    assert isinstance(effect.modifiers[0], EphemeralModifier)
-    assert effect.modifiers[0].stat_name == "bdd"
-    assert effect.modifiers[0].value == -1
-    
-    target.add_status_effect.assert_called_with(effect)
-    target.add_modifier.assert_called_with(effect.modifiers[0])
+    assert any(m.stat_name == "bdd" and m.value == -1 for m in target.modifiers)
+    assert effect in target.status_effects
     
     # Should delay character by half action cost
     context.delay_character.assert_called_with(target, target.action_cost_base * 0.5)
 
 def test_atordoado_hook_removal():
-    target = MagicMock()
-    target.char_id = "target_1"
+    target = create_dummy_character(char_id="target_1")
     context = MagicMock()
-    context.delay_character = MagicMock()
     
     effect = Atordoado(duration=1, target=target, context=context)
     
@@ -35,18 +28,18 @@ def test_atordoado_hook_removal():
     assert "on_turn_start" in hooks
     
     # Simulate turn start for another character
-    other_char = MagicMock()
-    other_char.char_id = "other_1"
+    other_char = create_dummy_character(char_id="other_1")
     load_other = ActionLoad(character=other_char)
     hooks["on_turn_start"](load_other)
     
     # Effect should not be removed
-    target.remove_status_effect.assert_not_called()
+    assert effect in target.status_effects
     
     # Simulate turn start for target character
     load_target = ActionLoad(character=target)
     hooks["on_turn_start"](load_target)
     
     # Effect should be removed
-    target.remove_status_effect.assert_called_with(effect)
-    assert target.remove_modifier.called
+    assert effect not in target.status_effects
+    assert not any(m.stat_name == "bdd" for m in target.modifiers)
+

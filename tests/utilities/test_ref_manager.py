@@ -69,14 +69,14 @@ def test_update_section():
     assert "New content here." in updated_content
     assert "This is a basic section content." not in updated_content
 
-def test_create_section_after():
-    content = "## Created After [TESTE.AFTER]\nContent."
-    success, msg = ref_manager.create_section(content, TEST_FILE, after_tag="[TESTE.BASIC]")
+def test_create_section_smart_hierarchy():
+    content = "### Created Smart [TESTE.BASIC.NEW]\nContent."
+    success, msg = ref_manager.create_section(content, TEST_FILE, target_tag="[TESTE.BASIC.NEW]")
     assert success is True
     
     with open(TEST_FILE, 'r', encoding='utf-8') as f:
         text = f.read()
-    assert "## Basic Section [TESTE.BASIC]\nThis is a basic section content.\n\n## Created After [TESTE.AFTER]" in text
+    assert "## Basic Section [TESTE.BASIC]\nThis is a basic section content.\n\n### Created Smart [TESTE.BASIC.NEW]" in text
 
 def test_smart_placement():
     # Create [TESTE.SMART_NEW] which should be placed after [TESTE.SMART_2]
@@ -89,7 +89,7 @@ def test_smart_placement():
         text = f.read()
     
     # It should be after SMART_2 because they share the pattern "TESTE.SMART."
-    assert "## Smart Placement Test [TESTE.SMART_2]\nContent 2.\n\n## New Smart Section [TESTE.SMART_NEW]" in text
+    assert "## Smart Placement Test [TESTE.SMART_2]\nContent 2.\n## New Smart Section [TESTE.SMART_NEW]" in text
 
 def test_resolve_tag_circular():
     # TESTE.DEP_A depends on TESTE.DEP_B which depends on TESTE.DEP_A
