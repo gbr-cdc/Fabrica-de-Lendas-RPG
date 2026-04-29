@@ -183,15 +183,39 @@ def create_section(content, file_path, target_tag=None):
                 else:
                     return False, f"Error: File identifier [{prefix}] not found. The target file is missing its root documentation tag."
 
-    content_to_insert = content.strip() + '\n'
+    # --- INÍCIO DA NOVA LÓGICA DE ESPAÇAMENTO ---
+    content = content.strip()
+    is_section = content.startswith('#')
+    content_to_insert = content
     
-    # Ensure there's a blank line before the new content if it's not at the beginning
-    if insert_idx > 0:
-        if not lines[insert_idx-1].endswith('\n'):
-            lines[insert_idx-1] += '\n\n'
-        elif lines[insert_idx-1] != '\n':
-            content_to_insert = '\n' + content_to_insert
-    
+    if is_section:
+        # 1. Garantir UMA linha em branco ACIMA (se não for o topo do arquivo)
+        if insert_idx > 0:
+            # Checa se a linha imediatamente acima tem texto
+            if lines[insert_idx - 1].strip() != "":
+                content_to_insert = '\n' + content_to_insert
+                
+        # 2. Garantir UMA linha em branco ABAIXO (se não for o fim do arquivo)
+        if insert_idx < len(lines):
+            # Checa se a linha imediatamente abaixo tem texto
+            if lines[insert_idx].strip() != "":
+                content_to_insert = content_to_insert + '\n\n'
+            else:
+                content_to_insert = content_to_insert + '\n'
+        else:
+            # Se for o fim do arquivo, apenas uma quebra padrão é suficiente
+            content_to_insert = content_to_insert + '\n'
+            
+    else:
+        # Se for apenas uma linha (ex: tag solta), não adicionamos linhas em branco extras.
+        content_to_insert = content_to_insert + '\n'
+        
+        # Prevenção edge-case: Se a linha anterior (ex: última do arquivo) não tiver o '\n', 
+        # nós a adicionamos para que a nova tag não grude no texto anterior.
+        if insert_idx > 0 and not lines[insert_idx - 1].endswith('\n'):
+            lines[insert_idx - 1] += '\n'
+    # --- FIM DA NOVA LÓGICA DE ESPAÇAMENTO ---
+
     new_lines = lines[:insert_idx] + [content_to_insert] + lines[insert_idx:]
 
     with open(file_path, 'w', encoding='utf-8') as f:
