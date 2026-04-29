@@ -3,7 +3,7 @@
 This document serves as the primary technical reference for the **Fábrica de Lendas** RPG Engine. It combines high-level architectural rules with detailed module documentation to guide both human developers and AI agents.
 
 ## Project Vision [ARCH.VISION]
-**Fábrica de Lendas** is a data-driven, modular RPG engine designed for tactical combat simulation. It follows a strict **Game-MVC** pattern, where rules and logic are decoupled from presentation. The engine uses an **Event-Driven** architecture to handle complex interactions (Passives, Effects) through an Event Bus.
+**Fábrica de Lendas** is a data-driven, modular RPG engine designed for tactical combat simulation. It follows a strict **Game-MVC** pattern, where rules and logic are  decoupled from presentation. The engine uses an **Event-Driven** architecture to handle complex interactions (Passives, Effects) through an Event Bus.
 
 ## Architectural Guardrails [ARCH.RULES]
 
@@ -11,24 +11,24 @@ These rules are context-exclusive and MUST be referenced in `MISSION_LOG.md` whe
 
 ### Core Patterns [ARCH.RULES.CORE]
 - **Game-MVC [ARCH.RULES.CORE.MVC]:** **Models:** Files in `core/`, `battle/`, `entities/`, `data/`. Represents the game world, rules and entities; **Controllers:** Files in `controllers/`. Scripts that instantiates and orquestrates models; **Views**: Presentation layer (Logs/UI) is decoupled from the engine.
-- **Command Pattern [ARCH.RULES.CORE.COMMAND]**: All actions (Skills, Basic Attacks, Movements) MUST inherit from `GameAction` and implement `can_execute()` and `execute()`.
-- **Observer/EventBus [ARCH.RULES.CORE.OBSERVER]**: Decouple reactive logic (Effects/Passives) via an EventBus. Orchestrators (e.g., `BattleManager`) manage subscriptions.
-- **IoC (Inversion of Control) [ARCH.RULES.CORE.IOC]**: Implementations using hooks MUST expose them via `get_hooks()`. Only the EventBus orchestrator (e.g., `BattleManager`) handles event registration.
-- **Data-Driven [ARCH.RULES.CORE.DATA]**: GameAction templates, CombatStyles, and GameRules are defined in JSON files (`data/`). Use `DataManager` for loading. JSON configurations should be preferred over hard coded implementations.
-- **CQRS [ARCH.RULES.CORE.CQRS]**: Use Methods for direct state changes (e.g., `take_damage`); use Events for notifications and event payload modifications ONLY.
-- **Modifier Stack Pattern [ARCH.RULES.CORE.MODIFIER]**: Stats are immutable. All dynamic changes (buffs/debuffs) MUST be implemented as `StatModifier` objects in the character's `modifiers` list.
-- **Anemic Entities [ARCH.RULES.CORE.ENTITIES]**: Classes in `entities/` are data containers. All complex logic resides in Systems (e.g., `CharacterSystem`) or Actions.
-- **Protocols & Typing [ARCH.RULES.CORE.TYPING]**: Use `typing.Protocol` for Dependency Injection. Use `from __future__ import annotations`. Keep typing imports in `TYPE_CHECKING` blocks to avoid circular dependencies.
+- **Command Pattern [ARCH.RULES.CORE.COMMAND]:** All actions (Skills, Basic Attacks, Movements) MUST inherit from `GameAction` and implement `can_execute()` and `execute()`. The `execute()` function returns a `ActionLoad` with a execution history.
+- **Observer/EventBus [ARCH.RULES.CORE.OBSERVER]:** Decouple reactive logic (Effects/Passives) via an EventBus. Orchestrators (e.g., `BattleManager`) manage subscriptions.
+- **IoC (Inversion of Control) [ARCH.RULES.CORE.IOC]:** Implementations using hooks MUST expose them via `get_hooks()`. Only the EventBus orchestrator (e.g., `BattleManager`) handles event registration.
+- **Data-Driven [ARCH.RULES.CORE.DATA]:** GameAction templates, CombatStyles, and GameRules are defined in JSON files (`data/`). Use `DataManager` for loading. JSON configurations should be preferred over hard coded implementations.
+- **CQRS [ARCH.RULES.CORE.CQRS]:** Use Methods for direct state changes (e.g., `take_damage`); use Events for notifications and event payload modifications ONLY.
+- **Modifier Stack Pattern [ARCH.RULES.CORE.MODIFIER]:** Stats are immutable. All dynamic changes (buffs/debuffs) MUST be implemented as `StatModifier` objects in the character's `modifiers` list.
+- **Anemic Entities [ARCH.RULES.CORE.ENTITIES]:** Classes in `entities/` are data containers. All complex logic resides in Systems (e.g., `CharacterSystem`) or Actions.
+- **Protocols & Typing [ARCH.RULES.CORE.TYPING]:** Use `typing.Protocol` for Dependency Injection. Use `from __future__ import annotations`. Keep typing imports in `TYPE_CHECKING` blocks to avoid circular dependencies.
 
-### Engine Mechanics [ARCH.RULES.ENGINE]
-- **Timeline Execution [ARCH.RULES.ENGINE.TIMELINE]:** The turn order is managed by a Min-Heap timeline. Characters are re-scheduled based on `action_cost` after every non-free action.
-- **Event Payload Modification [ARCH.RULES.ENGINE.PAYLOAD]:** Listeners in the EventBus receive payload objects (e.g., `AttackLoad`) passed by reference. They MUST modify the object directly to influence calculations.
-- **Tick-Based Simulation [ARCH.RULES.ENGINE.TICKS]:** The engine does not use rounds. It uses "Ticks" (discrete units of time). Logic relying on "duration" should count turns or specific events, not wall-clock time.
-- **Error Handling (Decision Loop) [ARCH.RULES.ENGINE.DECISION]:** Controllers MUST NOT enter an infinite loop when an action fails `can_execute()`. The Orchestrator MUST implement a safety break (Max Attempts).
-- **Targeting Cardinality [ARCH.RULES.ENGINE.TARGETING]:** All `BattleAction` subclasses MUST support a `targets: List[Character]` interface. Single-target actions should use a list with one element.
-- **Area Attack Resolution (Master Roll) [ARCH.RULES.ENGINE.AREA_ATTACK]:** For `AttackType.AREA`, the attacker’s roll MUST be performed once (Master Roll) with `target=None` in the `AttackLoad`. This ensures only target-agnostic passives influence the shared roll, followed by individual resolution phases for each target.
-**Defensive Payload Auditing [ARCH.RULES.ENGINE.PAYLOAD_TARGET_CHECK]:** Any hook that accesses `AttackLoad.target` MUST perform a null-check if the event it listens to could potentially be emitted during a Master Roll phase or a targetless context.
-- **Lifecycle Safety [ARCH.RULES.CORE.EPHEMERAL]**: Ephemeral hooks (valid for 1 action cycle) MUST be wrapped in `try...finally` within the Orchestrator to guarantee unsubscription.
+### Battle Engine Mechanics [ARCH.RULES.BATTLE]
+- **Timeline Execution [ARCH.RULES.BATTLE.TIMELINE]:** The turn order is managed by a Min-Heap timeline. Characters are re-scheduled based on `action_cost` after every non-free action.
+- **Event Payload Modification [ARCH.RULES.BATTLE.PAYLOAD]:** Listeners in the EventBus receive payload objects (e.g., `AttackLoad`) passed by reference. They MUST modify the object directly to influence calculations.
+- **Tick-Based Simulation [ARCH.RULES.BATTLE.TICKS]:** The engine does not use rounds. It uses "Ticks" (discrete units of time). Logic relying on "duration" should count turns or specific events, not wall-clock time.
+- **Error Handling (Decision Loop) [ARCH.RULES.BATTLE.DECISION]:** `CharacterController` MUST NOT enter an infinite loop when an action fails `can_execute()`. The `BattleManager` MUST implement a safety break (Max Attempts).
+- **Targeting Cardinality [ARCH.RULES.BATTLE.TARGETING]:** All `BattleAction` subclasses MUST support a `targets: List[Character]` interface. Single-target actions should use a list with one element.
+- **Area Attack Resolution (Master Roll) [ARCH.RULES.BATTLE.AREA_ATTACK]:** For `AttackType.AREA`, the attacker’s roll MUST be performed once (Master Roll) with `target=None` in the `AttackLoad`. This ensures only target-agnostic passives influence the shared roll, followed by individual resolution phases for each target.
+- **Defensive Payload Auditing [ARCH.RULES.BATTLE.PAYLOAD_TARGET_CHECK]:** Any hook that accesses `AttackLoad.target` MUST perform a null-check if the event it listens to could potentially be emitted during a Master Roll phase or a targetless context..
+- **Action-Scoped Interceptors [ARCH.RULES.BATTLE.EPHEMERAL_HOOKS]:** `BattleManager` MUST execute actions within a `try...finally` block to guarantee that ephemeral hooks (used by self-modifying actions like `AttackAction`) are unsubscribed, even if the action results in an error. This prevents memory leaks and state pollution.
 
 ## Project Structure [ARCH.STRUCT_MAP]
 
@@ -80,7 +80,7 @@ Data structure for individual components of an attack (e.g., "Lifesteal", "Stun"
 Blueprint for complex actions. Combines action/attack types, resource costs (Focus), and a list of `AttackEffects`. Used as the base for instantiating `AttackAction`. `[ARCH.RULES.CORE.DATA]`
 
 ### Events [ARCH.core.Events]
-Mutable payload objects for the Event Bus, allowing listeners to influence action outcomes. `[ARCH.RULES.ENGINE.PAYLOAD]`
+Mutable payload objects for the Event Bus, allowing listeners to influence action outcomes. `[ARCH.RULES.BATTLE.PAYLOAD]`
 
 #### ActionLoad [ARCH.core.Events.CLASS:ActionLoad]
 Base payload for all battle actions. Tracks the `character` performing the action, an execution `history` (log), and a `success` flag.
@@ -95,7 +95,7 @@ Foundational abstract classes and interfaces ensuring modularity and decoupling.
 Abstract base for the Command Pattern. Defines `can_execute()` and `execute()`. `[ARCH.RULES.CORE.COMMAND]`
 
 #### BattleAction [ARCH.core.BaseClasses.CLASS:BattleAction]
-Specialized `GameAction` for combat. Injected with `IBattleContext`, `targets`, and `action_type`. It provides a `target` property for single-target convenience. `[ARCH.RULES.ENGINE.TARGETING]`
+Specialized `GameAction` for combat. Injected with `IBattleContext`, `targets`, and `action_type`. It provides a `target` property for single-target convenience. `[ARCH.RULES.BATTLE.TARGETING]`
 
 #### BattlePassive [ARCH.core.BaseClasses.CLASS:BattlePassive]
 Base for reactive logic. Holds a reference to the `owner` and `IBattleContext`. Subclasses MUST implement `get_hooks()` to return event subscriptions. `[ARCH.RULES.CORE.IOC]`
@@ -152,18 +152,18 @@ The central orchestrator of the combat engine, managing time and event propagati
 #### BattleManager [ARCH.battle.BattleManager.CLASS:BattleManager]
 Manages the `timeline` (Min-Heap), the `listeners` registry (Event Bus), and the character lifecycle. Tracks `current_tick` and maintains a `graveyard`.
 
-- run_battle() [ARCH.battle.BattleManager.METHOD:BattleManager.run_battle]: The main engine loop. Executes characters' turns in tick order, managing the "Free Action -> Move/Standard Action" cycle and ensuring `resolve_deaths()` and `judge.rule()` are checked. `[ARCH.RULES.ENGINE.DECISION]`
-- emit() [ARCH.battle.BattleManager.METHOD:BattleManager.emit]: Triggers events on the Event Bus. Listeners modify the `ActionLoad` or `AttackLoad` payload objects directly. `[ARCH.RULES.ENGINE.PAYLOAD]`
-- subscribe() [ARCH.battle.BattleManager.METHOD:BattleManager.subscribe]: Manages dynamic listener registration, used by Passives and Status Effects. `[ARCH.RULES.CORE.EPHEMERAL]`
+- run_battle() [ARCH.battle.BattleManager.METHOD:BattleManager.run_battle]: The main engine loop. Executes characters' turns in tick order, managing the "Free Action -> Move/Standard Action" cycle and ensuring `resolve_deaths()` and `judge.rule()` are checked. `[ARCH.RULES.BATTLE.DECISION]`
+- emit() [ARCH.battle.BattleManager.METHOD:BattleManager.emit]: Triggers events on the Event Bus. Listeners modify the `ActionLoad` or `AttackLoad` payload objects directly. `[ARCH.RULES.BATTLE.PAYLOAD]`
+- subscribe() [ARCH.battle.BattleManager.METHOD:BattleManager.subscribe]: Manages dynamic listener registration, used by Passives and Status Effects. `[ARCH.RULES.BATTLE.EPHEMERAL_HOOKS]`
 - unsubscribe() [ARCH.battle.BattleManager.METHOD:BattleManager.unsubscribe]: Manages dynamic listener registration, used by Passives and Status Effects.
-- delay_character() [ARCH.battle.BattleManager.METHOD:BattleManager.delay_character]: Pushes a character's next turn further into the future on the timeline (e.g., due to Stun). `[ARCH.RULES.ENGINE.TIMELINE]`
+- delay_character() [ARCH.battle.BattleManager.METHOD:BattleManager.delay_character]: Pushes a character's next turn further into the future on the timeline (e.g., due to Stun). `[ARCH.RULES.BATTLE.TIMELINE]`
 - resolve_deaths() [ARCH.battle.BattleManager.METHOD:BattleManager.resolve_deaths]: Identifies characters at 0 HP, removes them from active play, and moves them to the `graveyard`.
 
 ### Battle Actions [ARCH.battle.BattleActions]
 Implementations of the Command Pattern for combat maneuvers. `[ARCH.RULES.CORE.COMMAND]`
 
 #### AttackAction [ARCH.battle.BattleActions.CLASS:AttackAction]
-Generic data-driven offensive resolution. Implements the complete attack flow (Roll -> Hit Check -> GdA -> Damage -> Application). Supports `AttackType.AREA` with a Master Roll. `[ARCH.RULES.ENGINE.TARGETING]`, `[ARCH.RULES.ENGINE.AREA_ATTACK]`
+Generic data-driven offensive resolution. Implements the complete attack flow (Roll -> Hit Check -> GdA -> Damage -> Application). Supports `AttackType.AREA` with a Master Roll. `[ARCH.RULES.BATTLE.TARGETING]`, `[ARCH.RULES.BATTLE.AREA_ATTACK]`
 
 #### GenerateManaAction [ARCH.battle.BattleActions.CLASS:GenerateManaAction]
 A Move Action that manifest mana from the daily reserve into `floating_mp`.
@@ -178,7 +178,7 @@ A Free Action that interacts with the `PosturaDefensiva` passive to toggle comba
 Reactive logic and hooks for character-specific traits and abilities. `[ARCH.RULES.CORE.IOC]`
 
 #### PosturaDefensiva [ARCH.battle.BattlePassives.CLASS:PosturaDefensiva]
-A stateful stance that modifies the owner's dice pools and applies persistent `EphemeralModifier` penalties to enemies it has previously hit. `[ARCH.RULES.ENGINE.PAYLOAD_TARGET_CHECK]`
+A stateful stance that modifies the owner's dice pools and applies persistent `EphemeralModifier` penalties to enemies it has previously hit. `[ARCH.RULES.BATTLE.PAYLOAD_TARGET_CHECK]`
 
 #### GracaDoDuelista [ARCH.battle.BattlePassives.CLASS:GracaDoDuelista]
 Grants GdA bonuses on `on_gda_modify` and provides an optional defensive reaction (Evasão) that uses `choose_reaction()`.
@@ -236,7 +236,7 @@ The "Decision Loop" interface that separates character behavior (AI or Player) f
 #### CharacterController [ARCH.controllers.CharacterController.CLASS:CharacterController]
 Abstract base class. Defines the interface for tactical decision-making.
 
-- choose_action() [ARCH.controllers.CharacterController.METHOD:CharacterController.choose_action]: Called at the start of a turn. Analyzes the `IBattleContext` and returns a `BattleAction` command. Supports re-decision if the previous action failed validation (via `action_load`). `[ARCH.RULES.ENGINE.DECISION]`
+- choose_action() [ARCH.controllers.CharacterController.METHOD:CharacterController.choose_action]: Called at the start of a turn. Analyzes the `IBattleContext` and returns a `BattleAction` command. Supports re-decision if the previous action failed validation (via `action_load`). `[ARCH.RULES.BATTLE.DECISION]`
 - choose_reaction() [ARCH.controllers.CharacterController.METHOD:CharacterController.choose_reaction]: Called during action resolution (e.g., `on_defense_reaction`). Allows the controller to opt-in to conditional effects (like Evasion) based on the current `AttackLoad`.
 
 #### PvP1v1Controller [ARCH.controllers.CharacterController.CLASS:PvP1v1Controller]
@@ -257,7 +257,7 @@ Archetype definitions that govern dice pool sizes (`atq_die`, `def_die`), the `m
 ### Game Rules [ARCH.data.Rules]
 Global constants and progression tables. Defines `limite_foco`/`limite_mana` multipliers and scaling tables for HP, MP, and `action_cost` based on attribute scores.
 
-## MODULE: Utilities [ARCH.XXXXX]
+## MODULE: Utilities [ARCH.utilities]
 The `utilities` module provides cross-cutting tools for documentation management, system operations, and agent assistance.
 
 ### Reference Manager [ARCH.utilities.ref_manager]
@@ -267,24 +267,27 @@ The central tool for targeted documentation extraction, recursive dependency res
 - resolve_tag() [ARCH.utilities.ref_manager.FUNCTION:resolve_tag]: The primary recursive solver. It fetches a tag's content and iteratively resolves all nested "DEPENDS:" tags. It maintains a `resolved_tags` registry to prevent circular dependencies. When a tag is found in a header (session), all other tags within that session are automatically marked as resolved to ensure clean extraction.
 - extract_section() [ARCH.utilities.ref_manager.FUNCTION:extract_section]: The parsing engine. It searches for a tag (prioritizing headers) and extracts the corresponding block of text. If the tag is found in a header, it captures all content until a header of equal or higher level is encountered.
 - update_section() [ARCH.utilities.ref_manager.FUNCTION:update_section]: The modification engine. Locates a tag and replaces its entire section (if a header) or line with new content. Supports reading content from a string or an external file via `--from-file`.
-- create_section() [ARCH.utilities.ref_manager.FUNCTION:create_section]: The creation engine. Implements **Smart Placement** and **Fail-Fast Validation**: it prevents duplicate tags and ensures hierarchical integrity. New tags are placed after their parent or last sibling based on prefix matching. It fails if a parent tag is missing (returning `"Error: Parent tag [prefix] not found."` for 3+ component tags) or if the file identifier is missing (for 2 component tags), ensuring documentation structure is maintained. Supports manual positioning via `--after [TAG]`.
+- create_section() [ARCH.utilities.ref_manager.FUNCTION:create_section]: The creation engine. Implements **Smart Placement** and **Fail-Fast Validation**: it prevents duplicate tags and ensures hierarchical integrity. New tags are placed after their parent or last sibling based on prefix matching. It fails if a parent tag is missing (returning "Error: Parent tag [prefix] not found." for 3+ component tags) or if the file identifier is missing (for 2 component tags), ensuring documentation structure is maintained.
 - get_path_for_tag() [ARCH.utilities.ref_manager.FUNCTION:get_path_for_tag]: A utility that normalizes tags and determines the correct source file path by matching the tag's prefix against the `PATH_MAPPING`.
 
 #### CLI Usage [ARCH.utilities.ref_manager.CLI]
 - CLI Interface: A command-line wrapper that allows agents to request multiple tags or perform documentation maintenance.
   - **Extraction:** `python3 utilities/ref_manager.py [TAG1] [TAG2]`
   - **Update:** `python3 utilities/ref_manager.py --update [TAG] "Content" [--from-file path]`
-  - **Creation:** `python3 utilities/ref_manager.py --create [NEW_TAG] "Content" [--after TAG]`
+  - **Creation:** `python3 utilities/ref_manager.py --create [NEW_TAG] "Content"`
   - **Deletion:** `python3 utilities/ref_manager.py --delete [TAG]`
 
 ## Test Quality Standards [ARCH.TEST_QUALITY]
 
-- **Behavior over Implementation [ARCH.TEST_QUALITY.TEST_BEHAVIOR]:** Tests MUST verify the outcome (e.g., final HP, logs, state changes) rather than internal implementation details (e.g., checking specific list indices or private method calls).
+- **Behavior over Implementation [ARCH.TEST_QUALITY.TEST_BEHAVIOR]:** Tests MUST verify the outcome (e.g., final HP, ActionLoad, state changes) rather than internal implementation details (e.g., checking specific list indices or private method calls).
 - **Controlled Mocking [ARCH.TEST_QUALITY.MOCKING]:** Use real instances for domain logic (Entities, Systems). Mock ONLY system boundaries (I/O, UI) or to enforce determinism. Use `DiceManager.schedule_result()` for simulating dice rolls.
 - **Entity Factory [ARCH.TEST_QUALITY.ENTITY_FACTORY]:** Use `tests.utils.entity_factory` when instantiating entities for tests. Use `DataManager` only for integration tests.
 - **Data Integrity [ARCH.TEST_QUALITY.DATA_INTEGRITY]:** For integration tests using `DataManager`, use `tests.utils.json_integrity_checker.get_json_keys()` to dynamically iterate over and verify all IDs in game data. This ensures tests remain decoupled from specific balance values while guaranteeing hydration logic works for all defined content.
 - **Decoupling [ARCH.TEST_QUALITY.DECOUPLING]:** Ensure tests do not break upon internal refactors if the public behavior remains unchanged.
-- **Invariants [ARCH.TEST_QUALITY.INVARIANTS]:** Assert that system state remains valid according to ARCH rules (e.g., stats calculated via the Modifier Stack `[ARCH.RULES.CORE.MODIFIER]`, no negative HP).
+- **Invariants [ARCH.TEST_QUALITY.INVARIANTS]:** Assert that attribute modifiers `[ARCH.RULES.CORE.MODIFIER]` are properly used and Character atributes are not corrupted by bad modifications.
+- **Lifecycle Auditing** [ARCH.TEST_QUALITY.LIFECYCLE]: Tests involving the EventBus MUST verify that all ephemeral hooks ([ARCH.RULES.BATTLE.EPHEMERAL_HOOKS]) used by self modifying actions are successfully unsubscribed after the action cycle. Assert that the EventBus subscriber count returns to its baseline.
+- **Battle Context [ARCH.TEST_QUALITY.IBATTLECONTEXT]:** Use `tests.utils.test_context.BattleTestContext` when a concrete implementation of `IBattleContext` is required for behavioral tests, avoiding excessive mocking of the battle state.
+
 ## Documentation Standards [ARCH.DOC_STANDARDS]
 
 ### MISSION [ARCH.DOC_STANDARDS.MISSION]
