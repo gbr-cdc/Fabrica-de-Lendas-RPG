@@ -127,7 +127,7 @@ def update_section(tag, new_content, file_path):
     
     return True, f"Successfully updated tag [{tag}] in {file_path}."
 
-def create_section(content, file_path, after_tag=None, target_tag=None):
+def create_section(content, file_path, target_tag=None):
     """
     Creates a new section or line in a markdown file.
     """
@@ -160,13 +160,7 @@ def create_section(content, file_path, after_tag=None, target_tag=None):
 
     insert_idx = len(lines)
     
-    if after_tag:
-        start, end, is_header = find_tag_range(after_tag, lines)
-        if start is not None:
-            insert_idx = end
-        else:
-            return False, f"Error: Position tag [{after_tag}] not found."
-    elif target_tag:
+    if target_tag:
         parts = norm_target.split('.')
         if len(parts) > 1:
             prefix = ".".join(parts[:-1])
@@ -331,7 +325,7 @@ if __name__ == "__main__":
         print("Usage:")
         print("  Extraction: python ref_manager.py [TAG1] [TAG2] ...")
         print("  Update:     python ref_manager.py --update [TAG] \"New Content\" [--from-file path]")
-        print("  Creation:   python ref_manager.py --create [TAG_TO_FIND_FILE] \"New Content\" [--after TAG]")
+        print("  Creation:   python ref_manager.py --create [TAG_TO_FIND_FILE] \"New Content\"")
         print("  Deletion:   python ref_manager.py --delete [TAG]")
         sys.exit(1)
     
@@ -383,11 +377,7 @@ if __name__ == "__main__":
             if mode == "update":
                 success, message = update_section(target_tag, new_content, path)
             elif mode == "create":
-                after_tag = None
-                if "--after" in sys.argv:
-                    after_tag = sys.argv[sys.argv.index("--after") + 1]
-                
-                success, message = create_section(new_content, path, after_tag, target_tag)
+                success, message = create_section(new_content, path, target_tag)
             else: # mode == "delete"
                 success, message = delete_section(target_tag, path)
             
