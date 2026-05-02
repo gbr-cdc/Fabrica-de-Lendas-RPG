@@ -112,13 +112,13 @@ def test_combo_passive_logic():
     
     # Mock AttackAction execution
     action_mock = MagicMock()
-    action_mock.execute_if_possible.return_value = MagicMock(success=True, history=["Combo Hit!"])
+    action_mock.execute_if_possible.return_value = MagicMock(success=True, history=["EXEC|BasicAttack|owner"])
     
     from battle.BattlePassives import action_registry
     with patch.dict(action_registry, {"AttackAction": MagicMock(return_value=action_mock)}):
         hook(hit_load)
         
-    assert any("MSG|Combo Stage 1" in h for h in hit_load.history)
+    assert any("COMBO|owner|1" in h for h in hit_load.history)
     
     # 3. Trigger Stage 1 fail
     combo.stage = 1

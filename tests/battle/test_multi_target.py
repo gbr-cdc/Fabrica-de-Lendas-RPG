@@ -19,6 +19,7 @@ def test_attack_action_multi_target():
     
     # Setup targets
     t1 = MagicMock()
+    t1.char_id = "T1"
     t1.name = "T1"
     t1.def_die = 8
     t1.rank = 1
@@ -27,6 +28,7 @@ def test_attack_action_multi_target():
     t1.current_hp = 10
     
     t2 = MagicMock()
+    t2.char_id = "T2"
     t2.name = "T2"
     t2.def_die = 8
     t2.rank = 1
@@ -57,8 +59,8 @@ def test_attack_action_multi_target():
         
         # Verify both targets were attacked
         history_str = "\n".join(result.history)
-        assert "atacar T1" in history_str
-        assert "atacar T2" in history_str
+        assert "HIT|T1" in history_str
+        assert "HIT|T2" in history_str
         assert mock_sys.take_damage.call_count == 2
 
 def test_attack_action_one_dead():
@@ -103,7 +105,7 @@ def test_attack_action_one_dead():
         result = action.execute()
         
         history_str = "\n".join(result.history)
-        assert "Alive" in history_str
+        assert "HIT|alive" in history_str
         # Dead target should be skipped and not appear in history via attack_load
         assert "DeadTarget" not in history_str
         assert mock_sys.take_damage.call_count == 1

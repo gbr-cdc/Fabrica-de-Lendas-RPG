@@ -15,14 +15,14 @@ def test_postura_defensiva_toggle_modifiers():
     # Toggle ON
     msg = passive.toggle()
     assert passive.is_active is True
-    assert "assumiu a Postura Defensiva" in msg
+    assert "POSTURA|dummy_01|ON" in msg
     assert any(m.stat_name == 'atk_die' and m.value == -2 for m in char.modifiers)
     assert any(m.stat_name == 'def_die' and m.value == 2 for m in char.modifiers)
     
     # Toggle OFF
     msg = passive.toggle()
     assert passive.is_active is False
-    assert "saiu da Postura Defensiva" in msg
+    assert "POSTURA|dummy_01|OFF" in msg
     assert not any(m.source == 'PosturaDefensiva' for m in char.modifiers)
 
 def test_postura_defensiva_hit_tracking():
@@ -42,7 +42,7 @@ def test_postura_defensiva_hit_tracking():
     hooks["on_gda_modify"](load)
     
     assert target.char_id in passive._tracked_targets
-    assert "[POSTURA]" in load.history[0]
+    assert "POSTURA|owner|OBSERVE|target" in load.history[0]
     
     # 2. Tracked target attacks owner
     atk_load = AttackLoad(character=target, target=char, battle_context=context, 
@@ -52,7 +52,7 @@ def test_postura_defensiva_hit_tracking():
     
     assert passive._tracked_targets[target.char_id] is True
     assert any(m.stat_name == 'pre' and m.value == -1 for m in target.modifiers)
-    assert "[POSTURA]" in atk_load.history[0]
+    assert "MOD|PosturaDefensiva" in atk_load.history[0]
 
 def test_postura_defensiva_cleanup_success():
     char = create_dummy_character(char_id="owner")
@@ -125,7 +125,8 @@ def test_toggle_action_execution():
     char = create_dummy_character(char_id="c1")
     context = MagicMock()
     passive = MagicMock()
-    passive.toggle.return_value = "Toggled!"
+    # Mock the return value of toggle to match the expected format
+    passive.toggle.return_value = "POSTURA|c1|ON"
     context.get_active_passive.return_value = passive
     
     action = TogglePosturaDefensiva(char, [], context)
@@ -133,7 +134,7 @@ def test_toggle_action_execution():
     
     result = action.execute()
     assert result.success is True
-    assert result.history[0] == "Toggled!"
+    assert "POSTURA|c1|ON" in result.history[0]
     context.get_active_passive.assert_called_once_with("c1", "Postura Defensiva")
 
 def test_postura_defensiva_on_roll_modify_no_target():

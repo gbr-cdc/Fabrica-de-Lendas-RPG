@@ -222,12 +222,14 @@ class BattleManager:
             actor = self.get_next_actor()
             if actor is None:
                 self.battle_state = BattleState.ERROR
-                self.battle_result.history.append(HistoryEmitter.msg("ERRO: Timeline empty"))
+                self.battle_result.history.append("ERR|TIMELINE_EMPTY")
                 break
             
             self.emit("on_turn_start", ActionLoad(character = actor))
             self.resolve_deaths()
-            self.battle_result.history.append(HistoryEmitter.turn_start(actor.char_id))
+            self.battle_result.history.append(HistoryEmitter.turn_start(
+                actor.char_id, actor.current_hp, actor.max_hp, actor.current_mp, actor.max_mp, actor.floating_focus, actor.floating_mp
+            ))
 
             last_action_load = None
             final_action = None
@@ -258,7 +260,7 @@ class BattleManager:
                         decision_attempts += 1
                         if decision_attempts >= max_attempts:
                             self.battle_state = BattleState.ERROR
-                            self.battle_result.history.append(HistoryEmitter.msg(f"ERRO: Decision loop {actor.char_id}"))
+                            self.battle_result.history.append(f"ERR|DECISION_LOOP|{actor.char_id}")
                             break 
                         
                         for event_name, callback in action_hooks.items():

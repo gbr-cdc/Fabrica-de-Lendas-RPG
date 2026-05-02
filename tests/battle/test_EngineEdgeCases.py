@@ -60,7 +60,7 @@ def test_battle_manager_run_battle_empty_timeline():
     
     bm.run_battle()
     assert bm.battle_state == BattleState.ERROR
-    assert "Timeline se tornou vazia" in bm.battle_result.history[0]
+    assert "ERR|TIMELINE_EMPTY" in bm.battle_result.history[0]
 
 def test_battle_manager_decision_loop():
     judge = MagicMock()
@@ -70,9 +70,15 @@ def test_battle_manager_decision_loop():
     actor = MagicMock()
     actor.char_id = "actor"
     actor.name = "Actor"
-    actor.current_hp = 50
     actor.current_hp = 100
+    actor.max_hp = 100
+    actor.current_mp = 0
+    actor.max_mp = 0
+    actor.floating_focus = 0
+    actor.floating_mp = 0
     actor.action_cost_base = 10
+    actor.hab = 10
+    actor.passive_abilities = []
     
     controller = MagicMock()
     # Return a failed action repeatedly
@@ -86,7 +92,7 @@ def test_battle_manager_decision_loop():
     bm.run_battle()
     
     assert bm.battle_state == BattleState.ERROR
-    assert "decision loop" in bm.battle_result.history[1]
+    assert "ERR|DECISION_LOOP|actor" in bm.battle_result.history[1]
 
 def test_battle_manager_resolve_deaths():
     judge = MagicMock()
@@ -106,7 +112,7 @@ def test_battle_manager_resolve_deaths():
     
     assert "dead" not in bm.characters
     assert "dead" in bm.graveyard
-    assert "[MORTE]" in bm.battle_result.history[0]
+    assert "DEATH|dead" in bm.battle_result.history[0]
 
 def test_battle_manager_passive_management():
     bm = BattleManager(MagicMock(), MagicMock(), MagicMock())
@@ -149,8 +155,14 @@ def test_battle_manager_move_action_cost():
     actor = MagicMock()
     actor.char_id = "actor"
     actor.current_hp = 100
-    actor.current_hp = 100
+    actor.max_hp = 100
+    actor.current_mp = 0
+    actor.max_mp = 0
+    actor.floating_focus = 0
+    actor.floating_mp = 0
     actor.action_cost_base = 100
+    actor.hab = 10
+    actor.passive_abilities = []
     
     action = MagicMock()
     action.action_type = BattleActionType.MOVE_ACTION
@@ -183,8 +195,14 @@ def test_battle_manager_decision_retry_loop():
     actor = MagicMock()
     actor.char_id = "actor"
     actor.current_hp = 100
-    actor.current_hp = 100
+    actor.max_hp = 100
+    actor.current_mp = 0
+    actor.max_mp = 0
+    actor.floating_focus = 0
+    actor.floating_mp = 0
     actor.action_cost_base = 10
+    actor.hab = 10
+    actor.passive_abilities = []
     
     controller = MagicMock()
     # 1. Fail first, 2. Succeed second

@@ -85,5 +85,5 @@ class HistoryEmitter:
         return f"STATUS|{entity_id}|{name}|{duration}|{state}"
 
     @staticmethod
-    def turn_start(actor_id: str) -> str:
-        return f"TURN_START|{actor_id}"
+    def turn_start(actor_id: str, hp: int, max_hp: int, mp: int, max_mp: int, focus: int, mana: int) -> str:
+        return f"TURN_START|{actor_id}|{hp}|{max_hp}|{mp}|{max_mp}|{focus}|{mana}"

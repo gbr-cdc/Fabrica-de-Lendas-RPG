@@ -97,7 +97,7 @@ class Combo(BattlePassive):
                 self.hit = False
                 
                 if response.success:
-                    attack_load.add_event("MSG", f"Combo Stage 1")
+                    attack_load.add_event("COMBO", self.owner.char_id, 1)
                     attack_load.history.extend(response.history)
 
             elif self.stage == 1:
@@ -110,7 +110,7 @@ class Combo(BattlePassive):
                 response = action_registry["AttackAction"](basic_attack_template, attack_load.character, [attack_load.target], self.context, attack_type=AttackType.EXTRA_ATTACK).execute_if_possible()
                 
                 if response.success:
-                    attack_load.add_event("MSG", f"Combo Stage 2")
+                    attack_load.add_event("COMBO", self.owner.char_id, 2)
                     attack_load.history.extend(response.history)
                 else:
                     self.stage = 0
@@ -120,7 +120,7 @@ class Combo(BattlePassive):
                 if attack_load.hit:
                     Atordoado(0, attack_load.target, attack_load.battle_context)
                     attack_load.add_event("STATUS", attack_load.target.char_id, "Atordoado", 0, "APPLIED")
-                    attack_load.add_event("MSG", f"Combo Final Stage {self.stage}")
+                    attack_load.add_event("COMBO", self.owner.char_id, self.stage, "FINAL")
         
         return {'on_attack_end': checar_ataque_bonus}
 
@@ -141,13 +141,13 @@ class PosturaDefensiva(BattlePassive):
             self._dice_modifiers = [m1, m2]
             self.owner.add_modifier(m1)
             self.owner.add_modifier(m2)
-            return HistoryEmitter.msg(f"{self.owner.name} assumiu a Postura Defensiva")
+            return f"POSTURA|{self.owner.char_id}|ON"
         else:
             for mod in self._dice_modifiers:
                 self.owner.remove_modifier(mod)
             self._dice_modifiers = []
             self._clear_tracking()
-            return HistoryEmitter.msg(f"{self.owner.name} saiu da Postura Defensiva")
+            return f"POSTURA|{self.owner.char_id}|OFF"
 
     def _start_tracking(self, target: 'Character'):
         if target.char_id not in self._tracked_targets:
@@ -172,7 +172,7 @@ class PosturaDefensiva(BattlePassive):
         def hit_hook(attack_load: 'AttackLoad'):
             if self.is_active and attack_load.character.char_id == self.owner.char_id and attack_load.hit:
                 self._start_tracking(attack_load.target)
-                attack_load.add_event("MSG", f"{self.owner.name} observando {attack_load.target.name}")
+                attack_load.add_event("POSTURA", self.owner.char_id, "OBSERVE", attack_load.target.char_id)
 
         def penalty_hook(attack_load: 'AttackLoad'):
             cid = attack_load.character.char_id
