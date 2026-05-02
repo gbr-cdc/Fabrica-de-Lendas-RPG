@@ -2,31 +2,31 @@
 **Versão:** 1.0 (Draft Mecânico)
 **Autor:** Gabriel
 
----
-
-## 1. Visão Geral do Sistema
+## Visão Geral do Sistema
 * **Objetivo:** Criar um sistema de RPG focado em histórias de alta fantasia, com a estética de cenários de anime shonen. O sistema prioriza a simplicidade e a versatilidade, utilizando um combate que se comporta mecanicamente de forma inspirada em jogos eletrônicos. Ele é projetado para representar toda a jornada de desenvolvimento de um personagem, desde um aventureiro comum até se tornar uma lenda que se aproxima do nível das divindades.
+
 * **Pilares de Design:**
   * **Simplicidade e Fluidez:** Para que o combate transmita uma sensação imersiva e tática, o sistema roda de maneira fluida, sem regras truncadas, longas paradas de dados ou cálculos complicados. Na parte interpretativa, a prioridade é a liberdade, oferecendo uma estrutura simples para a resolução de conflitos.
   * **Gameficação do Combate:** O sistema trata o combate de uma forma abertamente gameficada, em vez de ter foco cinematográfico ou narrativo. Os objetivos principais são: deve ser divertido "combar" e montar a build do personagem, e deve ser divertido jogar o combate na mesa. Fica a cargo dos jogadores e do mestre dar o teor narrativo e o sabor da cena sobre essa base mecânica. 
-  * **Personalização:** Tendo em vista que a ideia é criar um sistema genérico focado em cenários de alta fantasia e anime, ele precisa dar uma grande liberdade para a criação de conceitos de personagem. Ele o faz através de uma abordagem modular onde o jogador pode comprar características e pacotes de habilidades separadas, ao invés de comprar classes definidas. Além disso o sistema busca ao máximo separar elementos de combate da interpretação, evitando atributos como Carisma e Inteligência por exemplo. Isso se dá para que o jogador não fique preso a certas escolhas para fazer um personagem eficiente, como não poder fazer um guerreiro carismático, uma vez que ele estaria disperdiçando pontos em Carisma que ele deveria estar gastando em Constituição de Força. Elementos da parte da mente e personalidade do personagem podem ser criados de maneira livre e, quando representam uma vantagem narrativa, ela é traduzida através de perícias e de um sistema de vantagens e desvantagens. 
+  * **Personalização:** Tendo em vista que a ideia é criar um sistema genérico focado em cenários de alta fantasia e anime, ele precisa dar uma grande liberdade para a criação de conceitos de personagem. Ele o faz através de uma abordagem modular onde o jogador pode comprar características e pacotes de habilidades separadas, ao invés de comprar classes definidas. Além disso o sistema busca ao máximo separar elementos de combate da interpretação, evitando atributos como Carisma e Inteligência por exemplo. Isso se dá para que o jogador não fique preso a certas escolhas para fazer um personagem eficiente, como não poder fazer um guerreiro carismático, uma vez que ele estaria disperdiçando pontos em Carisma que ele deveria estar gastando em Constituição e Força. Elementos da parte da mente e personalidade do personagem podem ser criados de maneira livre e, quando representam uma vantagem narrativa, ela é traduzida através de perícias e de um sistema de vantagens e desvantagens. 
   * **Sistema de Batalha Ativo:** Uma das ideias que originou esse RPG foi a tentativa de trabalhar com um sistema de turnos com passagem ativa de tempo, onde a ação de cada personagem aconteça em um número definido de "ticks", de forma que seja possível um personagem ter vantagem nos turnos e agir mais vezes. Isto tem inspiração em jogos que usam o ATB (Active Time Battle) como os Final Fantasy antigos e o Chrono Trigger. Esta abordagem leva à economia de ações que é explicada na seção 3.
 
----
-
-## 2. Atributos Base
+## Atributos Base
 O Fábrica de Lendas utiliza três atributos principais que buscam englobar três arquétipos clássicos de personagens em histórias fantásticas: os personagens fortes e resistentes (**Físico**), os personagens rápidos e habilidosos (**Habilidade**) e personagens conjuradores, que focam em magias ou poderes especiais (**Mente**).
 
 * **Físico (FIS):** Representa a força e a resistência do personagem, o quanto ele é fisicamente capaz.
   * **Impacto mecânico:** Define os PV (Pontos de Vida) máximos.
+  * **Testes:** Testes que exigam força bruta pura como saltar, levantar, mover, arremessar ou quebrar objetos  resistentes e pesados. Tabém testes que exijam resistência e vitalidade, como correr longas distâncias, resistir a doênças e venenos, prender a respiração, resistir a situações extremas e ao cansaço.
 * **Habilidade (HAB):** Representa a agilidade e destreza do personagem, sua velocidade e a precisão de seus golpes.
   * **Impacto mecânico:** Define o **Custo de Ação Base** (velocidade na linha do tempo).
+  * **Testes:** Testes que envolvam velocidade e reflexo como correr curtas distâncias, mover-se mais rápido ou reagir a ataques. Também testes que envolvam destresa como executar movimentos precisos e mirar em locais específicos.
 * **Mente (MEN):** Representa a disciplina, capacidade de concentração e força espiritual do personagem.
   * **Impacto mecânico:** Define o teto de Mana e a capacidade de geração de Foco/Mana por turno (conceitos explicados na seção 5).
+  * **Testes:** Testes que envolvam resistir ou ativar o efeito de magias e itens mágicos.
 
 ### Tabelas de Progressão
 
-| Físico | HP |
+| Físico | PV |
 | ---: | ---: |
 | 0 | 10 |
 | 1 | 20 |
@@ -64,7 +64,7 @@ O Fábrica de Lendas utiliza três atributos principais que buscam englobar trê
 | 14 | 11 |
 | 15 | 10 |
 
-| Mente | MP |
+| Mente | Mana |
 | ---: | ---: |
 | 0 | 0 |
 | 1 | 10 |
@@ -85,36 +85,38 @@ O Fábrica de Lendas utiliza três atributos principais que buscam englobar trê
 
 ### Escala de Poder dos Atributos
 
-| Escala de Poder | Descrição |
+| Rank | Descrição |
 | :---: | :--- |
-| **0** | **[Muito fraco]**, abaixo do nível de um ser humano. Um rato teria Físico 0 por exemplo. |
-| **1** | **[Fraco]**, considerado fraco para níveis humanos, pode ser uma criança ou uma pessoa doente. |
-| **2 ~ 3** | **[Comum]**, nível de um ser humano médio. |
-| **4 ~ 6** | **[Heróico]**, acima do normal para um ser humano, capaz de feitos impressionantes, nível comum entre aventureiros. |
-| **7 ~ 9** | **[Lendário]**, capaz de feitos dignos de lendas, mover-se próximo da velocidade do som, levantar objetos de várias toneladas, conjurar magias capazes de destruir vilarejos inteiros. |
-| **10 ~ 12** | **[Épico]**, ápice da capacidade de um ser mortal, se aproximando do nível dos semi-deuses, capaz de se mover em várias vezes a velocidade do som, erguer e lançar objetos de várias toneladas com facilidade. |
-| **12 ~ 15** | **[Divino]**, capaz de feitos que desafiam a própria lógica, mover-se próximo da velocidade da luz, fazer montanhas se moverem, manipular magias capazes de moldar a realidade. |
+| **0 (Muito fraco)** | Abaixo do nível de um ser humano. Um rato teria Físico 0 por exemplo. |
+| **1 (Fraco)** | Considerado fraco para níveis humanos, pode ser uma criança ou uma pessoa doente. |
+| **2 ~ 3 (Comum)** | Nível de um ser humano médio. |
+| **4 ~ 6 (Heróico)** | Acima do normal para um ser humano, capaz de feitos impressionantes, nível comum entre aventureiros. |
+| **7 ~ 9 (Lendário)** | Capaz de feitos dignos de lendas, mover-se próximo da velocidade do som, levantar objetos pesando toneladas, conjurar magias capazes de destruir vilarejos inteiros. |
+| **10 ~ 12 (Épico)** | Ápice da capacidade de um ser mortal, se aproximando do nível dos semi-deuses, capaz de se mover em várias vezes a velocidade do som, erguer e lançar objetos de várias toneladas com facilidade. |
+| **12 ~ 15 (Divino)** | Capaz de feitos que desafiam a própria lógica, mover-se próximo da velocidade da luz, fazer montanhas se moverem, manipular magias capazes de moldar a realidade. |
 
-### Testes de Atributo
-* ***Testes Comuns:*** O jogador rola 1d10 mais o atributo relevante e tem que tirar um valor maior do que uma dificuldade definida pelo mestre. O método padrão para definir a dificuldade de um teste é usar a tabela de escala de poder. Considere o nível do feito, pegue o valor médio de um atributo daquele nível e depois some um modificador de o quão difícil aquele feito devaria ser. Exemplo: Tentar mover uma porta pesada de de pedra de centenas de kilos pode ser considerado um feito heróico, e os atributos são considerados heroicos entre 4 e 6. Pegamos 5 que é o ponto médio e depois somamos o valor 4, pois é uma porta bem pesada, e mesmo um personagem de FIS heróico teria 40% de chance de não conseguir. Entretanto, esse método é só uma sugestão e todas as considerações são subjetivas. Você pode simplesmente olhar para a tabela da escala de poder, considerar o que o jogador quer fazer e estipular um valor.
+### Notas de Design 
+Estes três arquétipos de personagem — o rápido, o forte e o conjurador — são bastante genéricos, de maneira que não é tão claro determinar em qual deles um dado personagem da ficção se encaixa, mas é uma tríade muito comum em jogos — o tank, o dps e o mago — e aqui serve como base para orientar as fantasias de personagem. Eu reduzi o número de atributos para apenas três, agrupando alguns conceitos que normalmente são separados, como Força e Constituição em Físico, e Destreza e Agilidade em Habilidade. O caso de Mente é especial: esse atributo seria o equivalente a Inteligência e Sabedoria. A questão é que eu não quero que atributos relacionados ao combate disputem recursos com atributos relacionados à interpretação. Então, Mente aqui diz mais respeito à capacidade de seu personagem usar habilidades especiais e magias. Quanto à precisão de ataque e dano, o atributo utilizado para calcular os bônus depende do atributo principal do personagem. A escala de poder apresentada serve para orientar a interpretação. O sistema tenta representar as essas escalas através das suas progressões de atributos, dano de armas, habilidades e magias. Mas essa representação tem limitações, tentar representar no combate um personagem que se move na velocidade do som quebraria o jogo. O que vai acontecer é que um personagem de HAB 9 lutando contra alguem de HAB 2 vai se mover de duas a três vezes antes que o oponente consiga reagir, o que é uma vantagem muito grande. Existem situações nas quais eu ainda vou precisar pensar: um personagem com FIS 8 consegue levantar um caminhão e tacar encima de alguem, e vai ser necessário determinar como isso funciona.
 
-* ***Testes Resistidos:*** Cada uma das partes envolvidas joga 1d10 e soma o atributo relevante. Nestes testes o defensor sempre tem vantagem, então o atacante, que provavelmente é quem desencadeou o teste, precisa de um valor maior para vencer. Modificadores podem ser aplicados à rolagem do atacante de acordo com a situação.
+## Rolagem de Testes
+* **Testes de Atributo**: Testes de atributo são bastante simplificados. Olhe para a tabela de "Escala de Poder dos Atributos" e considere o atributo do personagem. De acordo com o valor do atributo e a descrição do rank, defina o valor no d10 que o jogador precisa tirar para realizar aquele feito.
 
-> **Nota de Design:** Estes três arquétipos de personagem — o rápido, o forte e o conjurador — são bastante genéricos, de maneira que não é tão claro determinar em qual deles um dado personagem da ficção se encaixa, mas é uma tríade muito comum em jogos — o tank, o dps e o mago — e aqui serve como base para orientar as fantasias de personagem. Eu reduzi o número de atributos para apenas três, agrupando alguns conceitos que normalmente são separados, como Força e Constituição em Físico, e Destreza e Agilidade em Habilidade. O caso de Mente é especial: esse atributo seria o equivalente a Inteligência e Sabedoria. A questão é que eu não quero que atributos relacionados ao combate disputem recursos com atributos relacionados à interpretação. Então, Mente aqui diz mais respeito à capacidade de seu personagem usar habilidades especiais e magias. Quanto à precisão de ataque e dano, o atributo utilizado para calcular os bônus depende do atributo principal do personagem. A escala de poder apresentada serve para orientar a interpretação. O sistema tenta representar as essas escalas através das suas progressões de atributos, dano de armas, habilidades e magias. Mas essa representação tem limitações, tentar representar no combate um personagem que se move na velocidade do som quebraria o jogo. O que vai acontecer é que um personagem de HAB 9 lutando contra alguem de HAB 2 vai se mover de duas a três vezes antes que o oponente consiga reagir, o que é uma vantagem muito grande. Existem situações nas quais eu ainda vou precisar pensar: um personagem com FIS 8 consegue levantar um caminhão e tacar encima de alguem, e vai ser necessário determinar como isso funciona.
+* **Testes de Proficiência**: 1d10 + Proficiência vs Dificuldade
+  * **Determinando a Dificuldade:** [A FAZER]
 
----
+* **Testes Resistidos:** 1d10 + Atributo ou Proficiência (Atacante) vs 1d10 + Atributo ou Proficiência (Defensor)
 
-## 3. O Motor de Tempo
+## O Motor de Tempo
 
 O controle de turnos no Fábrica de Lendas se comporta de maneira diferente. Não existe uma noção de rodadas; o tempo flui de maneira contínua em unidades chamadas "ticks" e as ações dos personagens custam um certo número de ticks. A maneira como isso é feito é através das seguintes regras:
 
-1. No início do combate, anote um contador com o custo de ação de cada personagem. O personagem com menor custo age primeiro. Em caso de empate, o conflito é resolvido no dado uma vez para o resto do combate.
+1. No início do combate, anote um contador com o custo de ação de cada personagem. O personagem com menor custo age primeiro. Em caso de empate, o personagem com maior valor de HAB vence. Se o empate persistir, o conflito é resolvido no dado uma vez para o resto do combate.
 
-2. Existem duas ações básicas: uma ação de ataque e uma ação de movimento. O custo de uma ação de ataque é o valor de custo de ação determinado pela Habilidade do personagem. O valor de uma ação de movimento é metade deste custo. Movimento inclui se movimentar, tomar poções e usar itens. 
+2. Existem duas ações básicas: uma ação de padrão e uma ação de movimento. O custo de uma ação padrão é o valor de custo de ação determinado pela Habilidade do personagem. O valor de uma ação de movimento é metade deste custo. Movimento inclui se movimentar, tomar poções e usar itens. 
 
 3. Após um personagem agir, some o custo da ação ao contador daquele personagem. O próximo personagem a agir será aquele que tiver o menor custo acumulado.
 
-***/TO DO/***
+**/A FAZER/**
 - [ ] Como fazer esse controle de turnos à mão pode ser complicado, eu quero criar uma representação gráfica utilizando um círculo com 60 segmentos, similar a um relógio, para marcar a posição de cada personagem na ordem de turnos e usar um ponteiro para marcar a passagem de tempo.
 - [ ] Outra possibilidade é fazer um aplicativo online que faz esse controle de turnos automaticamente.
 
@@ -140,45 +142,49 @@ As colunas Dif X desta tabela mostram a quantidade de ataques necessária antes 
 
 > ***Nota de Design:*** Eu demorei dias brigando com números e tabelas do Excel para chegar até os valores desta tabela. Eu usei o motor de testes automatizados presente nesse projeto para testar e, ao que tudo indica, estes valores funcionam. Repare que os atributos 0 e 1 neste RPG são usados para personagens fracos, por isso os números relativos a eles são diferentes. A sacada que eu tive para balancear a progressão foi focar nos "breakpoints", momentos onde a vantagem de velocidade é efetiva e o personagem passa a ter, por exemplo, de 1 ataque bônus a cada 4 ataques para 1 ataque bônus a cada 3 ataques. E uma concessão que tive que fazer para esses números funcionarem na prática é que a diferença de 1 ponto de atributo, em geral, não é significativa além de dar a vantagem de iniciativa. Assim, a diferença de dois pontos faz com que o personagem ganhe um ataque bônus a aproximadamente 4 ataques; a diferença de três ganha 1 ataque bônus a cada dois ataques; e a partir da diferença de quatro pontos, a vantagem é de 1 ataque bônus a cada 2 ataques. Isso aproximadamente, os "quebrados" também se acumulam. Então, como os ataques bônus ganhos de HAB 5 para 2 são 1 por 2,33 ataques, supondo que o personagem de HAB 5 seja o P1 e o outro o P2, a sequência de ações pelo relógio de turnos ficaria: P1 - P2 - P1 - P2 - P1 - **P1** - P2 - P1 - P2 - P1 - **P1**. Ou seja, P1 ganha um ataque extra em três ataques e dois ataques extras em cinco. Agir mais vezes é uma vantagem muito forte se considerarmos que a economia de ações dita o ritmo do jogo. Para equilibrar isso, ações de movimento têm um custo separado. Isso serve para aliviar a vantagem de personagens focados em HAB de atacarem e se moverem mais rápido, atrasando o ritmo de ataques do personagem se ele quiser se reposicionar (na minha ideia original esses números definiam a ordem de turnos, de maneira que o personagem ganhava um turno bônus ao invés de uma ação de ataque bônus). O custo de movimentar é metade do custo de um ataque, de maneira que ele também diminui à medida que a habilidade do personagem aumenta. A única coisa que me incomoda é que os números usados para a progressão parecem aleatórios à primeira vista; não são uma sequência mais intuitiva como de 1 em 1, 5 em 5 ou 10 em 10. Isto é porque a matemática envolvida no balanceamento dessa progressão, por ser uma curva decrescente e pelos "breakpoints" que mencionei, é bastante complexa e os números são muito sensíveis. Variar um ponto em qualquer um desses valores atrapalha a curva inteira.
 
-## 4. Resolução de Combate
+## Resolução de Combate
 
-* Ataque = Bônus de Rank + Dado de Ataque + Modificadores
-* Defesa = Bônus de Rank + Dado de Defesa + Modificadores
+* Ataque = Bônus de Rank + Dado de Ataque + Bônus de Ataque(BdA)
+* Defesa = Bônus de Rank + Dado de Defesa + Bônus de Defesa (BdD)
+* Bônus de Ataque (BdA)/ Bônus de Defesa (BdD): Bônus concedido por habilidades e itens.
 * Grau de Acerto (GdA) = Ataque - Defesa
 * Se GdA > 0, então o ataque acertou.
 * Dano = Poder de Ataque (PdA) + (GdA * Multiplicador de Ataque (MdA))
-* Poder de Ataque: Dano Base da Arma + Atributo Principal
-* Multiplicador de Ataque: Definido pela arma, 1 por padrão.
+* Poder de Ataque (PdA): Dano Base da Arma(DB) + Atributo Principal
+* Multiplicador de Ataque(MdA): Definido pela arma, 1 por padrão.
 * Atributo Principal: Definido pelo Estilo de Combate (explicado na seção 6).
 * O Dado de Ataque e o Dado de Defesa também são definidos pelo Estilo de Combate.
 * Bônus de Rank cresce com o nível do personagem.
 * Bônus de Precisão/Guarda: Mecânica presente em itens e habilidades. Um bônus de Precisão +1 permite que um ataque acerte com GdA 0, Precisão +2 acerta com GdA -1, e assim por diante. Nestes casos, no cálculo de dano, o GdA é considerado 0. O bônus de Guarda +1 faz com que um ataque com GdA 1 erre, GdA 2 para Guarda +2, e assim segue.
 
-> **Nota de Design:** Eu comecei esse sistema pensando em baseá-lo no d10 e usar jogadas resistidas (1d10 vs 1d10) para definir acerto e dano. Eu então adicionei um valor base e um multiplicador na fórmula de dano para conseguir ajustar a variabilidade. Normalmente, se jogarmos um d10 contra um d10, temos uma situação onde o dano médio é 1.65 e o dano máximo é 9, o que dificulta certos balanceamentos. Com a minha fórmula, eu reduzo consideravelmente a diferença entre o dano médio e o dano máximo. Depois veio a ideia de variar os dados de acordo com os Estilos de Combate (que definem como o personagem luta e fazem parte da composição da "classe" do personagem). Isso me ajudou a criar identidades diferentes para estilos diferentes e me ajudou a balancear personagens de HAB, que têm a vantagem de serem mais rápidos (uma vantagem muito forte, já que a economia de ações rege este tipo de jogo). Mas, ao trabalhar com dados menores, eu subestimei o impacto que bônus como +1 ou +2 teriam nas jogadas. Uma diferença de um bônus +1 no ataque é suficiente para levar a taxa de vitória entre personagens iguais de 50/50 para 66/34; com um bônus +2 a diferença chega a 80/20, o que eu considero desequilibrado para uma diferença tão pequena. Eu cogitei usar apenas o d20 para jogadas de ataque, mas em um teste resistido a variabilidade do d20 torna-se muito grande, com a diferença entre os dados podendo ir de 1 a 19. Eu poderia ajustar isso com a minha fórmula de dano, mas senti que usar um d20 também alteraria a identidade do sistema que eu estava criando. Então, eu mantive os dados variando entre 1d8 e 1d12 e defini como regra que os valores dessas rolagens não devem ser alterados, a menos que sejam bônus instantâneos, que se aplicam em apenas um ataque. Mas isso fez com que eu perdesse as interações de adicionar bônus permanentes na hora de criar habilidades de personagens e itens. Por isso, criei a mecânica de bônus de Precisão e bônus de Guarda, que giram em torno do GdA, que é um valor central nas minhas interações de combate. Estas mecânicas ainda precisam ser implementadas e testadas no meu motor de testes. Por último, o Bônus de Rank é uma exceção à regra, pois serve para diferenciar personagens mais poderosos de personagens mais fracos. Como os dados de ataque e defesa não mudam, sem o Bônus de Rank um personagem nivel 1 teria a mesma chance de acertar outro personagem nivel 1 que teria de acertar um personagem nível 20.
+### Notas de Design 
+Eu comecei esse sistema pensando em baseá-lo no d10 e usar jogadas resistidas (1d10 vs 1d10) para definir acerto e usar a diferença das rolagens para definir o dano. Eu então adicionei um valor base e um multiplicador na fórmula de dano para conseguir ajustar a variabilidade. Normalmente, se jogarmos um d10 contra um d10, temos uma situação onde o dano médio é 1.65 e o dano máximo é 9, o que dificulta certos balanceamentos. Com a minha fórmula, eu reduzo consideravelmente a diferença entre o dano médio e o dano máximo. Depois veio a ideia de variar os dados de acordo com os Estilos de Combate (que definem como o personagem luta e fazem parte da composição da "classe" do personagem). Isso me ajudou a criar identidades diferentes para estilos diferentes e me ajudou a balancear personagens de HAB, que têm a vantagem de serem mais rápidos (uma vantagem muito forte, já que a economia de ações rege este tipo de jogo). Mas, ao trabalhar com dados menores, eu subestimei o impacto que um bônus como +1 ou +2 teria nas jogadas. Um bônus +1 no ataque é suficiente para levar a taxa de vitória entre personagens iguais de 50/50 para 66/34; com um bônus +2 a diferença chega a 80/20, o que eu considero desequilibrado para uma diferença tão pequena. Eu cogitei usar apenas o d20 para jogadas de ataque, mas em um teste resistido a variabilidade do d20 torna-se muito grande, com a diferença entre os dados podendo ir de 1 a 19. Eu poderia ajustar isso com a minha fórmula de dano, mas senti que usar um d20 também alteraria a identidade do sistema que eu estava criando. Então, eu mantive os dados variando entre 1d8 e 1d12 e defini como regra que os valores dessas rolagens não devem ser alterados, a menos que sejam bônus instantâneos, que se aplicam em apenas um ataque. Mas isso fez com que eu perdesse as interações de adicionar bônus permanentes na hora de criar habilidades de personagens e itens. Por isso, criei a mecânica de bônus de Precisão e bônus de Guarda, que giram em torno do GdA, que é um valor central nas minhas interações de combate. Estas mecânicas ainda precisam ser implementadas e testadas no meu motor de testes. Por último, o Bônus de Rank é uma exceção à regra, pois serve para diferenciar personagens mais poderosos de personagens mais fracos. Como os dados de ataque e defesa não mudam, sem o Bônus de Rank um personagem nivel 1 teria a mesma chance de acertar outro personagem nivel 1 que teria de acertar um personagem nível 20.
 
----
-
-## 5. Economia de Recursos
-Existem dois recursos de combate especiais no Fábrica de Lendas: Mana e Foco.
+## Economia de Recursos
+Existem dois recursos de combate especiais no Fábrica de Lendas: Mana e Foco. Além disso, temos os bons e velhos PVs(Pontos de Vida)
 
 * **Mana:**
   * Personagens possuem um valor máximo de Mana definido pelo seu valor de MEN.
   * Para usar magias é preciso primeiro manifestar a Mana necessária.
-  * **Manifestar Mana:** Ação que gera uma quantidade de Mana igual ao valor de MEN do personagem. Se, ao realizar essa ação, o personagem possuir mana o suficiente para usar uma magia, ele pode fazê-lo. Se não, ele precisa aguardar seu próximo turno para gerar mais mana. Esta ação tem o custo de uma ação padrão, independentemente de uma magia ter sido utilizada ou não.
-  * Se o personagem receber dano, ele precisa fazer um teste de MEN com dificuldade igual a 5 + o atributo principal da fonte de dano para não perder a mana manifestada. Se a fonte de dano não for um personagem, o mestre estipula a dificuldade.
+  * **Manifestar Mana:** Consome uma ação de movimento para gerar mana igual ao seu valor de MEN. Um personagem pode manter uma quantidade de mana flutualnte igual a 5 * o seu valor de MEN.
+   * Se o personagem receber dano, ele precisa fazer um teste de MEN com dificuldade igual a 5 + o atributo principal da fonte de dano para não perder a mana manifestada. Se a fonte de dano não for um personagem, o mestre estipula a dificuldade.
 
 * **Foco:** 
   * Foco é gerado quando o personagem ataca. Alternativamente, ele pode gastar uma ação de movimento para gerar o seu valor de Foco.
-  * O valor gerado é igual a MEN e o máximo que pode ser acumulado é igual a 3 * MEN.
+  * O valor gerado é igual a MEN e o máximo que pode ser acumulado é igual a 5 * MEN.
   * Foco é usado para ativar as habilidades do personagem.
 
-* **Especial:** Para personagens com um Estilo de Combate marcial que ganhem acesso a magias, é possível gastar uma ação de movimento para transformar seu Foco em Mana. 
+  * **Especial:** Para personagens com um Estilo de Combate marcial que ganhem acesso a magias, é possível gastar uma ação de movimento para transformar seu Foco em Mana. 
 
-> **Notas de Design:** Com magos precisando manifestar a mana antes de usar suas magias e correndo o risco de perder essa mana ao tomar dano, a minha intenção é fazer com que eles funcionem a partir de uma mecânica de risco e recompensa. Se eles conseguirem ficar seguros, conseguem dar muito dano. Por outro lado, se os inimigos os alcançarem, eles ficam em perigo. Isso faz com que atrapalhar a concentração dos conjuradores do oponente enquanto protege a concentração de seus aliados seja um objetivo tático importante. Entretanto, nem o dano das magias nem o tempo necessário para usá-las deve ser tão alto assim para que o combate não gire só em torno disso. Um mago vai precisar de dois turnos (um juntando mana e outro completando a mana e usando a magia) para usar uma magia de seu nível, e três turnos para usar uma magia mais forte. Quatro turnos seria para tentar usar uma magia muito avançada para o seu nível. O dano deve ser o suficiente para machucar, mas não para virar o rumo da batalha, a menos que seja uma magia de nível muito alto. Eu estou revendo minhas tabelas de dano, mas a base que eu estava usando em quantidade de ataques para derrubar um alvo, também conhecido como TTK (Time to Kill), seria 5 acertos para golpes normais e 3 acertos para magias. Além disso, nada impede que através de habilidades e magias específicas um mago consiga entrar no calor da batalha. 
-> 
-> Quanto ao Foco, ele é a mana dos guerreiros. A vantagem do Foco é que ele pode ser gerado enquanto se ataca, diferente dos magos que precisam ficar parados. Por outro lado, habilidades são menos poderosas do que magias. Isso gera uma dualidade: guerreiros querem ficar no calor do combate, onde conseguem atacar constantemente, e magos querem ficar seguros enquanto carregam suas magias. Quanto a converter Foco em Mana, isso é para personagens híbridos. Existe um Estilo de Combate chamado Conjurador, que é para quem quer usar magia. Mas personagens que não pegaram esse estilo ainda podem ter acesso a magias através de Especializações. Entretanto, estes personagens não vão ter MEN como atributo principal, o que quer dizer que o Foco gerado vai ser menor, e eles não vão ter as habilidades de um Conjurador, que auxiliam bastante no uso de magias. Além de tudo, eles precisam gastar uma ação de movimento. Desta forma, não acho que a conversão seja desequilibrada. Outro ponto sobre esse sistema de recursos é que ele também é focado no gerenciamento. Guardar alguns pontos de Mana/Foco para um momento crítico, assim como para usar magias/habilidades de reação, faz parte da estratégia.
+* **Vida:**
+  - [ ] A FAZER: Decidir regras para recuperação de PVs e regras para testes de sobrevivência quando os PVs chegam a 0.
 
-## 6. Equipamentos e Status
+#### Notas de Design
+Com magos precisando manifestar a mana antes de usar suas magias e correndo o risco de perder essa mana ao tomar dano, a minha intenção é fazer com que eles funcionem a partir de uma mecânica de risco e recompensa. Se eles conseguirem ficar seguros, conseguem dar muito dano. Por outro lado, se os inimigos os alcançarem, eles ficam em perigo. Isso faz com que atrapalhar a concentração dos conjuradores do oponente enquanto protege a concentração de seus aliados seja um objetivo tático importante. Entretanto, nem o dano das magias nem o tempo necessário para usá-las deve ser tão alto assim para que o combate não gire só em torno disso. Um mago vai precisar de duas ações de movimento e uma padrão para usar uma magia de seu nível, e três a quatro ações de movimento e uma padrão para usar uma magia mais forte. Mais do que isso seria para tentar usar uma magia muito avançada para o seu nível. O dano deve ser o suficiente para machucar, mas não para virar o rumo da batalha, a menos que seja uma magia de nível muito alto. Eu estou revendo minhas tabelas de dano, mas a base que eu estava usando em quantidade de ataques para derrubar um alvo, também conhecido como TTK (Time to Kill), seria 5 acertos para golpes normais e 3 acertos para magias. Além disso, nada impede que através de habilidades e magias específicas um mago consiga entrar no calor da batalha. 
+
+Quanto ao Foco, ele é a mana dos guerreiros. A vantagem do Foco é que ele pode ser gerado enquanto se ataca, diferente dos magos que precisam ficar parados. Por outro lado, habilidades são menos poderosas do que magias. Isso gera uma dualidade: guerreiros querem ficar no calor do combate, onde conseguem atacar constantemente, e magos querem ficar seguros enquanto carregam suas magias. Quanto a converter Foco em Mana, isso é para personagens híbridos. Existe um Estilo de Combate chamado Conjurador, que é para quem quer usar magia. Mas personagens que não pegaram esse estilo ainda podem ter acesso a magias através de Especializações. Entretanto, estes personagens não vão ter MEN como atributo principal, o que quer dizer que o Foco gerado vai ser menor, e eles não vão ter as habilidades de um Conjurador, que auxiliam bastante no uso de magias. Além de tudo, eles precisam gastar uma ação de movimento. Desta forma, não acho que a conversão seja desequilibrada. Outro ponto sobre esse sistema de recursos é que ele também é focado no gerenciamento. Guardar alguns pontos de Mana/Foco para um momento crítico, assim como para usar magias/habilidades de reação, faz parte da estratégia
+
+## Equipamentos e Itens
 
 ### Armas
 ***Tabela de Dano***
@@ -191,7 +197,8 @@ Existem dois recursos de combate especiais no Fábrica de Lendas: Mana e Foco.
 | 4 | 10 | 2 |
 | 5 | 15 | 3 |
 
-> ***Notas de Design:*** Para começar, eu tomei a decisão de padronizar o dano das armas de acordo com os tiers. Então uma adaga, uma espada longa e um martelo de guerra dão o mesmo dano. A diferença entre as armas é representada no sistema a partir dos Estilos de Combate que as utilizam, com suas diferentes habilidades. Os atributos usados como base para os tiers são: 3, 5, 8, 11 e 13. Essa sequência tem a ver com os tiers na escala de poder. A curva de PdA foi calculada de forma que um personagem usando uma arma de tier adequado tenha PdA igual ao dobro do seu atributo principal. Assim, o atributo se mantém impactante no cálculo do dano. O MdA é calculado para ser aproximadamente 10% do PdA, de maneira a evitar que valores altos de GdA façam com que o dano exploda.
+#### Notas de Design 
+Para começar, eu tomei a decisão de padronizar o dano das armas de acordo com os tiers. Então uma adaga, uma espada longa e um martelo de guerra dão o mesmo dano. A diferença entre as armas é representada no sistema a partir dos Estilos de Combate que as utilizam, com suas diferentes habilidades. Os atributos usados como base para os tiers são: 3, 5, 8, 11 e 13. Essa sequência tem a ver com os tiers na escala de poder. A curva de PdA foi calculada de forma que um personagem usando uma arma de tier adequado tenha PdA igual ao dobro do seu atributo principal. Assim, o atributo se mantém impactante no cálculo do dano. O MdA é calculado para ser aproximadamente 10% do PdA, de maneira a evitar que valores altos de GdA façam com que o dano exploda.
 
 ### Armaduras
 
@@ -205,24 +212,47 @@ Existem dois recursos de combate especiais no Fábrica de Lendas: Mana e Foco.
 | **4** | 35 | 70 | 110 |
 | **5** | 55 | 110 | 160 |
 
-> ***Notas de Design:*** Para simplificar as coisas, e como não existe um conceito de classe de armadura nesse sistema, armaduras concedem um bônus de HP. Matematicamente isso vai funcionar de maneira análoga a "armaduras absorvem parte do dano", mas sem precisar calcular essa redução toda vez que o dano for calculado. A armadura que um personagem utiliza é determinada pelo Estilo de Combate. O cálculo utilizado para definir os bônus foi feito a partir da referência dos mesmos atributos usados para as armas, de maneira que mantos aumentem os PVs em 20%, armaduras leves em 40% e armaduras pesadas em 60%. Quanto a escudos, eles não possuem uma progressão separada. Existe um Estilo de Combate que usa escudos e concede habilidades defensivas. Para esse RPG, os equipamentos arma e escudo são tratados como um elemento só. Então, quando receber uma recompensa por derrotar um inimigo ou encontrar um baú de tesouro, você pode encontrar um conjunto de arma e escudo tier X, e nunca um escudo separado. Isso é um elemento de jogo que pode ser meio estranho do ponto de vista interpretativo, mas não imagino que vá ser estranho ao ponto de quebrar a suspensão de descrença.
+### Notas de Design 
+Para simplificar as coisas, e como não existe um conceito de classe de armadura nesse sistema, armaduras concedem um bônus de HP. Matematicamente isso vai funcionar de maneira análoga a "armaduras absorvem parte do dano", mas sem precisar calcular essa redução toda vez que o dano for calculado. A armadura que um personagem utiliza é determinada pelo Estilo de Combate. O cálculo utilizado para definir os bônus foi feito a partir da referência dos mesmos valores de atributo usados para as armas, de maneira que mantos aumentem os PVs em 20%, armaduras leves em 40% e armaduras pesadas em 60%. Quanto a escudos, eles não possuem uma progressão separada. Existe um Estilo de Combate que usa escudos e concede habilidades defensivas. Para esse RPG, os equipamentos arma e escudo são tratados como um elemento só. Então, quando receber uma recompensa por derrotar um inimigo ou encontrar um baú de tesouro, você pode encontrar um conjunto de arma e escudo tier X, e nunca um escudo separado. Isso é um elemento de jogo que pode ser meio estranho do ponto de vista interpretativo, mas não imagino que vá ser estranho ao ponto de quebrar a suspensão de descrença.
 
 ### Propriedades Especiais
 
 * Itens podem ter propriedades especiais. 
 * A quantidade máxima de propriedades é definida pelo tier do item.
 
-***TO DO***
+**A FAZER**
 - [ ] Criar uma lista de propriedades
 
-> ***Notas de Design:*** Eu quero fazer um sistema de loot parecido com Diablo, eventualmente com uma tabela para rolar as propriedades de acordo com o tier e o tipo do equipamento. Essa seria mais uma forma de dar elementos únicos para classes de armas e armaduras com, por exemplo, armaduras pesadas tendo maior chance de possuir propriedades defensivas enquanto mantos dão propriedades relacionadas a magia e armaduras leves dão propriedades de precisão ou mobilidade. Mas isso deve ficar para uma próxima atualização do sistema.
+#### Notas de Design
+Eu quero fazer um sistema de loot parecido com Diablo, eventualmente com uma tabela para rolar as propriedades de acordo com o tier e o tipo do equipamento. Essa seria mais uma forma de dar elementos únicos para classes de armas e armaduras com, por exemplo, armaduras pesadas tendo maior chance de possuir propriedades defensivas enquanto mantos dão propriedades relacionadas a magia e armaduras leves dão propriedades de precisão ou mobilidade. Mas isso deve ficar para uma próxima atualização do sistema.
 
-## 7. Estilos de Combate
+### Itens
+- [ ] A FAZER: Criar lista de itens e seus efeitos
+
+## Vantagens e Desvantagens
+
+- [ ] A FAZER: Criar seção
+
+### Notas de Design
+Eu não quero usar o nome "vantagens e desvantagens", mas ainda não tive uma ideia melhor. Uma vez que atributos principais tem influência reduzida na interpretação e não existem atributos como Inteligência ou Carisma, fica a questão de como fazer um personagem inteligente ou carismático. Vantagens e Desvantagens servem para isso, além de expandir a customização do personagem. Você pode descrever a aparência e personalidade do seu personagem como quiser, além de elementos específicos da sua história. Mas se você quiser que qualquer característica seja impactante na interpretação, ela precisa ser comprada como uma vantagem ou aceita como desvantagem. Aceitar desvantagens fornece mais pontos para comprar vantagens. Esse sistema junto com as proficiencias lidam com a parte interpretativa do RPG, enquanto os atributos, estilos de combate, especializações, tecnicas e magias lidam com a parte de combate. 
+
+Um detalhe a se considerar na hora de desenvolver as desvantagens é que, mais do que uma penalidade, elas devem ser interessantes para a interpretação. Um padrão que eu identifico em jogos que usam esse sistema é jogadores escolherem desvantagens que eles julgam ser ignoráveis ou menos impactantes, apenas para garantir os pontos de vantagem. O sistema de vantagens e desvantagens deve ser visto não como uma oportunidade de deixar seu personagem mais forte, e sim como uma oportunidade de customizar seu personagem de acordo com a história.
+
+
+## Proficiências
+
+- [ ] A FAZER: Criar seção
+
+### Notas de Design
+Basicamente uma lista de perícias. Imagino que valores variando de 1 a 10 seja o suficiente, com a escala indo de "Novato" a "Mestre". Uma questão é que eu não quero que atributos principais influenciem em perícias, como forma de manter a separação entre interpretação e combate. Embora perícias (ou Proficiências no meu RPG) possam ocasionalmente serem usadas em combate, elas pertencem mais ao domínio da interpretação. Aqui é também um lugar para permitir a criação de personagens inteligentes através de proficiências voltadas ao conhecimento, uma vez que não exsiste um atributo inteligência. Isto junto com um sistema de vantagens e desvantagens na seção a seguir deve ser o suficiente para sustentar a interpretação.
+
+## Estilos de Combate
 * O Estilo de Combate determina como o personagem luta, as armas e armaduras que utiliza e concede a ele habilidades de combate.
 * O estilo também determina quais dados são utilizados para ataque e defesa e qual é o seu atributo principal, que aumenta o dano de seus ataques.
 * Ao escolher um Estilo de Combate o personagem começar com a sua habilidade principal, que é a primeira habilidade da lista.
 
->***Nota de Design:*** O estilo de combate junto com os atributos principais formam o núcleo do personagem no que diz respeito ao combate. Este núcleo pode depois ser expandido a partir de especializações, e essa é a base da progressão de "classe" do sistema. O jogador pode montar a sua classe combinando um estilo de combate com diferentes especializações. O estilo de combate e cada especialização dão a ele um leque de habilidades para desbloquear. Então o estilo de combate é a base dessa estrutura, pois ao determinar o atributo principal, o ataque e a defesa, ele determina o foco do personagem quanto a seu papel no jogo.
+### Notas de Design 
+O estilo de combate junto com os atributos principais formam o núcleo do personagem no que diz respeito ao combate. Este núcleo pode depois ser expandido a partir de especializações, e essa é a base da progressão de "classe" do sistema. O jogador pode montar a sua classe combinando um estilo de combate com diferentes especializações. O estilo de combate e cada especialização dão a ele um leque de habilidades para desbloquear. Então o estilo de combate é a base dessa estrutura, pois ao determinar o atributo principal, o ataque e a defesa, ele determina o foco do personagem quanto a seu papel no jogo.
 
 
 ### Lista de Estilos
@@ -235,7 +265,7 @@ Existem dois recursos de combate especiais no Fábrica de Lendas: Mana e Foco.
 * **Armas:** Espada Larga, Machado Grande, Martelo Grande
 
 ##### Habilidades
-* **Força Bruta:** Os ataques que você acertar têm seu GdA dobrado. Esse efeito é aplicado antes de somar o bônus de Habilidades Marciais, e é arredondado para baixo.
+* **Força Bruta:** Os ataques que você acertar têm seu GdA dobrado.
 * **Mãos Pesadas:** Toda vez que atacar com uma arma pesada, se o GdA for maior que 3, o alvo é atordoado.
   > **Atordoado:** Some metade do tempo de ação do personagem ao seu contador. Até o fim do seu próximo turno, ele recebe -1 de Defesa.
 * **Alcance:** Enquanto usar uma arma pesada, pode gastar 2 de foco para realizar um ataque contra todos os alvos que estiverem ao seu alcance em combate corpo a corpo.
@@ -253,8 +283,8 @@ Existem dois recursos de combate especiais no Fábrica de Lendas: Mana e Foco.
 ##### Habilidades
 * **Bloquear:** Enquanto equipar um escudo, quando um ataque for acertá-lo, pode gastar 2 de foco para adicionar 1d4 à sua defesa. Toda vez que sua guarda superar a defesa do oponente, se o GdA for menor que -3, ganha +1 de Ataque contra aquele oponente.
 * **Golpe de Escudo:** Pode gastar 2 de Foco para fazer um ataque usando seu dado de defesa. O dano desse ataque é reduzido pela metade e o GdA é considerado 0 para calcular o dano. Se o GdA desse ataque for maior do que 3, o alvo é atordoado.
-* **Pressionar:** Pode gastar 2 de foco para jogar testes para deter o oponente com vantagem. Toda vez que um teste para deter o oponente for um sucesso, você ataca aquele oponente com vantagem.
-* **Proteger:** Se um aliado adjacente for receber um ataque, pode gastar 2 de foco para direcionar esse ataque para você. Não funciona contra técnicas especiais ou magias.
+* **Pressionar:** Pode gastar 2 de foco para jogar testes para ameaçar o oponente com vantagem. Toda vez que um teste para deter o oponente for um sucesso, seu próximo ataque contra ele ganha vantagem.
+* **Proteger:** Se um aliado adjacente for receber um ataque, pode gastar 2 de foco para direcionar esse ataque para você. Não funciona contra técnicas ou magias.
 
 ---
 
@@ -347,15 +377,91 @@ Existem dois recursos de combate especiais no Fábrica de Lendas: Mana e Foco.
 * **Armas:** Tomos, Cajados, Orbes
 
 ##### Habilidades
-* **Condutor de Mana:** Você pode gastar uma ação de ataque para gerar o valor de mana definido pelo seu atributo mente. Essa mana é retirada da sua reserva de mana total. Após gerar mana, se tiver mana o suficiente, você pode conjurar uma magia. Se você receber dano, deve fazer um teste de MEN cuja dificuldade é 5 mais o atributo principal da fonte do dano, ou um valor determinado pelo mestre caso a fonte não seja um personagem. Se falhar no teste, você perde a mana acumulada.
-* **Analítico:** Você pode gastar o seu turno para analisar o campo de batalha e rolar um dado de conjuração. Você pode escolher manter aquele dado para ser utilizado no seu próximo turno. Você pode usar sua ação para gerar mana no turno que usa essa habilidade.
-* **Bateria de Mana:** Você consegue manter uma quantidade de mana armazenada igual ao seu valor de MEN mesmo fora de combate. Você precisa declarar que vai gerar e guardar essa mana antes do combate começar.
+* **Estudioso do Arcano:** Você desbloqueia a árvore de magias e a ação de canalizar mana. Conjuradores tem acesso a todas as linhas de magia, desde que tenha as condições necessárias para comprá-las (Como, por exemplo, Magma 1 exigindo Fogo 2 e Terra 2).    
+* **Analítico:** Você pode gastar uma ação de movimento para analisar o campo de batalha e rolar um dado de conjuração. Você pode escolher manter aquele dado para ser utilizado no seu próximo turno. Você pode canalizar mana ao mesmo tempo que usa essa habilidade.
+* **Bateria de Mana:** Você consegue manter uma quantidade de mana armazenada igual a duas vezes o seu valor de MEN mesmo fora de combate. Você precisa declarar que vai gerar e guardar essa mana antes do combate começar.
 * **Resoluto:** Ao receber dano, contanto que você tenha mais de 50% do seu HP, você joga o teste para não perder sua mana acumulada com vantagem (jogue o dado duas vezes e escolha o melhor resultado).
 
----
+## Especializações
+- [ ] A FAZER: Criar seção.
 
-## 8. Filosofia de Balanceamento
-*Uma nota sobre como o jogo foi testado (excelente para o portfólio).*
+### Notas de Design
+Enquanto Estilos de Combate dizem como seu personagem luta, Especializações dizem o que ele sabe fazer em combate além disso. São as "habilidades de classe" como o smite do Paladino ou o inspirar do Bardo. Mas, Especializações não são classes. Um personagem pode ter até três especializações. A combinação entre Estilo de Combate e Especializações monta a classe. Em termos de regras, Especializações e Estilos de Combate são parecidos. Cada especialização concede três habilidades desbloqueáveis à medida que o personagem sobe de nível. Existes Especializações Marciais e Especializações Arcanas. As Especializações Arcanas interagem com as diferentes linhas de magia e são voltadas para personagens do Estilo de Combate Conjurador. Personagens de outros estilos também podem adiquirir Especializações Arcanas. Neste caso, eles desbloqueiam a linha de magia específica daquela especialização, ao contrário de conjuradores que têem acesso a todas as magias.
 
-***/TO DO/***
-- [ ] Escrever
+Especializações que tenho até agora:
+
+**Especilizações Marciais**
+  **Vanguarda**
+    Função: Tank, Dano
+    Descrição: Guerreiros da linha de frente, que gostam de estar sempre trocando golpes. Habilidades como ganhar Foco ao receber dano, ficar mais forte com menos de 50% do HP ou quando está cercado.
+  **Campeão**
+    Função: Controlador, Tank
+    Descrição: Personagens do tipo comandante. Habilidades do tipo "aura" que fornecem buffs a aliados próximos e debuffs aos inimigos. 
+  **Berserker**
+    Função: Dano, Tank
+    Descrição: Mecânica voltada para a habilidade de entrar em fúria e interações com ela, como ganhar resistências ao entrar em fúria ou diminuir os efeitos negativos após o combate.
+  **Trovador**
+    Função: Controlador, Suporte
+    Descrição: Habilidades de bardo. Da para considerar se essa não seria uma especialização arcana, mas talvez não precise. Deve interagir com a proficiência em performance.
+  **Alquimista**
+    Função: Suporte, Controlador, Dano
+    Descrição: A especialização Alquimista dá bastante versatilidade para se trabalhar, pois depende das poções que o personagem utiliza. O que também significa que vai ser uma especialização difícil de se criar que vai precisar de um sistema de fabricação e de coleta de materiais.
+    Deve interagir com a proficiência em alquimia.
+  **Caçador**
+    Função: Dano, Suporte
+    Descrição: Precisa ter uma especialização que permita ter um companheiro animal né. Caçador se encaixa bem nisso, com habilidades que permitam ganhar vantagens contra determinados inimigos. Duas coisas a se tomar cuidado é que companheiro animal costuma ser algo bem roubado, e buscar não deixar as habilidades do Caçador nichadas demais, como limitar os seus bônus a inimigos e ambientes muito específicos. Talvez criar uma mecânica que permita o caçador se adaptar a condições novas.
+  **Sabotador**
+    Função: Controlador, Dano
+    Descrição: O cara dos truques sujos, com habilidades para incapacitar seus oponentes e tirar vantagem dos debilitados. Focado em causar efeitos negativos.
+  **Sombra**
+    Função: Dano, Mobilidade
+    Descrição: Utiliza-se de furtividade para se esconder em combate e pegar os inimigos de surpresa e foca em flanquear. Deve interagir com com a proficiência em furtividade.
+  **Estrategista**
+    Função: Controlador, Suporte
+    Descrição: Especialista em encontrar o ponto fracos dos inimigos e influenciar o fluxo da batalha. Habilidades que lidam com a manipulação de rolagem de dados.
+  **Viajante**
+    Função: Mobilidade, Suporte
+    Descrição: Especialista em movimentação e posicionamento. Conseguem se mover distâncias maiores e gerar foco enquanto se movem. 
+
+**Especializações Arcanas**
+  **Elementarista**
+    Descrição: Fortalece magias de um determinado elemento aumentando dano, diminuindo o custo ou ampliando o efeito de efeitos secundários como queimar ou congelar. Também concede resistência e a habilidade de absorver mana daquele elemento. Talvez fazer uma habilidade específica que varia para cada elemento.
+    Desbloqueia: Uma linha elemental.
+  **Arcanista**
+    Descrição: Habilidades voltadas para meta-magia e manipulação de mana. Diminui o custo e aumenta os efeitos de magias da linha arcana.
+    Desbloqueia: Magias arcanas.
+  **Clérigo**
+    Descrição: Amplificação de efeitos de cura, duração de buffs e resistencia a efeitos negativos.
+    Desbloqueia: Magias da linha vida.
+  **Augoreiro**
+    Descrição: Amplificação da intensidade e duração de efeitos negativos e auras passiva que enfraquecem os oponentes.
+    Desbloqueia: Magias da linha morte.
+  **Naturalista**
+    Descrição: Fortalece magias da natureza, concede a habilidade de se transformar em animais e se tornar mais forte em ambientes naturais.
+    Desbloqueia: Magias da linha natureza. 
+  **Oráculo**
+    Descrição: Habilidades que concedem boa sorte, melhoram os efeitos de magias de divinação e habilidades relacionadas a espiritualidade.
+    Desbloqueia: Magias de Divinação.
+  **Necromante**
+    Descrição: Habilidades que interagem com necromancia, aumentar o número e poder dos mortos vivos criados e talvez habilidades que interajam com maldições.
+    Desbloqueia: Magias da Linha Necromancia
+
+
+## Tecnicas e Magias
+
+- [ ] A FAZER: Criar a seção.
+
+### Notas de Design
+Para as magias, eu estou me inspirando no sistema de licenças do Final Fantasy 12. O personagem tem acesso a magias a partir de pacotes contendo de duas a três. Estes pacotes se organizam de maneira hierarquica, formando um árvore. A questão é determinar essa organização. Eu criei a seguinte tabela para usar como base para o dano e o custo de magias de acordo com os mesmos ranks que usei nas escalas de poder.
+
+| Rank     | PdA | MdA | Mana |
+| :------- | :-- | :-- | :--- |
+| Comum    | 15  | 3   |  6   |
+| Heróico  | 20  | 4   |  8   |
+| Lendário | 35  | 7   |  14  |
+| Épico    | 70  | 14  |  30  |
+| Divino   | 125 | 25  |  50  |
+
+Então, uma primeira decisão é pensar em progressão vertical destes pacotes. Vamos ter um pacote por rank, de forma que uma linha de magia é composta por 5 pacotes, ou vamos agrupar tiers em pacotes com, por exemplo, tiers Comum-Heróico no primeiro pacote, Lendário-Épico no segundo e Divino no terceiro, de forma que linhas tenham apenas 3 pacotes? Ter menos magias por rank pode ser bom para evitar redundância: não é necessário que exista, por exemplo, uma magia de alvo único e uma em ára para cada rank. No meu sistema magias de rank baixo não se tornam obsoletas por causa da dinâmica de gerar mana. Uma bola de fogo, que para um mago nível baixo é o seu principal dano, continua útil para um mago de nível alto por ser uma opção mais rápida, uma vez que ele consegue gerar mais mana. Repare que os ranks Épico e Divino custam consideravemnete mais mana e causam bastante dano. Magias desses ranks têem uma área de efeito grande e alto poder destrutivo. Por outro lado, ter mais passos em uma linha permite uma maior sensação de progressão. Com menos passos, personagems passarão mais tempo sem ter acesso a novas magias.
+
+A outra questão diz respeito a progressão horizontal e como magias serão compradas. Em jogos, especialização costuma ser mais eficiente do que versatilidade. Então, vai ser melhor seguir uma linha para desbloquear as magias mais poderosas dela do que dividir seus pontos em várias linhas diferentes. Eu gostaria de incentivar um certo nível de versatilidade. Uma boa solução para isso é um sistema de custos crescentes, onde a cada passo na linha o custo do próximo é maior. Essa curva de custos precisa ser pensada de forma que a decisão passe de se eu vou ter uma linha no nível 3 e outra no nivel 2 ou uma linha no nível 5 para se eu vou ter uma linha no nível 5 ou duas linhas no nível 4. Então o crescimento dos custos precisa ser bem agressivo. Dessa forma, é mais tranquilo de criar linhas que dependem de outras, pois é menos punitivo deixar de seguir uma linha só.
