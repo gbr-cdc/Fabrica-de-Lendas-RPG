@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from core.DiceManager import DiceManager
     from entities.Characters import Character
     from controllers.CharacterController import CharacterController
+    from core.BaseClasses import BattlePassive
 
 class BattleManager:
     """
@@ -226,6 +227,7 @@ class BattleManager:
             
             self.emit("on_turn_start", ActionLoad(character = actor))
             self.resolve_deaths()
+            self.battle_result.history.append(f"Turno do {actor.name} =======================================")
 
             last_action_load = None
             final_action = None
