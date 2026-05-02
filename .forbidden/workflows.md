@@ -5,9 +5,12 @@
 2. **Understand:** Problem statement and User's desired outcome/technical preference. Challange user directions if you have better solutions to the problem.
 3. **Analyze:** Validate against ARCH.RULES and common gaming design patterns.
 4. **Propose:** Create `docs/plans/[task].md`.
-5. **Iterate:** Wait for the user to approve the plan.
+5. **HALT EXECUTION:** Present the plan to the user and ask for approval. **YOU MUST STOP GENERATING TEXT HERE.** Do not proceed to Step 6 under any circumstances until the user explicitly replies with approval.
 6. **Check Mission Format:** Fetch [ARCH.DOC_STANDARDS.MISSION]
 7. **Mission:** Translate the approved Plan into a mission. Create new mission with tag [MISSION.ACTIVE.(mission_name)].
+  **Note:** Do not try to check MISSION_LOG.md to confirm file state or active missions, just use **Skill: Reference Manager** to *create a tag* with the new mission. If ref_manager fails informing tag already exists, change mission name and tag.
+8. **Git Protocol**: STOP and ask USER to commit changes. Suggest message: `planning: create mission for ...`.
+
 
 ## ARCHITECTURAL ANALYSIS [WORKFLOWS.ARCH_ANALYSIS]
 1. **Receive:** Fetch [ARCH.(...)] tags user wants to discuss. If you didn't received any, aks for tags.
