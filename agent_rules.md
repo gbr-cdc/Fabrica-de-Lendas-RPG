@@ -17,9 +17,15 @@ Agents must use `python3 utilities/ref_manager.py` for all documentation operati
     - Line Tag: A tag placed inside a standard line of text (e.g., Timeout rule [TAG_TIME]: Set timeout to 30s). It references and modifies ONLY that specific single line.
     - Section Tag: A tag placed inside a Markdown header (e.g., ### Database Rules [TAG_DB]). It references the header and all content below it, stopping immediately before the next header of equal or higher level.
 - **Fetch a tag:** Get referenced content with the tag. Use: `python3 utilities/ref_manager.py [TAG]`
-- **Create a tag:** Append new content. Use: `python3 utilities/ref_manager.py --create [TAG_FOR_FILE] "Content"`
-    - *Smart Placement:* `ref_manager` will automatically place the new tag logically based on tag hierarchy.
-- **Update a tag:** Replace existing section or line. Use: `python3 utilities/ref_manager.py --update [TAG] "New Content" [--from-file path]`
+- **Create a tag:** Add new content to the documentation. Use: `python3 utilities/ref_manager.py --create [FULL_NEW_TAG] 'Content'`
+    - **Uniqueness:** The `[FULL_NEW_TAG]` MUST NOT already exist in the target file.
+    - **Target Tag:** You MUST pass the full tag you are creating as the argument. NEVER pass a parent tag to `--create` (e.g., do not use `ref_manager --create [A.B]` to create `[A.B.C]`).
+    - **Smart Placement:** `ref_manager` automatically determines the insertion point:
+        - It searches for the last sibling (e.g., for `[A.B.C]`, it looks for the last `[A.B.*]`).
+        - If no siblings exist, it looks for the parent section (e.g., `[A.B]`).
+        - **Fail-Fast:** If neither a sibling nor the parent is found, it will fail.
+    - **Shell Safety:** ALWAYS use single quotes `' '` for the content argument to prevent shell interpretation of special characters.
+- **Update a tag:** Replace existing section or line. Use: `python3 utilities/ref_manager.py --update [TAG] 'New Content' [--from-file path]`
     - Single-Line Constraint: If updating a line tag, the "New Content" MUST be exactly one line. Do not pass multi-line strings. 
     - Line Tag Preservation: When updating a line, you MUST include the exact original line tag within your "New Content".
     - Section Tag Preservation: When updating a section, your "New Content" MUST start with the original Markdown header containing the tag (e.g., ## Section Name [TAG]). Do not strip the header away.
