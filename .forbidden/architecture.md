@@ -72,7 +72,7 @@ Encapsulates a dice roll outcome. Tracks the `final_roll`, individual dice (`rol
 Summary of a finished combat. Contains the execution `history` (log of events), lists of `winners` and `losers`, `duration` in ticks, and per-character action statistics.
 
 #### CombatStyle [ARCH.core.Structs.CLASS:CombatStyle]
-Archetype definition for a character's fighting method. Defines attack/defense dice (e.g., d20, d12), the `main_stat` for bonuses, and required weapon/armor types. Loaded from `CombatStyles.json`.
+Archetype definition for a character's fighting method. Defines attack/defense dice (e.g., d20, d12), the `main_stat` for bonuses, and required weapon/armor types. Loaded from `CombatStyles.json`. `[ARCH.RULES.CORE.DATA]`
 
 #### AttackEffects [ARCH.core.Structs.CLASS:AttackEffects]
 Data structure for individual components of an attack (e.g., "Lifesteal", "Stun"). Contains an `id` and a dictionary of `parameters` used by the resolution logic.
@@ -84,14 +84,14 @@ Blueprint for complex actions. Combines action/attack types, resource costs (Foc
 Mutable payload objects for the Event Bus, allowing listeners to influence action outcomes. `[ARCH.RULES.BATTLE.PAYLOAD]`
 
 #### ActionLoad [ARCH.core.Events.CLASS:ActionLoad]
-Base payload for all battle actions. Tracks the `character` performing the action, an execution `history` (log), and a `success` flag.
-- add_event() [ARCH.core.Events.METHOD:ActionLoad.add_event]: Standardizes event insertion into history using a pipe-delimited format (`TAG|PARAM1|...`).
+Base payload for all battle actions. Tracks the `character` performing the action, an execution `history` (log), and a `success` flag. `[ARCH.RULES.CORE.HISTORY]`
+- add_event() [ARCH.core.Events.METHOD:ActionLoad.add_event]: Standardizes event insertion into history using a pipe-delimited format (`TAG|PARAM1|...`). `[ARCH.RULES.CORE.HISTORY]`
 
 #### AttackLoad [ARCH.core.Events.CLASS:AttackLoad]
 Specialized payload for offensive resolution. Carries the `target`, `battle_context`, `attack_type`, and states (`attack_state`, `defense_state`). Critical fields for modification: `gda` (Degree of Success), `damage`, and `hit` (boolean).
 
 #### HistoryEmitter [ARCH.core.Events.CLASS:HistoryEmitter]
-Static utility to generate standardized, structured event tags for the history stream (e.g., EXEC, ROLL, DMG, HP, FOCUS, MANA, STATUS).
+Static utility to generate standardized, structured event tags for the history stream (e.g., EXEC, ROLL, DMG, HP, FOCUS, MANA, STATUS). `[ARCH.RULES.CORE.HISTORY]`
 
 ### Base Classes [ARCH.core.BaseClasses]
 Foundational abstract classes and interfaces ensuring modularity and decoupling.
@@ -140,7 +140,7 @@ Central registry for loading and accessing data-driven templates from JSON files
 Implementation of the Modifier Stack Pattern for dynamic stat calculation. `[ARCH.RULES.CORE.MODIFIER]`
 
 #### StatModifier [ARCH.core.Modifiers.CLASS:StatModifier]
-Base for all stat changes. Tracks `stat_name`, `value`, and `source` with a unique UUID.
+Base for all stat changes. Tracks `stat_name`, `value`, and `source` with a unique UUID. `[ARCH.RULES.CORE.MODIFIER]`
 
 #### EphemeralModifier [ARCH.core.Modifiers.CLASS:EphemeralModifier]
 Short-term changes intended to be cleared after combat or specific effect durations.
@@ -155,19 +155,19 @@ The `battle` module handles combat orchestration, action resolution, and reactiv
 The central orchestrator of the combat engine, managing time and event propagation. `[ARCH.RULES.CORE.OBSERVER]`
 
 #### BattleManager [ARCH.battle.BattleManager.CLASS:BattleManager]
-Manages the `timeline` (Min-Heap), the `listeners` registry (Event Bus), and the character lifecycle. Tracks `current_tick` and maintains a `graveyard`.
+Manages the `timeline` (Min-Heap), the `listeners` registry (Event Bus), and the character lifecycle. Tracks `current_tick` and maintains a `graveyard`. `[ARCH.RULES.BATTLE.TIMELINE]`, `[ARCH.RULES.BATTLE.TICKS]`
 
-- run_battle() [ARCH.battle.BattleManager.METHOD:BattleManager.run_battle]: The main engine loop. Executes characters turns in tick order. Registers `TURN_START` tags and ensures `resolve_deaths()` and `judge.rule()` are checked. `[ARCH.RULES.BATTLE.DECISION]`
+- run_battle() [ARCH.battle.BattleManager.METHOD:BattleManager.run_battle]: The main engine loop. Executes characters turns in tick order. Registers `TURN_START` tags and ensures `resolve_deaths()` and `judge.rule()` are checked. `[ARCH.RULES.BATTLE.DECISION]`, `[ARCH.RULES.BATTLE.TICKS]`
 - emit() [ARCH.battle.BattleManager.METHOD:BattleManager.emit]: Triggers events on the Event Bus. Listeners modify the `ActionLoad` or `AttackLoad` payload objects directly. `[ARCH.RULES.BATTLE.PAYLOAD]`
 - subscribe() [ARCH.battle.BattleManager.METHOD:BattleManager.subscribe]: Manages dynamic listener registration, used by Passives and Status Effects. `[ARCH.RULES.BATTLE.EPHEMERAL_HOOKS]`
-- unsubscribe() [ARCH.battle.BattleManager.METHOD:BattleManager.unsubscribe]: Manages dynamic listener registration, used by Passives and Status Effects.
+- unsubscribe() [ARCH.battle.BattleManager.METHOD:BattleManager.unsubscribe]: Manages dynamic listener registration, used by Passives and Status Effects. `[ARCH.RULES.BATTLE.EPHEMERAL_HOOKS]`
 - delay_character() [ARCH.battle.BattleManager.METHOD:BattleManager.delay_character]: Pushes a character next turn further into the future on the timeline (e.g., due to Stun). `[ARCH.RULES.BATTLE.TIMELINE]`
 - resolve_deaths() [ARCH.battle.BattleManager.METHOD:BattleManager.resolve_deaths]: Identifies characters at 0 HP, removes them from active play, moves them to the `graveyard`, and registers `DEATH` tags.
 ### Battle Actions [ARCH.battle.BattleActions]
 Implementations of the Command Pattern for combat maneuvers. `[ARCH.RULES.CORE.COMMAND]`
 
 #### AttackAction [ARCH.battle.BattleActions.CLASS:AttackAction]
-Generic data-driven offensive resolution. Implements the complete attack flow (Roll -> Hit Check -> GdA -> Damage -> Application). Registers structured tags for every phase of resolution (ROLL, HIT, DMG, HP). Supports `AttackType.AREA` with a Master Roll. `[ARCH.RULES.BATTLE.TARGETING]`, `[ARCH.RULES.BATTLE.AREA_ATTACK]`
+Generic data-driven offensive resolution. Implements the complete attack flow (Roll -> Hit Check -> GdA -> Damage -> Application). Registers structured tags for every phase of resolution (ROLL, HIT, DMG, HP). Supports `AttackType.AREA` with a Master Roll. `[ARCH.RULES.BATTLE.TARGETING]`, `[ARCH.RULES.BATTLE.AREA_ATTACK]`, `[ARCH.RULES.BATTLE.EPHEMERAL_HOOKS]`
 
 #### GenerateManaAction [ARCH.battle.BattleActions.CLASS:GenerateManaAction]
 A Move Action that manifest mana from the daily pool (`MANA_T`) into the floating pool (`MANA_F`).
@@ -206,7 +206,7 @@ Evaluates the presence of living characters in each team to determine the `Battl
 Temporary modifiers and behavioral changes with a turn-based duration. `[ARCH.RULES.CORE.MODIFIER]`
 
 #### StatusEffect [ARCH.battle.StatusEffects.CLASS:StatusEffect]
-Abstract base that extends `BattlePassive`. Implements `apply()` and `remove()` logic, including `EphemeralModifier` management.
+Abstract base that extends `BattlePassive`. Implements `apply()` and `remove()` logic, including `EphemeralModifier` management. `[ARCH.RULES.CORE.MODIFIER]`
 
 #### Atordoado [ARCH.battle.StatusEffects.CLASS:Atordoado]
 Stun effect. Upon application, it immediately calls `delay_character()`. It subscribes to `on_turn_start` to decrement duration or expire. Registers `STATUS` tags when applied/removed.
@@ -291,6 +291,7 @@ The central tool for targeted documentation extraction, recursive dependency res
 - **Invariants [ARCH.TEST_QUALITY.INVARIANTS]:** Assert that attribute modifiers `[ARCH.RULES.CORE.MODIFIER]` are properly used and Character atributes are not corrupted by bad modifications.
 - **Lifecycle Auditing** [ARCH.TEST_QUALITY.LIFECYCLE]: Tests involving the EventBus MUST verify that all ephemeral hooks ([ARCH.RULES.BATTLE.EPHEMERAL_HOOKS]) used by self modifying actions are successfully unsubscribed after the action cycle. Assert that the EventBus subscriber count returns to its baseline.
 - **Battle Context [ARCH.TEST_QUALITY.IBATTLECONTEXT]:** Use `tests.utils.test_context.BattleTestContext` when a concrete implementation of `IBattleContext` is required for behavioral tests, avoiding excessive mocking of the battle state.
+- **Structured History [ARCH.TEST_QUALITY.STRUCTURED_HISTORY]:** Tests verifying action outcomes MUST assert against structured event tags (`TAG|PARAM1|PARAM2...`) rather than narrative strings or partial substrings of `MSG` tags. This ensures tests remain resilient to localization changes and narrative polish. `[ARCH.RULES.CORE.HISTORY]`
 
 ## Documentation Standards [ARCH.DOC_STANDARDS]
 
