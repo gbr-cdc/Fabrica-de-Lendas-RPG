@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Callable, Dict, TYPE_CHECKING
 from core.Enums import RollState, AttackType
-from core.Events import AttackLoad
+from core.Events import AttackLoad, HistoryEmitter
 from core.BaseClasses import IBattleContext, BattlePassive, ActionLoad
 from core.CharacterSystem import CharacterSystem
 
@@ -20,7 +20,7 @@ class GracaDoDuelista(BattlePassive):
             if attack_load.character.char_id == self.owner.char_id:
                 roll = self.dice_service.roll_dice(6, RollState.NEUTRAL)
                 attack_load.gda += roll.final_roll
-                attack_load.history.append(f"[PASSIVA] Graça do Duelista adicionou +{roll.final_roll} de GdA!")
+                attack_load.add_event("MOD", self.name, roll.final_roll, self.owner.char_id)
 
         def reacao_evasao_hook(attack_load: 'AttackLoad') -> None:
             if attack_load.target is None:
@@ -32,11 +32,11 @@ class GracaDoDuelista(BattlePassive):
                         controller = self.context.get_controller(self.owner.char_id)
                         if controller and controller.choose_reaction(self.owner, self.name, attack_load, self.context):
                             CharacterSystem.spend_focus(self.owner, custo_evasao)
+                            attack_load.add_event("FOCUS", self.owner.char_id, -custo_evasao, self.owner.floating_focus)
+                            
                             roll = self.dice_service.roll_dice(4, RollState.NEUTRAL)
                             attack_load.gda -= roll.final_roll
-
-                            attack_load.history.append(f"[REAÇÃO] {self.owner.name} gastou 2 de Foco e usou Evasão!")
-                            attack_load.history.append(f"Rolou +{roll.final_roll} na Defesa. O GdA caiu para {attack_load.gda}.")
+                            attack_load.add_event("MOD", f"{self.name}_EVASAO", -roll.final_roll, self.owner.char_id)
 
         return {
             "on_gda_modify": passiva_acerto_hook,
@@ -51,8 +51,9 @@ class ForçaBruta(BattlePassive):
         def multiply_hook(attack_load: 'AttackLoad'):
             if attack_load.character.char_id == self.owner.char_id:
                 if attack_load.hit:
-                    attack_load.gda += attack_load.gda
-                    attack_load.history.append(f"[PASSIVA] Força Bruta dobrou o GdA para {attack_load.gda}!")
+                    val = attack_load.gda
+                    attack_load.gda += val
+                    attack_load.add_event("MOD", self.name, val, self.owner.char_id)
         return {'on_gda_modify': multiply_hook}
 
 class MãosPesadas(BattlePassive):
@@ -66,8 +67,8 @@ class MãosPesadas(BattlePassive):
             if attack_load.character.char_id == self.owner.char_id:
                 if attack_load.hit:
                     if attack_load.gda > 3:
-                        Atordoado(duration=1, target=attack_load.target, context=self.context)
-                    attack_load.history.append(f"[PASSIVA] Mãos Pesadas dobrada o GdA para {attack_load.gda}!")
+                        Atordoado(duration=0, target=attack_load.target, context=self.context)
+                        attack_load.add_event("STATUS", attack_load.target.char_id, "Atordoado", 0, "APPLIED")
         return {'on_gda_modify': effect_hook}
 
 class Combo(BattlePassive):
@@ -96,7 +97,7 @@ class Combo(BattlePassive):
                 self.hit = False
                 
                 if response.success:
-                    attack_load.history.append(f"[PASSIVA] Combo! {self.owner.name} ataca novamente (Estágio {self.stage})!")
+                    attack_load.add_event("MSG", f"Combo Stage 1")
                     attack_load.history.extend(response.history)
 
             elif self.stage == 1:
@@ -109,7 +110,7 @@ class Combo(BattlePassive):
                 response = action_registry["AttackAction"](basic_attack_template, attack_load.character, [attack_load.target], self.context, attack_type=AttackType.EXTRA_ATTACK).execute_if_possible()
                 
                 if response.success:
-                    attack_load.history.append(f"[PASSIVA] Combo! {self.owner.name} ataca novamente (Estágio {self.stage})!")
+                    attack_load.add_event("MSG", f"Combo Stage 2")
                     attack_load.history.extend(response.history)
                 else:
                     self.stage = 0
@@ -118,7 +119,8 @@ class Combo(BattlePassive):
             elif self.stage > 1:
                 if attack_load.hit:
                     Atordoado(0, attack_load.target, attack_load.battle_context)
-                    attack_load.history.append(f"[PASSIVA] Combo! {self.owner.name} ataca novamente (Estágio {self.stage})!")
+                    attack_load.add_event("STATUS", attack_load.target.char_id, "Atordoado", 0, "APPLIED")
+                    attack_load.add_event("MSG", f"Combo Final Stage {self.stage}")
         
         return {'on_attack_end': checar_ataque_bonus}
 
@@ -139,13 +141,13 @@ class PosturaDefensiva(BattlePassive):
             self._dice_modifiers = [m1, m2]
             self.owner.add_modifier(m1)
             self.owner.add_modifier(m2)
-            return f"{self.owner.name} assumiu a Postura Defensiva!"
+            return HistoryEmitter.msg(f"{self.owner.name} assumiu a Postura Defensiva")
         else:
             for mod in self._dice_modifiers:
                 self.owner.remove_modifier(mod)
             self._dice_modifiers = []
             self._clear_tracking()
-            return f"{self.owner.name} saiu da Postura Defensiva."
+            return HistoryEmitter.msg(f"{self.owner.name} saiu da Postura Defensiva")
 
     def _start_tracking(self, target: 'Character'):
         if target.char_id not in self._tracked_targets:
@@ -170,7 +172,7 @@ class PosturaDefensiva(BattlePassive):
         def hit_hook(attack_load: 'AttackLoad'):
             if self.is_active and attack_load.character.char_id == self.owner.char_id and attack_load.hit:
                 self._start_tracking(attack_load.target)
-                attack_load.history.append(f"[POSTURA] {self.owner.name} está observando {attack_load.target.name}!")
+                attack_load.add_event("MSG", f"{self.owner.name} observando {attack_load.target.name}")
 
         def penalty_hook(attack_load: 'AttackLoad'):
             cid = attack_load.character.char_id
@@ -178,7 +180,7 @@ class PosturaDefensiva(BattlePassive):
                 mod = EphemeralModifier(stat_name='pre', value=-1, source='PosturaDefensiva_Penalidade')
                 attack_load.character.add_modifier(mod)
                 self._tracked_targets[cid] = True
-                attack_load.history.append(f"[POSTURA] {attack_load.character.name} sofre penalidade de -1 de Precisão contra {self.owner.name}!")
+                attack_load.add_event("MOD", "PosturaDefensiva", -1, attack_load.character.char_id)
 
         def cleanup_hook(attack_load: 'AttackLoad'):
             cid = attack_load.character.char_id

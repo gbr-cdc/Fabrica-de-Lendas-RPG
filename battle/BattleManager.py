@@ -4,7 +4,7 @@ from typing import List, Callable, Dict, TYPE_CHECKING
 from collections import defaultdict
 from core.Enums import BattleState, BattleActionType
 from core.Structs import BattleResult, AttackActionTemplate
-from core.Events import ActionLoad
+from core.Events import ActionLoad, HistoryEmitter
 from battle.BattlePassives import registry
 from core.CharacterSystem import CharacterSystem
 
@@ -212,7 +212,7 @@ class BattleManager:
                 self.emit("on_character_death", ActionLoad(character=personagem))
                 
                 # Registra no histórico global
-                self.battle_result.history.append(f"[MORTE] {personagem.name} foi derrotado!")
+                self.battle_result.history.append(HistoryEmitter.death(personagem.char_id))
 
     def run_battle(self):
         while True:
@@ -222,12 +222,12 @@ class BattleManager:
             actor = self.get_next_actor()
             if actor is None:
                 self.battle_state = BattleState.ERROR
-                self.battle_result.history.append("[ERRO] Timeline se tornou vazia antes da batalha acabar")
+                self.battle_result.history.append(HistoryEmitter.msg("ERRO: Timeline empty"))
                 break
             
             self.emit("on_turn_start", ActionLoad(character = actor))
             self.resolve_deaths()
-            self.battle_result.history.append(f"Turno do {actor.name} =======================================")
+            self.battle_result.history.append(HistoryEmitter.turn_start(actor.char_id))
 
             last_action_load = None
             final_action = None
@@ -258,7 +258,7 @@ class BattleManager:
                         decision_attempts += 1
                         if decision_attempts >= max_attempts:
                             self.battle_state = BattleState.ERROR
-                            self.battle_result.history.append(f"[ERRO CRÍTICO] Controller de {actor.name} entrou em decision loop!")
+                            self.battle_result.history.append(HistoryEmitter.msg(f"ERRO: Decision loop {actor.char_id}"))
                             break 
                         
                         for event_name, callback in action_hooks.items():

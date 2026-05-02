@@ -20,7 +20,9 @@ def test_generate_mana_action():
     assert can_exec is True
     
     load = action.execute()
-    assert "gerou 5 de Mana!" in load.history[0]
+    # Check for MANA_T (reduction) and MANA_F (generation)
+    assert any("MANA_T|" in h for h in load.history)
+    assert any("MANA_F|" in h for h in load.history)
     assert actor.current_mp == 0 
     assert actor.floating_mp == 5 
 
@@ -36,7 +38,7 @@ def test_generate_focus_action():
     assert can_exec is True
     
     load = action.execute()
-    assert "gerou 10 de Foco!" in load.history[0]
+    assert any("FOCUS|" in h for h in load.history)
     assert actor.floating_focus == 10
 
 def test_attack_action_execution_flow():
@@ -86,15 +88,16 @@ def test_attack_action_execution_flow():
     context.emit.side_effect = mock_emit
 
     action_load = action.execute()
-    
-    # Atk = 10 + 12 = 22. Def = 5 + 12 = 17. GdA = 22 - 17 = 5.
-    # With hook (+5), GdA = 10.
-    
-    assert len(emitted_loads) == 1
-    load = emitted_loads[0]
-    assert load.hit is True
-    assert load.gda == 10
-    
+
+    # Check for EXEC, ROLL, HIT, DMG, HP tags
+    history_str = "|".join(action_load.history)
+    assert "EXEC|Atk|actor" in history_str
+    assert "ROLL|ATK|10|6|actor" in history_str
+    assert "ROLL|DEF|5|6|target" in history_str 
+    assert "HIT|target" in history_str
+    assert "DMG|target|20|basic_attack" in history_str
+    assert "HP|target|-20|80" in history_str
+
     # Check if target HP changed
     assert target.current_hp < 100
 
@@ -129,14 +132,14 @@ def test_attack_action_gda_hook():
     
     hooks["on_damage_calculation"](load)
     assert load.gda == 5
-    assert "adicionou +5" in load.history[0]
+    assert "MOD|A|5|" in load.history[0]
 
 def test_attack_action_execute_miss():
     dice = DiceManager(seed=42)
     actor = create_dummy_character(attributes=[1, 1, 1])
     actor.floating_focus = 10
     
-    target = create_dummy_character(attributes=[15, 15, 15])
+    target = create_dummy_character(char_id="target", attributes=[15, 15, 15])
     
     context = MagicMock()
     context.dice_service = dice
@@ -151,7 +154,7 @@ def test_attack_action_execute_miss():
     action.execute()
     load = emitted_loads[0]
     assert load.hit is False
-    assert "completamente defendido" in load.history[-1]
+    assert "MISS|target" in load.history[-1]
 
 def test_generate_mana_action_failures():
     actor = create_dummy_character()

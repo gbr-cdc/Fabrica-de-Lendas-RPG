@@ -160,3 +160,20 @@ Reduce token usage by implementing an archiving system for `MISSION_LOG.md`.
 **Steps Completed:**
 - [x] Archive legacy tasks to `MISSION_HISTORY.md`. | Files: `MISSION_LOG.md`, `MISSION_HISTORY.md`.
 - [x] Implement Log Archiving policy in `agent_rules.md`. | Files: `agent_rules.md`.
+
+## 2026-05-02 01:18: History Refactor (COMPLETED) [MISSION.ARCHIVE.HISTORY_REFACTOR]
+
+Refactor the `history` field in `ActionLoad` and `AttackLoad` to use structured event tags instead of narrative strings. This includes Focus and Mana management and updates to all core battle systems that emit history.
+
+**Rule References:** [ARCH.RULES.CORE.MVC], [ARCH.RULES.CORE.DATA], [ARCH.RULES.BATTLE.PAYLOAD]
+
+**Plan:** file:///home/alice/Repositorios/RPG/docs/plans/history_refactor.md
+
+**Steps:**
+- [x] Implement `HistoryEmitter` utility and `add_event` helper. | State: HistoryEmitter implemented with tags for EXEC, ROLL, MOD, HIT, MISS, DMG, HP, FOCUS, MANA_F, MANA_T, MSG, DEATH, STATUS. ActionLoad updated with add_event helper.
+- [x] [RED] [Attack History Verification]: Update tests to assert structured tags in AttackAction.
+- [x] [GREEN] [Attack Action Refactor]: Refactor AttackAction.execute to emit structured tags. | State: AttackAction now emits EXEC, FOCUS (cost), ROLL (Atk/Def), HIT/MISS, DMG, and HP tags. Internal narrative strings removed.
+- [x] [RED] [Resource History Verification]: Add tests for structured history in resource actions.
+- [x] [GREEN] [Resource Actions Refactor]: Refactor GenerateFocusAction and GenerateManaAction. | State: Resource actions now emit MANA_T, MANA_F, and FOCUS tags representing exact delta and current state.
+- [x] [BLUE]: Refactor BattlePassives.py and StatusEffects.py to emit MOD and status tags. | State: All passives hooks now use MOD or MSG tags. StatusEffects updated to emit STATUS tags on apply/remove and receive ActionLoad for recording.
+- [x] [BLUE]: Update BattleManager.py to use structured tags for meta-events. | State: Global history now records DEATH, TURN_START, and MSG (Errors) tags via HistoryEmitter.

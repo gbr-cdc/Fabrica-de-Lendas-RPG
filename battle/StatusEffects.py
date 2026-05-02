@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import Callable, Dict, TYPE_CHECKING
-from core.Events import ActionLoad
+from core.Events import ActionLoad, HistoryEmitter
 from core.BaseClasses import IBattleContext, BattlePassive
 from core.Modifiers import EphemeralModifier
 
@@ -61,8 +61,8 @@ class Atordoado(StatusEffect):
     def on_get_hooks(self) -> Dict[str, 'Callable']:
         def check_stun_end(action_load: 'ActionLoad'):
             if action_load.character.char_id == self.character.char_id:
-                # CQRS: Efeito expira e manda a ordem de remoção
+                # Efeito expira e manda a ordem de remoção
+                action_load.add_event("STATUS", self.character.char_id, self.name, 0, "REMOVED")
                 self.remove()
         
         return {'on_turn_start': check_stun_end}
-

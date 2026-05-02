@@ -17,6 +17,7 @@ These rules are context-exclusive and MUST be referenced in `MISSION_LOG.md` whe
 - **Data-Driven [ARCH.RULES.CORE.DATA]:** GameAction templates, CombatStyles, and GameRules are defined in JSON files (`data/`). Use `DataManager` for loading. JSON configurations should be preferred over hard coded implementations.
 - **CQRS [ARCH.RULES.CORE.CQRS]:** Use Methods for direct state changes (e.g., `take_damage`); use Events for notifications and event payload modifications ONLY.
 - **Modifier Stack Pattern [ARCH.RULES.CORE.MODIFIER]:** Stats are immutable. All dynamic changes (buffs/debuffs) MUST be implemented as `StatModifier` objects in the character's `modifiers` list.
+- **Event Stream History [ARCH.RULES.CORE.HISTORY]:** Decouples the Engine (Model) from the presentation (View). The `history` field in `ActionLoad` payloads MUST contain only pipe-delimited structured tags (`TAG|PARAM...`). Use `HistoryEmitter` to generate standard tags. Narrative strings and localization are strictly prohibited within the Model layer; they are the exclusive responsibility of the View.
 - **Anemic Entities [ARCH.RULES.CORE.ENTITIES]:** Classes in `entities/` are data containers. All complex logic resides in Systems (e.g., `CharacterSystem`) or Actions.
 - **Protocols & Typing [ARCH.RULES.CORE.TYPING]:** Use `typing.Protocol` for Dependency Injection. Use `from __future__ import annotations`. Keep typing imports in `TYPE_CHECKING` blocks to avoid circular dependencies.
 
@@ -84,9 +85,13 @@ Mutable payload objects for the Event Bus, allowing listeners to influence actio
 
 #### ActionLoad [ARCH.core.Events.CLASS:ActionLoad]
 Base payload for all battle actions. Tracks the `character` performing the action, an execution `history` (log), and a `success` flag.
+- add_event() [ARCH.core.Events.METHOD:ActionLoad.add_event]: Standardizes event insertion into history using a pipe-delimited format (`TAG|PARAM1|...`).
 
 #### AttackLoad [ARCH.core.Events.CLASS:AttackLoad]
 Specialized payload for offensive resolution. Carries the `target`, `battle_context`, `attack_type`, and states (`attack_state`, `defense_state`). Critical fields for modification: `gda` (Degree of Success), `damage`, and `hit` (boolean).
+
+#### HistoryEmitter [ARCH.core.Events.CLASS:HistoryEmitter]
+Static utility to generate standardized, structured event tags for the history stream (e.g., EXEC, ROLL, DMG, HP, FOCUS, MANA, STATUS).
 
 ### Base Classes [ARCH.core.BaseClasses]
 Foundational abstract classes and interfaces ensuring modularity and decoupling.
@@ -152,24 +157,23 @@ The central orchestrator of the combat engine, managing time and event propagati
 #### BattleManager [ARCH.battle.BattleManager.CLASS:BattleManager]
 Manages the `timeline` (Min-Heap), the `listeners` registry (Event Bus), and the character lifecycle. Tracks `current_tick` and maintains a `graveyard`.
 
-- run_battle() [ARCH.battle.BattleManager.METHOD:BattleManager.run_battle]: The main engine loop. Executes characters' turns in tick order, managing the "Free Action -> Move/Standard Action" cycle and ensuring `resolve_deaths()` and `judge.rule()` are checked. `[ARCH.RULES.BATTLE.DECISION]`
+- run_battle() [ARCH.battle.BattleManager.METHOD:BattleManager.run_battle]: The main engine loop. Executes characters turns in tick order. Registers `TURN_START` tags and ensures `resolve_deaths()` and `judge.rule()` are checked. `[ARCH.RULES.BATTLE.DECISION]`
 - emit() [ARCH.battle.BattleManager.METHOD:BattleManager.emit]: Triggers events on the Event Bus. Listeners modify the `ActionLoad` or `AttackLoad` payload objects directly. `[ARCH.RULES.BATTLE.PAYLOAD]`
 - subscribe() [ARCH.battle.BattleManager.METHOD:BattleManager.subscribe]: Manages dynamic listener registration, used by Passives and Status Effects. `[ARCH.RULES.BATTLE.EPHEMERAL_HOOKS]`
 - unsubscribe() [ARCH.battle.BattleManager.METHOD:BattleManager.unsubscribe]: Manages dynamic listener registration, used by Passives and Status Effects.
-- delay_character() [ARCH.battle.BattleManager.METHOD:BattleManager.delay_character]: Pushes a character's next turn further into the future on the timeline (e.g., due to Stun). `[ARCH.RULES.BATTLE.TIMELINE]`
-- resolve_deaths() [ARCH.battle.BattleManager.METHOD:BattleManager.resolve_deaths]: Identifies characters at 0 HP, removes them from active play, and moves them to the `graveyard`.
-
+- delay_character() [ARCH.battle.BattleManager.METHOD:BattleManager.delay_character]: Pushes a character next turn further into the future on the timeline (e.g., due to Stun). `[ARCH.RULES.BATTLE.TIMELINE]`
+- resolve_deaths() [ARCH.battle.BattleManager.METHOD:BattleManager.resolve_deaths]: Identifies characters at 0 HP, removes them from active play, moves them to the `graveyard`, and registers `DEATH` tags.
 ### Battle Actions [ARCH.battle.BattleActions]
 Implementations of the Command Pattern for combat maneuvers. `[ARCH.RULES.CORE.COMMAND]`
 
 #### AttackAction [ARCH.battle.BattleActions.CLASS:AttackAction]
-Generic data-driven offensive resolution. Implements the complete attack flow (Roll -> Hit Check -> GdA -> Damage -> Application). Supports `AttackType.AREA` with a Master Roll. `[ARCH.RULES.BATTLE.TARGETING]`, `[ARCH.RULES.BATTLE.AREA_ATTACK]`
+Generic data-driven offensive resolution. Implements the complete attack flow (Roll -> Hit Check -> GdA -> Damage -> Application). Registers structured tags for every phase of resolution (ROLL, HIT, DMG, HP). Supports `AttackType.AREA` with a Master Roll. `[ARCH.RULES.BATTLE.TARGETING]`, `[ARCH.RULES.BATTLE.AREA_ATTACK]`
 
 #### GenerateManaAction [ARCH.battle.BattleActions.CLASS:GenerateManaAction]
-A Move Action that manifest mana from the daily reserve into `floating_mp`.
+A Move Action that manifest mana from the daily pool (`MANA_T`) into the floating pool (`MANA_F`).
 
 #### GenerateFocusAction [ARCH.battle.BattleActions.CLASS:GenerateFocusAction]
-A Move Action that replenishes the `floating_focus` pool.
+A Move Action that replenishes the `floating_focus` pool, emitting `FOCUS` tags.
 
 #### TogglePosturaDefensiva [ARCH.battle.BattleActions.CLASS:TogglePosturaDefensiva]
 A Free Action that interacts with the `PosturaDefensiva` passive to toggle combat stances.
@@ -205,7 +209,7 @@ Temporary modifiers and behavioral changes with a turn-based duration. `[ARCH.RU
 Abstract base that extends `BattlePassive`. Implements `apply()` and `remove()` logic, including `EphemeralModifier` management.
 
 #### Atordoado [ARCH.battle.StatusEffects.CLASS:Atordoado]
-Stun effect. Upon application, it immediately calls `delay_character()`. It subscribes to `on_turn_start` to decrement duration or expire.
+Stun effect. Upon application, it immediately calls `delay_character()`. It subscribes to `on_turn_start` to decrement duration or expire. Registers `STATUS` tags when applied/removed.
 
 ## MODULE: Entities [ARCH.entities]
 The `entities` module contains data-only classes representing game objects. `[ARCH.RULES.CORE.ENTITIES]`

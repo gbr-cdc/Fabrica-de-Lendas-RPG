@@ -86,7 +86,7 @@ def test_battle_manager_decision_loop():
     bm.run_battle()
     
     assert bm.battle_state == BattleState.ERROR
-    assert "decision loop" in bm.battle_result.history[0]
+    assert "decision loop" in bm.battle_result.history[1]
 
 def test_battle_manager_resolve_deaths():
     judge = MagicMock()

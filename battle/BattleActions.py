@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Dict, Callable, TYPE_CHECKING, List
 from core.BaseClasses import BattleAction, IBattleContext
-from core.Events import ActionLoad, AttackLoad
+from core.Events import ActionLoad, AttackLoad, HistoryEmitter
 from core.Structs import AttackActionTemplate
 from core.Enums import RollState, BattleActionType, AttackType
 from core.CharacterSystem import CharacterSystem
@@ -38,7 +38,7 @@ class AttackAction(BattleAction):
                     def add_gda_hook(attack_load: 'AttackLoad'):
                         if attack_load.character.char_id == self.actor.char_id:
                             attack_load.gda += amt
-                            attack_load.history.append(f"[{self.name}] adicionou +{amt} de GdA!")
+                            attack_load.add_event("MOD", self.name, amt, attack_load.character.char_id)
                     return add_gda_hook
                 hooks['on_damage_calculation'] = make_hook(amount)
         return hooks
@@ -46,7 +46,10 @@ class AttackAction(BattleAction):
     def execute(self) -> ActionLoad:
         CharacterSystem.spend_focus(self.actor, self.template.focus_cost)
 
-        action_load = ActionLoad(character=self.actor, history=[f"{self.actor.name} usou {self.name}!"])
+        action_load = ActionLoad(character=self.actor)
+        action_load.add_event("EXEC", self.template.id, self.actor.char_id)
+        if self.template.focus_cost > 0:
+            action_load.add_event("FOCUS", self.actor.char_id, -self.template.focus_cost, self.actor.floating_focus)
 
         master_attack_load = None
         master_roll_result = None
@@ -66,9 +69,9 @@ class AttackAction(BattleAction):
             )
             self.context.emit('on_roll_modify', master_attack_load)
             master_roll_result = self.context.dice_service.roll_dice(self.actor.atk_die, master_attack_load.attack_state)
-            master_attack_load.history.append(f"{self.actor.name} rolou um Ataque em Área ({master_roll_result.final_roll})!")
+            
+            master_attack_load.add_event("ROLL", "ATK_AREA", master_roll_result.final_roll, self.actor.atk_die, self.actor.char_id)
             mod_atk_roll = master_roll_result.final_roll + self.actor.rank + self.actor.bda
-            master_attack_load.history.append(f"Total modificado ataque (Área): {mod_atk_roll}")
             action_load.history.extend(master_attack_load.history)
 
         for target in self.targets:
@@ -89,28 +92,24 @@ class AttackAction(BattleAction):
             if self.attack_type == AttackType.AREA:
                 # Inherit state from master roll but for this specific target
                 attack_load.attack_state = master_attack_load.attack_state
-                attack_load.history.append(f"Aplicando Ataque em Área contra {target.name} (Ataque: {mod_atk_roll})")
                 current_mod_atk = mod_atk_roll
             else:
                 self.context.emit('on_roll_modify', attack_load)
                 roll_result = self.context.dice_service.roll_dice(self.actor.atk_die, attack_load.attack_state)
-                attack_load.history.append(f"{self.actor.name} rolou {roll_result.final_roll} para atacar {target.name}!")
                 current_mod_atk = roll_result.final_roll + self.actor.rank + self.actor.bda
-                attack_load.history.append(f"Total modificado ataque: {current_mod_atk}")
+                attack_load.add_event("ROLL", "ATK", roll_result.final_roll, self.actor.atk_die, self.actor.char_id)
             
             roll_result = self.context.dice_service.roll_dice(target.def_die, attack_load.defense_state)
-            attack_load.history.append(f"{target.name} rolou {roll_result.final_roll} para defender!")
             mod_def_roll = roll_result.final_roll + target.rank + target.bdd
-            attack_load.history.append(f"Total modificado defesa: {mod_def_roll}")
+            attack_load.add_event("ROLL", "DEF", roll_result.final_roll, target.def_die, target.char_id)
             
             attack_load.gda = current_mod_atk - mod_def_roll
-            attack_load.history.append(f"GdA base é {attack_load.gda}")
             
             self.context.emit('on_defense_reaction', attack_load)
             
             if attack_load.gda > (0 + target.grd - self.actor.pre):
                 attack_load.hit = True
-                attack_load.history.append("O ataque acertou!")
+                attack_load.add_event("HIT", target.char_id)
                 self.context.emit('on_hit_check', attack_load)
                 
                 if attack_load.gda < 0:
@@ -121,19 +120,22 @@ class AttackAction(BattleAction):
                 self.context.emit('on_damage_calculation', attack_load)
                 final_gda = max(0, attack_load.gda)
                 attack_load.damage = attack_load.damage + self.actor.pda + (self.actor.mda * final_gda)
-                attack_load.history.append(f"Dano calculado: PDA {self.actor.pda} + (MDA {self.actor.mda} x GdA {final_gda}) = {attack_load.damage}") 
                 
                 self.context.emit('on_damage_taken', attack_load)
                 CharacterSystem.take_damage(target, attack_load.damage)
+                attack_load.add_event("DMG", target.char_id, attack_load.damage, self.attack_type.value)
+                attack_load.add_event("HP", target.char_id, -attack_load.damage, target.current_hp)
             else:
-                attack_load.history.append("O ataque foi completamente defendido!")
+                attack_load.add_event("MISS", target.char_id)
                 self.context.emit('on_hit_check', attack_load)
 
             self.context.emit('on_attack_end', attack_load)
             action_load.history.extend(attack_load.history)
         
         if self.attack_type == AttackType.BASIC_ATTACK:
-            CharacterSystem.generate_focus(self.actor)
+            old_focus = self.actor.floating_focus
+            new_focus = CharacterSystem.generate_focus(self.actor)
+            action_load.add_event("FOCUS", self.actor.char_id, new_focus - old_focus, new_focus)
 
         return action_load
 
@@ -153,10 +155,15 @@ class GenerateManaAction(BattleAction):
         return {}
 
     def execute(self) -> ActionLoad:
+        old_total = self.actor.current_mp
         old_floating = self.actor.floating_mp
         new_floating = CharacterSystem.generate_mana(self.actor)
-        generated = new_floating - old_floating
-        return ActionLoad(character=self.actor, history=[f"{self.actor.name} canalizou sua energia e gerou {generated} de Mana!"])
+        new_total = self.actor.current_mp
+        
+        load = ActionLoad(character=self.actor)
+        load.add_event("MANA_T", self.actor.char_id, new_total - old_total, new_total)
+        load.add_event("MANA_F", self.actor.char_id, new_floating - old_floating, new_floating)
+        return load
 
 class GenerateFocusAction(BattleAction):
     def __init__(self, actor: 'Character', targets: List['Character'], context: 'IBattleContext', action_type: 'BattleActionType' = BattleActionType.MOVE_ACTION):
@@ -174,8 +181,10 @@ class GenerateFocusAction(BattleAction):
     def execute(self) -> ActionLoad:
         old_focus = self.actor.floating_focus
         new_focus = CharacterSystem.generate_focus(self.actor)
-        generated = new_focus - old_focus
-        return ActionLoad(character=self.actor, history=[f"{self.actor.name} respirou fundo e gerou {generated} de Foco!"])
+        
+        load = ActionLoad(character=self.actor)
+        load.add_event("FOCUS", self.actor.char_id, new_focus - old_focus, new_focus)
+        return load
 
 class TogglePosturaDefensiva(BattleAction):
     def __init__(self, actor: 'Character', targets: List['Character'], context: 'IBattleContext'):
