@@ -1,5 +1,7 @@
 import pytest
 from views.BattleView import BattleView
+from core.Structs import BattleResult
+from tests.utils.entity_factory import create_dummy_character
 
 class TestBattleView:
     def test_parse_exec(self):
@@ -91,3 +93,38 @@ class TestBattleView:
         result = BattleView.parse(history)
         # Assuming we just keep the raw tag for unknown/malformed ones
         assert result == ["UNKNOWN|Something", "EXEC|Incomplete"]
+
+    def test_present_battle(self, capsys):
+        hero = create_dummy_character(char_id="hero", name="Hero")
+        hero.current_hp = 10
+        
+        res = BattleResult()
+        res.history = ["EXEC|Slash|Hero", "DMG|Goblin|5|Physical"]
+        res.winners = [hero]
+        res.losers = []
+        res.duration = 5
+        
+        view = BattleView()
+        view.present_battle(res)
+        
+        captured = capsys.readouterr().out
+        assert "[ACTION] Hero uses Slash" in captured
+        assert "[DAMAGE] Goblin receives 5 Physical damage" in captured
+        assert "Batalha terminada!" in captured
+        assert "Hero: 10HP" in captured
+
+    def test_present_summary(self, capsys):
+        hero = create_dummy_character(char_id="hero_id", name="Hero")
+        
+        res = BattleResult()
+        res.winners = [hero]
+        res.duration = 5
+        
+        view = BattleView()
+        view.present_summary([res], "hero_id", "goblin_id")
+        
+        captured = capsys.readouterr().out
+        assert "Resultados das 1 batalhas:" in captured
+        assert "hero_id: 1 vitórias" in captured
+        assert "goblin_id: 0 vitórias" in captured
+        assert "Média de turnos por batalha: 5.00" in captured
