@@ -274,6 +274,17 @@ The central tool for targeted documentation extraction, recursive dependency res
 - create_section() [ARCH.utilities.ref_manager.FUNCTION:create_section]: The creation engine. Implements **Smart Placement** and **Fail-Fast Validation**: it prevents duplicate tags and ensures hierarchical integrity. New tags are placed after their parent or last sibling based on prefix matching. It fails if a parent tag is missing (returning "Error: Parent tag [prefix] not found." for 3+ component tags) or if the file identifier is missing (for 2 component tags), ensuring documentation structure is maintained.
 - get_path_for_tag() [ARCH.utilities.ref_manager.FUNCTION:get_path_for_tag]: A utility that normalizes tags and determines the correct source file path by matching the tag's prefix against the `PATH_MAPPING`.
 
+## MODULE: views [ARCH.views]
+Contains modules responsible for presenting data to the user or translating internal state to human-readable formats.
+
+### BattleView.py [ARCH.views.BattleView]
+Translates structured history tags from the core into technical narrative strings. Adheres to `[ARCH.RULES.CORE.MVC]` and parses formats from `[ARCH.RULES.CORE.HISTORY]`.
+
+#### BattleView [ARCH.views.BattleView.CLASS:BattleView]
+Class responsible for parsing battle history logs.
+
+- parse() [ARCH.views.BattleView.METHOD:BattleView.parse]: Takes a list of structured history strings and returns a list of formatted narrative strings. Handles EXEC, ROLL, MOD, HIT, MISS, DMG, HP, FOCUS, MANA_F, MANA_T, MSG, DEATH, STATUS, and TURN_START tags. Unmatched tags are kept as is.
+
 #### CLI Usage [ARCH.utilities.ref_manager.CLI]
 - CLI Interface: A command-line wrapper that allows agents to request multiple tags or perform documentation maintenance.
   - **Extraction:** `python3 utilities/ref_manager.py [TAG1] [TAG2]`

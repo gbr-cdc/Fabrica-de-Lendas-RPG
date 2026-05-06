@@ -2,7 +2,7 @@
 
 ## FEATURE PLANNING [WORKFLOWS.FEATURE_PLANNING]
 1. **Check Architectural Rules:** Fetch [ARCH.RULES]
-2. **Understand:** Problem statement and User's desired outcome/technical preference. Challange user directions if you have better solutions to the problem.
+2. **Understand:** Problem statement and User's desired outcome/technical preference. Challenge user directions if you have better solutions to the problem.
 3. **Analyze:** Validate against ARCH.RULES and common gaming design patterns.
 4. **Propose:** Create `docs/plans/[task].md`.
 5. **HALT EXECUTION:** Present the plan to the user and ask for approval. **YOU MUST STOP GENERATING TEXT HERE.** Do not proceed to Step 6 under any circumstances until the user explicitly replies with approval.
@@ -44,21 +44,25 @@
     - Ask USER to commit changes and suggest message: `reunion: description_of_change`.
 
 ## MISSION EXECUTION [WORKFLOWS.MISSION_EXECUTION]
-1. **Receive:** Fetch a [MISSION.ACITVE.(...)] tag. If you didn't received one, ask for one. If mission have no steps to complete, stop and inform the problem.
+1. **Receive:** Fetch a [MISSION.ACTIVE.(...)] tag. If you didn't received one, ask for one. If mission have no steps to complete, stop and inform the problem.
 2. **State Check:** Check last `State: (...)` notes in previous completed steps if available for context.
 3. **Phase Execution:** Select a project phase to execute.
 
 ### Phase execution
 - **TDD Phases:**
-    1. **RED (Test Objective)**: Pick a [RED] step -> Create/Update Integration/Scenario Test based on the detailed objective -> `pytest` (Must Fail).
-    2. **GREEN (Implementation)**: Pick the corresponding [GREEN] step -> Implement approved logic -> `pytest` (Must Pass).
+    1. **Quality Standards:** Fetch [ARCH.TEST_QUALITY]
+    2. **RED (Test Objective):** Pick a [RED] step -> Create/Update Integration/Scenario Test based on the detailed objective -> `pytest` (Must Fail).
+    3. **GREEN (Implementation):** Pick the corresponding [GREEN] step -> Implement approved logic -> `pytest` (Must Pass).
+    4. Go to **PhaseComplete**
 - **Non-TDD Phases**:
-    - **BLUE (Implementation)**: Pick the corresponding [BLUE] step -> Implement approved logic -> pytest (Regression: Full suite must pass)
+    1. **BLUE (Implementation)**: Pick the corresponding [BLUE] step -> Implement approved logic -> pytest (Regression: Full suite must pass)
+    2. Go to **PhaseComplete**
 - **PhaseComplete ([RED/GREEN] or [BLUE])**:
     1. Update [MISSION.ACTIVE.(...)] with:
         - Mark completed steps [ ] -> [x]
         - Append `| State: description of step results with all information summarized for the next step` to the [GREEN] or [BLUE] step.
             - **Source of truth**: Consider this state note is all next agent will have from previous context, so make sure it is descriptive and concise.
+        - If there are no steps left to complete, go to "Mission Completion", then proceed to "Evaluate"
     2. **Evaluate**: Check if the project documentation need to be updated.
         - **Filter**: From the list of files you modified this session. Exclude `tests/` and root files.
         - **Document:** If tere is any modified files left after filtering, transition to the [WORKFLOWS.DOC_MODULES] workflow.
@@ -76,4 +80,4 @@
 3. **Evaluate**: Fetch all required file documentation tags in a single batched `ref_manager.py` call. Check for missing elements or discrepancies vs [ARCH.DOC_STANDARDS.MODULE] based on recent changes (e.g., public APIs, state transitions, or core logic).
 4. **Sync**: Use `ref_manager.py --update` or `--create` to align the module documentation with the code.
     - If `--create` fails with `"Error: Parent tag [ARCH.module_name] not found."`, default to creating the missing module documentation (`[ARCH.module_name]`) with the file documentation (`[ARCH.module_name.FileName]`) inside, strictly following [ARCH.DOC_STANDARDS.MODULE].
-5. **Git Protocol**: Ask USER to commit changes and suggest message: `exection: description_of_changes`. 
+5. **Git Protocol**: STOP and ask USER to commit changes and suggest message: `execution: description_of_changes`. 
