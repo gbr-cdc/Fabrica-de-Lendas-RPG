@@ -45,252 +45,255 @@ These rules are context-exclusive and MUST be referenced in `MISSION_LOG.md` whe
 └── pvp_simulator/       # Main entry point for simulation
 ```
 
-## MODULE: Core [ARCH.core]
+## Modules Documentation [ARCH.DOC]
+
+### MODULE: Core [ARCH.DOC.core]
 The `core` module contains the fundamental building blocks of the engine. `[ARCH.RULES.CORE]`
 
-### Enums [ARCH.core.Enums]
+#### Enums [ARCH.DOC.core.Enums]
 Centralized enumerations to ensure type safety and consistency across the engine.
-- RollState [ARCH.core.Enums.CLASS:RollState]: Defines dice roll modifiers: `ADVANTAGE` (take highest), `DISADVANTAGE` (take lowest), or `NEUTRAL`.
-- ArmorType [ARCH.core.Enums.CLASS:ArmorType]: Categories for physical protection: `ROBE`, `LIGHT`, `HEAVY`.
-- WeaponType [ARCH.core.Enums.CLASS:WeaponType]: Categories for offensive equipment, including `GREAT_WEAPON`, `RANGED_WEAPON`, and `MAGICAL_FOCUS`.
-- AttributeType [ARCH.core.Enums.CLASS:AttributeType]: The three primary stats: `FIS` (Physical), `HAB` (Skill), `MEN` (Mental).
-- StatusEffectType [ARCH.core.Enums.CLASS:StatusEffectType]: Identifiers for active conditions like `ATORDOADO` or `QUEIMADO`.
-- AttackType [ARCH.core.Enums.CLASS:AttackType]: Classification of offensive maneuvers: `BASIC_ATTACK`, `SKILL`, `AREA`, `EXTRA_ATTACK`.
-- BattleActionType [ARCH.core.Enums.CLASS:BattleActionType]: Action economy categories: `MOVE_ACTION`, `STANDARD_ACTION`, `FREE_ACTION`.
-- BattleState [ARCH.core.Enums.CLASS:BattleState]: High-level combat outcomes: `VICTORY`, `DEFEAT`, `DRAW`, `RUNNING`, `ERROR`.
+- RollState [ARCH.DOC.core.Enums.CLASS:RollState]: Defines dice roll modifiers: `ADVANTAGE` (take highest), `DISADVANTAGE` (take lowest), or `NEUTRAL`.
+- ArmorType [ARCH.DOC.core.Enums.CLASS:ArmorType]: Categories for physical protection: `ROBE`, `LIGHT`, `HEAVY`.
+- WeaponType [ARCH.DOC.core.Enums.CLASS:WeaponType]: Categories for offensive equipment, including `GREAT_WEAPON`, `RANGED_WEAPON`, and `MAGICAL_FOCUS`.
+- AttributeType [ARCH.DOC.core.Enums.CLASS:AttributeType]: The three primary stats: `FIS` (Physical), `HAB` (Skill), `MEN` (Mental).
+- StatusEffectType [ARCH.DOC.core.Enums.CLASS:StatusEffectType]: Identifiers for active conditions like `ATORDOADO` or `QUEIMADO`.
+- AttackType [ARCH.DOC.core.Enums.CLASS:AttackType]: Classification of offensive maneuvers: `BASIC_ATTACK`, `SKILL`, `AREA`, `EXTRA_ATTACK`.
+- BattleActionType [ARCH.DOC.core.Enums.CLASS:BattleActionType]: Action economy categories: `MOVE_ACTION`, `STANDARD_ACTION`, `FREE_ACTION`.
+- BattleState [ARCH.DOC.core.Enums.CLASS:BattleState]: High-level combat outcomes: `VICTORY`, `DEFEAT`, `DRAW`, `RUNNING`, `ERROR`.
 
-### Structs [ARCH.core.Structs]
+#### Structs [ARCH.DOC.core.Structs]
 Data containers for passing structured information across modules. `[ARCH.RULES.CORE.DATA]`
 
-#### GameRules [ARCH.core.Structs.CLASS:GameRules]
+##### GameRules [ARCH.DOC.core.Structs.CLASS:GameRules]
 Configuration for global mechanics. Includes `hp_table` and `mp_table` for level scaling, `action_cost_table` for turn delay, and resource multipliers for Focus and Mana (MEN-based). `[ARCH.RULES.CORE.DATA]`
 
-#### RollResult [ARCH.core.Structs.CLASS:RollResult]
+##### RollResult [ARCH.DOC.core.Structs.CLASS:RollResult]
 Encapsulates a dice roll outcome. Tracks the `final_roll`, individual dice (`roll1`, `roll2` for advantage/disadvantage), and `RollState`. Used by `DiceManager` and the Event Bus.
 
-#### BattleResult [ARCH.core.Structs.CLASS:BattleResult]
+##### BattleResult [ARCH.DOC.core.Structs.CLASS:BattleResult]
 Summary of a finished combat. Contains the execution `history` (log of events), lists of `winners` and `losers`, `duration` in ticks, and per-character action statistics.
 
-#### CombatStyle [ARCH.core.Structs.CLASS:CombatStyle]
+##### CombatStyle [ARCH.DOC.core.Structs.CLASS:CombatStyle]
 Archetype definition for a character's fighting method. Defines attack/defense dice (e.g., d20, d12), the `main_stat` for bonuses, and required weapon/armor types. Loaded from `CombatStyles.json`. `[ARCH.RULES.CORE.DATA]`
 
-#### AttackEffects [ARCH.core.Structs.CLASS:AttackEffects]
+##### AttackEffects [ARCH.DOC.core.Structs.CLASS:AttackEffects]
 Data structure for individual components of an attack (e.g., "Lifesteal", "Stun"). Contains an `id` and a dictionary of `parameters` used by the resolution logic.
 
-#### AttackActionTemplate [ARCH.core.Structs.CLASS:AttackActionTemplate]
+##### AttackActionTemplate [ARCH.DOC.core.Structs.CLASS:AttackActionTemplate]
 Blueprint for complex actions. Combines action/attack types, resource costs (Focus), and a list of `AttackEffects`. Used as the base for instantiating `AttackAction`. `[ARCH.RULES.CORE.DATA]`
 
-### Events [ARCH.core.Events]
+#### Events [ARCH.DOC.core.Events]
 Mutable payload objects for the Event Bus, allowing listeners to influence action outcomes. `[ARCH.RULES.BATTLE.PAYLOAD]`
 
-#### ActionLoad [ARCH.core.Events.CLASS:ActionLoad]
+##### ActionLoad [ARCH.DOC.core.Events.CLASS:ActionLoad]
 Base payload for all battle actions. Tracks the `character` performing the action, an execution `history` (log), and a `success` flag. `[ARCH.RULES.CORE.HISTORY]`
-- add_event() [ARCH.core.Events.METHOD:ActionLoad.add_event]: Standardizes event insertion into history using a pipe-delimited format (`TAG|PARAM1|...`). `[ARCH.RULES.CORE.HISTORY]`
+- add_event() [ARCH.DOC.core.Events.METHOD:ActionLoad.add_event]: Standardizes event insertion into history using a pipe-delimited format (`TAG|PARAM1|...`). `[ARCH.RULES.CORE.HISTORY]`
 
-#### AttackLoad [ARCH.core.Events.CLASS:AttackLoad]
+##### AttackLoad [ARCH.DOC.core.Events.CLASS:AttackLoad]
 Specialized payload for offensive resolution. Carries the `target`, `battle_context`, `attack_type`, and states (`attack_state`, `defense_state`). Critical fields for modification: `gda` (Degree of Success), `damage`, and `hit` (boolean).
 
-#### HistoryEmitter [ARCH.core.Events.CLASS:HistoryEmitter]
+##### HistoryEmitter [ARCH.DOC.core.Events.CLASS:HistoryEmitter]
 Static utility to generate standardized, structured event tags for the history stream (e.g., EXEC, ROLL, DMG, HP, FOCUS, MANA, STATUS). `[ARCH.RULES.CORE.HISTORY]`
 
-### Base Classes [ARCH.core.BaseClasses]
+#### Base Classes [ARCH.DOC.core.BaseClasses]
 Foundational abstract classes and interfaces ensuring modularity and decoupling.
 
-#### GameAction [ARCH.core.BaseClasses.CLASS:GameAction]
+##### GameAction [ARCH.DOC.core.BaseClasses.CLASS:GameAction]
 Abstract base for the Command Pattern. Defines `can_execute()` and `execute()`. `[ARCH.RULES.CORE.COMMAND]`
 
-#### BattleAction [ARCH.core.BaseClasses.CLASS:BattleAction]
+##### BattleAction [ARCH.DOC.core.BaseClasses.CLASS:BattleAction]
 Specialized `GameAction` for combat. Injected with `IBattleContext`, `targets`, and `action_type`. It provides a `target` property for single-target convenience. `[ARCH.RULES.BATTLE.TARGETING]`
 
-#### BattlePassive [ARCH.core.BaseClasses.CLASS:BattlePassive]
+##### BattlePassive [ARCH.DOC.core.BaseClasses.CLASS:BattlePassive]
 Base for reactive logic. Holds a reference to the `owner` and `IBattleContext`. Subclasses MUST implement `get_hooks()` to return event subscriptions. `[ARCH.RULES.CORE.IOC]`
 
-#### IBattleContext [ARCH.core.BaseClasses.PROTOCOL:IBattleContext]
+##### IBattleContext [ARCH.DOC.core.BaseClasses.PROTOCOL:IBattleContext]
 Structural typing (Protocol) for the battle orchestrator. Provides methods for `emit()`, `subscribe()`, `delay_character()`, and accessing character/controller registries. `[ARCH.RULES.CORE.TYPING]`
 
-### Character System [ARCH.core.CharacterSystem]
+#### Character System [ARCH.DOC.core.CharacterSystem]
 Stateless domain logic for manipulating `Character` entities. Isolates rule-heavy operations from data containers. `[ARCH.RULES.CORE.ENTITIES]`
 
-- take_damage() [ARCH.core.CharacterSystem.FUNCTION:take_damage]: Direct HP modification with a floor of 0. `[ARCH.RULES.CORE.CQRS]`
-- generate_focus() [ARCH.core.CharacterSystem.FUNCTION:generate_focus]: Replenishes floating resources based on the character's `MEN` attribute and `GameRules` limits.
-- generate_mana() [ARCH.core.CharacterSystem.FUNCTION:generate_mana]: Replenishes floating resources based on the character's `MEN` attribute and `GameRules` limits.
-- spend_focus() [ARCH.core.CharacterSystem.FUNCTION:spend_focus]: Validates and consumes resources for actions; returns success status.
-- spend_mana() [ARCH.core.CharacterSystem.FUNCTION:spend_mana]: Validates and consumes resources for actions; returns success status.
-- equip_weapon() [ARCH.core.CharacterSystem.FUNCTION:equip_weapon]: Validates item types against `CombatStyle` and updates derived stats like `base_pda` or `max_hp`.
-- equip_armor() [ARCH.core.CharacterSystem.FUNCTION:equip_armor]: Validates item types against `CombatStyle` and updates derived stats like `base_pda` or `max_hp`.
+- take_damage() [ARCH.DOC.core.CharacterSystem.FUNCTION:take_damage]: Direct HP modification with a floor of 0. `[ARCH.RULES.CORE.CQRS]`
+- generate_focus() [ARCH.DOC.core.CharacterSystem.FUNCTION:generate_focus]: Replenishes floating resources based on the character's `MEN` attribute and `GameRules` limits.
+- generate_mana() [ARCH.DOC.core.CharacterSystem.FUNCTION:generate_mana]: Replenishes floating resources based on the character's `MEN` attribute and `GameRules` limits.
+- spend_focus() [ARCH.DOC.core.CharacterSystem.FUNCTION:spend_focus]: Validates and consumes resources for actions; returns success status.
+- spend_mana() [ARCH.DOC.core.CharacterSystem.FUNCTION:spend_mana]: Validates and consumes resources for actions; returns success status.
+- equip_weapon() [ARCH.DOC.core.CharacterSystem.FUNCTION:equip_weapon]: Validates item types against `CombatStyle` and updates derived stats like `base_pda` or `max_hp`.
+- equip_armor() [ARCH.DOC.core.CharacterSystem.FUNCTION:equip_armor]: Validates item types against `CombatStyle` and updates derived stats like `base_pda` or `max_hp`.
 
-### Dice Manager [ARCH.core.DiceManager]
+#### Dice Manager [ARCH.DOC.core.DiceManager]
 Random number generation and deterministic roll scheduling for combat resolution.
 
-- roll_dice() [ARCH.core.DiceManager.FUNCTION:roll_dice]: Core rolling logic supporting single die or 2d20-style Advantage/Disadvantage. Returns a `RollResult`.
-- schedule_result() [ARCH.core.DiceManager.FUNCTION:schedule_result]: Injects a predefined integer into a queue, forcing the next `roll_dice()` call to return that value. Critical for deterministic testing.
+- roll_dice() [ARCH.DOC.core.DiceManager.FUNCTION:roll_dice]: Core rolling logic supporting single die or 2d20-style Advantage/Disadvantage. Returns a `RollResult`.
+- schedule_result() [ARCH.DOC.core.DiceManager.FUNCTION:schedule_result]: Injects a predefined integer into a queue, forcing the next `roll_dice()` call to return that value. Critical for deterministic testing.
 
-### Data Manager [ARCH.core.DataManager]
+#### Data Manager [ARCH.DOC.core.DataManager]
 Central registry for loading and accessing data-driven templates from JSON files. `[ARCH.RULES.CORE.DATA]`
 
-- load_combat_styles() [ARCH.core.DataManager.FUNCTION:load_combat_styles]: Methods to populate the internal registries from JSON data.
-- load_game_rules() [ARCH.core.DataManager.FUNCTION:load_game_rules]: Methods to populate the internal registries from JSON data.
-- load_characters() [ARCH.core.DataManager.FUNCTION:load_characters]: Methods to populate the internal registries from JSON data.
-- load_action_templates() [ARCH.core.DataManager.FUNCTION:load_action_templates]: Methods to populate the internal registries from JSON data.
-- get_action_template() [ARCH.core.DataManager.FUNCTION:get_action_template]: Methods to retrieve hydrated templates or entities by their unique IDs.
-- get_character() [ARCH.core.DataManager.FUNCTION:get_character]: Methods to retrieve hydrated templates or entities by their unique IDs.
-- get_combat_style() [ARCH.core.DataManager.FUNCTION:get_combat_style]: Methods to retrieve hydrated templates or entities by their unique IDs.
+- load_combat_styles() [ARCH.DOC.core.DataManager.FUNCTION:load_combat_styles]: Methods to populate the internal registries from JSON data.
+- load_game_rules() [ARCH.DOC.core.DataManager.FUNCTION:load_game_rules]: Methods to populate the internal registries from JSON data.
+- load_characters() [ARCH.DOC.core.DataManager.FUNCTION:load_characters]: Methods to populate the internal registries from JSON data.
+- load_action_templates() [ARCH.DOC.core.DataManager.FUNCTION:load_action_templates]: Methods to populate the internal registries from JSON data.
+- get_action_template() [ARCH.DOC.core.DataManager.FUNCTION:get_action_template]: Methods to retrieve hydrated templates or entities by their unique IDs.
+- get_character() [ARCH.DOC.core.DataManager.FUNCTION:get_character]: Methods to retrieve hydrated templates or entities by their unique IDs.
+- get_combat_style() [ARCH.DOC.core.DataManager.FUNCTION:get_combat_style]: Methods to retrieve hydrated templates or entities by their unique IDs.
 
-### Modifiers [ARCH.core.Modifiers]
+#### Modifiers [ARCH.DOC.core.Modifiers]
 Implementation of the Modifier Stack Pattern for dynamic stat calculation. `[ARCH.RULES.CORE.MODIFIER]`
 
-#### StatModifier [ARCH.core.Modifiers.CLASS:StatModifier]
+##### StatModifier [ARCH.DOC.core.Modifiers.CLASS:StatModifier]
 Base for all stat changes. Tracks `stat_name`, `value`, and `source` with a unique UUID. `[ARCH.RULES.CORE.MODIFIER]`
 
-#### EphemeralModifier [ARCH.core.Modifiers.CLASS:EphemeralModifier]
+##### EphemeralModifier [ARCH.DOC.core.Modifiers.CLASS:EphemeralModifier]
 Short-term changes intended to be cleared after combat or specific effect durations.
 
-#### PersistentModifier [ARCH.core.Modifiers.CLASS:PersistentModifier]
+##### PersistentModifier [ARCH.DOC.core.Modifiers.CLASS:PersistentModifier]
 Long-term changes typically originating from equipment, traits, or permanent conditions.
 
-## MODULE: Battle [ARCH.battle]
+### MODULE: Battle [ARCH.DOC.battle]
 The `battle` module handles combat orchestration, action resolution, and reactive logic.
 
-### Battle Manager [ARCH.battle.BattleManager]
+#### Battle Manager [ARCH.DOC.battle.BattleManager]
 The central orchestrator of the combat engine, managing time and event propagation. `[ARCH.RULES.CORE.OBSERVER]`
 
-#### BattleManager [ARCH.battle.BattleManager.CLASS:BattleManager]
+##### BattleManager [ARCH.DOC.battle.BattleManager.CLASS:BattleManager]
 Manages the `timeline` (Min-Heap), the `listeners` registry (Event Bus), and the character lifecycle. Tracks `current_tick` and maintains a `graveyard`. `[ARCH.RULES.BATTLE.TIMELINE]`, `[ARCH.RULES.BATTLE.TICKS]`
 
-- run_battle() [ARCH.battle.BattleManager.METHOD:BattleManager.run_battle]: The main engine loop. Executes characters turns in tick order. Registers `TURN_START` tags and ensures `resolve_deaths()` and `judge.rule()` are checked. `[ARCH.RULES.BATTLE.DECISION]`, `[ARCH.RULES.BATTLE.TICKS]`
-- emit() [ARCH.battle.BattleManager.METHOD:BattleManager.emit]: Triggers events on the Event Bus. Listeners modify the `ActionLoad` or `AttackLoad` payload objects directly. `[ARCH.RULES.BATTLE.PAYLOAD]`
-- subscribe() [ARCH.battle.BattleManager.METHOD:BattleManager.subscribe]: Manages dynamic listener registration, used by Passives and Status Effects. `[ARCH.RULES.BATTLE.EPHEMERAL_HOOKS]`
-- unsubscribe() [ARCH.battle.BattleManager.METHOD:BattleManager.unsubscribe]: Manages dynamic listener registration, used by Passives and Status Effects. `[ARCH.RULES.BATTLE.EPHEMERAL_HOOKS]`
-- delay_character() [ARCH.battle.BattleManager.METHOD:BattleManager.delay_character]: Pushes a character next turn further into the future on the timeline (e.g., due to Stun). `[ARCH.RULES.BATTLE.TIMELINE]`
-- resolve_deaths() [ARCH.battle.BattleManager.METHOD:BattleManager.resolve_deaths]: Identifies characters at 0 HP, removes them from active play, moves them to the `graveyard`, and registers `DEATH` tags.
-### Battle Actions [ARCH.battle.BattleActions]
+- run_battle() [ARCH.DOC.battle.BattleManager.METHOD:BattleManager.run_battle]: The main engine loop. Executes characters turns in tick order. Registers `TURN_START` tags and ensures `resolve_deaths()` and `judge.rule()` are checked. `[ARCH.RULES.BATTLE.DECISION]`, `[ARCH.RULES.BATTLE.TICKS]`
+- emit() [ARCH.DOC.battle.BattleManager.METHOD:BattleManager.emit]: Triggers events on the Event Bus. Listeners modify the `ActionLoad` or `AttackLoad` payload objects directly. `[ARCH.RULES.BATTLE.PAYLOAD]`
+- subscribe() [ARCH.DOC.battle.BattleManager.METHOD:BattleManager.subscribe]: Manages dynamic listener registration, used by Passives and Status Effects. `[ARCH.RULES.BATTLE.EPHEMERAL_HOOKS]`
+- unsubscribe() [ARCH.DOC.battle.BattleManager.METHOD:BattleManager.unsubscribe]: Manages dynamic listener registration, used by Passives and Status Effects. `[ARCH.RULES.BATTLE.EPHEMERAL_HOOKS]`
+- delay_character() [ARCH.DOC.battle.BattleManager.METHOD:BattleManager.delay_character]: Pushes a character next turn further into the future on the timeline (e.g., due to Stun). `[ARCH.RULES.BATTLE.TIMELINE]`
+- resolve_deaths() [ARCH.DOC.battle.BattleManager.METHOD:BattleManager.resolve_deaths]: Identifies characters at 0 HP, removes them from active play, moves them to the `graveyard`, and registers `DEATH` tags.
+
+#### Battle Actions [ARCH.DOC.battle.BattleActions]
 Implementations of the Command Pattern for combat maneuvers. `[ARCH.RULES.CORE.COMMAND]`
 
-#### AttackAction [ARCH.battle.BattleActions.CLASS:AttackAction]
+##### AttackAction [ARCH.DOC.battle.BattleActions.CLASS:AttackAction]
 Generic data-driven offensive resolution. Implements the complete attack flow (Roll -> Hit Check -> GdA -> Damage -> Application). Registers structured tags for every phase of resolution (ROLL, HIT, DMG, HP). Supports `AttackType.AREA` with a Master Roll. `[ARCH.RULES.BATTLE.TARGETING]`, `[ARCH.RULES.BATTLE.AREA_ATTACK]`, `[ARCH.RULES.BATTLE.EPHEMERAL_HOOKS]`
 
-#### GenerateManaAction [ARCH.battle.BattleActions.CLASS:GenerateManaAction]
+##### GenerateManaAction [ARCH.DOC.battle.BattleActions.CLASS:GenerateManaAction]
 A Move Action that manifest mana from the daily pool (`MANA_T`) into the floating pool (`MANA_F`).
 
-#### GenerateFocusAction [ARCH.battle.BattleActions.CLASS:GenerateFocusAction]
+##### GenerateFocusAction [ARCH.DOC.battle.BattleActions.CLASS:GenerateFocusAction]
 A Move Action that replenishes the `floating_focus` pool, emitting `FOCUS` tags.
 
-#### TogglePosturaDefensiva [ARCH.battle.BattleActions.CLASS:TogglePosturaDefensiva]
+##### TogglePosturaDefensiva [ARCH.DOC.battle.BattleActions.CLASS:TogglePosturaDefensiva]
 A Free Action that interacts with the `PosturaDefensiva` passive to toggle combat stances.
 
-### Battle Passives [ARCH.battle.BattlePassives]
+#### Battle Passives [ARCH.DOC.battle.BattlePassives]
 Reactive logic and hooks for character-specific traits and abilities. `[ARCH.RULES.CORE.IOC]`
 
-#### PosturaDefensiva [ARCH.battle.BattlePassives.CLASS:PosturaDefensiva]
+##### PosturaDefensiva [ARCH.DOC.battle.BattlePassives.CLASS:PosturaDefensiva]
 A stateful stance that modifies the owner's dice pools and applies persistent `EphemeralModifier` penalties to enemies it has previously hit. `[ARCH.RULES.BATTLE.PAYLOAD_TARGET_CHECK]`
 
-#### GracaDoDuelista [ARCH.battle.BattlePassives.CLASS:GracaDoDuelista]
+##### GracaDoDuelista [ARCH.DOC.battle.BattlePassives.CLASS:GracaDoDuelista]
 Grants GdA bonuses on `on_gda_modify` and provides an optional defensive reaction (Evasão) that uses `choose_reaction()`.
 
-#### Combo [ARCH.battle.BattlePassives.CLASS:Combo]
+##### Combo [ARCH.DOC.battle.BattlePassives.CLASS:Combo]
 Monitors `on_attack_end` to trigger recursive `AttackAction` executions (Extra Attacks) upon successful hits.
 
-#### ForçaBruta [ARCH.battle.BattlePassives.CLASS:ForçaBruta]
+##### ForçaBruta [ARCH.DOC.battle.BattlePassives.CLASS:ForçaBruta]
 A simple multiplier applied during the `on_gda_modify` phase.
 
-#### MãosPesadas [ARCH.battle.BattlePassives.CLASS:MãosPesadas]
+##### MãosPesadas [ARCH.DOC.battle.BattlePassives.CLASS:MãosPesadas]
 Triggers the application of `Atordoado` status if GdA exceeds a threshold during hit resolution.
 
-### Judges [ARCH.battle.Judges]
+#### Judges [ARCH.DOC.battle.Judges]
 Victory and defeat condition logic, called at the start of every turn and after every standard action.
 
-#### BattleJudge [ARCH.battle.Judges.CLASS:BattleJudge]
+##### BattleJudge [ARCH.DOC.battle.Judges.CLASS:BattleJudge]
 Evaluates the presence of living characters in each team to determine the `BattleState`.
 
-### Status Effects [ARCH.battle.StatusEffects]
+#### Status Effects [ARCH.DOC.battle.StatusEffects]
 Temporary modifiers and behavioral changes with a turn-based duration. `[ARCH.RULES.CORE.MODIFIER]`
 
-#### StatusEffect [ARCH.battle.StatusEffects.CLASS:StatusEffect]
+##### StatusEffect [ARCH.DOC.battle.StatusEffects.CLASS:StatusEffect]
 Abstract base that extends `BattlePassive`. Implements `apply()` and `remove()` logic, including `EphemeralModifier` management. `[ARCH.RULES.CORE.MODIFIER]`
 
-#### Atordoado [ARCH.battle.StatusEffects.CLASS:Atordoado]
+##### Atordoado [ARCH.DOC.battle.StatusEffects.CLASS:Atordoado]
 Stun effect. Upon application, it immediately calls `delay_character()`. It subscribes to `on_turn_start` to decrement duration or expire. Registers `STATUS` tags when applied/removed.
 
-## MODULE: Entities [ARCH.entities]
+### MODULE: Entities [ARCH.DOC.entities]
 The `entities` module contains data-only classes representing game objects. `[ARCH.RULES.CORE.ENTITIES]`
 
-### Characters [ARCH.entities.Characters]
+#### Characters [ARCH.DOC.entities.Characters]
 The primary data container for actors, designed as an anemic entity with a reactive modifier stack. `[ARCH.RULES.CORE.ENTITIES]`
 
-#### Character [ARCH.entities.Characters.CLASS:Character]
+##### Character [ARCH.DOC.entities.Characters.CLASS:Character]
 Tracks core state: `current_hp`, `current_mp`, `floating_mp`, and `floating_focus`. Maintains references to `CombatStyle`, `Weapon`, and `Armor`.
 
-- get_stat_total() [ARCH.entities.Characters.METHOD:Character.get_stat_total]: Computes real-time values for stats like `rank`, `bda`, `bdd`, `pre`, `grd`, `pda`, and `mda`. This ensures stats are never mutated directly. `[ARCH.RULES.CORE.MODIFIER]`
+- get_stat_total() [ARCH.DOC.entities.Characters.METHOD:Character.get_stat_total]: Computes real-time values for stats like `rank`, `bda`, `bdd`, `pre`, `grd`, `pda`, and `mda`. This ensures stats are never mutated directly. `[ARCH.RULES.CORE.MODIFIER]`
 
-### Items [ARCH.entities.Items]
+#### Items [ARCH.DOC.entities.Items]
 Data structures for equipment, used by `CharacterSystem` to populate character stats.
 
-#### Weapon [ARCH.entities.Items.CLASS:Weapon]
+##### Weapon [ARCH.DOC.entities.Items.CLASS:Weapon]
 Dataclass defining offensive traits. Includes `db` (Damage Bonus), `mda` (Degree of Success multiplier), and `type` (for compatibility checks).
 
-#### Armor [ARCH.entities.Items.CLASS:Armor]
+##### Armor [ARCH.DOC.entities.Items.CLASS:Armor]
 Dataclass defining defensive traits. Includes `hp_bonus` and `type`.
 
-## MODULE: Controllers [ARCH.controllers]
+### MODULE: Controllers [ARCH.DOC.controllers]
 The `controllers` module implements the "Decision Loop" for characters, separating AI/Player logic from the engine. `[ARCH.RULES.CORE.MVC]`
 
-### Character Controller [ARCH.controllers.CharacterController]
+#### Character Controller [ARCH.DOC.controllers.CharacterController]
 The "Decision Loop" interface that separates character behavior (AI or Player) from engine mechanics. `[ARCH.RULES.CORE.MVC]`
 
-#### CharacterController [ARCH.controllers.CharacterController.CLASS:CharacterController]
+##### CharacterController [ARCH.DOC.controllers.CharacterController.CLASS:CharacterController]
 Abstract base class. Defines the interface for tactical decision-making.
 
-- choose_action() [ARCH.controllers.CharacterController.METHOD:CharacterController.choose_action]: Called at the start of a turn. Analyzes the `IBattleContext` and returns a `BattleAction` command. Supports re-decision if the previous action failed validation (via `action_load`). `[ARCH.RULES.BATTLE.DECISION]`
-- choose_reaction() [ARCH.controllers.CharacterController.METHOD:CharacterController.choose_reaction]: Called during action resolution (e.g., `on_defense_reaction`). Allows the controller to opt-in to conditional effects (like Evasion) based on the current `AttackLoad`.
+- choose_action() [ARCH.DOC.controllers.CharacterController.METHOD:CharacterController.choose_action]: Called at the start of a turn. Analyzes the `IBattleContext` and returns a `BattleAction` command. Supports re-decision if the previous action failed validation (via `action_load`). `[ARCH.RULES.BATTLE.DECISION]`
+- choose_reaction() [ARCH.DOC.controllers.CharacterController.METHOD:CharacterController.choose_reaction]: Called during action resolution (e.g., `on_defense_reaction`). Allows the controller to opt-in to conditional effects (like Evasion) based on the current `AttackLoad`.
 
-#### PvP1v1Controller [ARCH.controllers.CharacterController.CLASS:PvP1v1Controller]
+##### PvP1v1Controller [ARCH.DOC.controllers.CharacterController.CLASS:PvP1v1Controller]
 Reference implementation for automated combat. Prioritizes Skills over Basic Attacks if Focus is available.
 
-## MODULE: Data [ARCH.data]
+### MODULE: Data [ARCH.DOC.data]
 The `data` module stores external JSON definitions that drive engine behavior and character scaling. `[ARCH.RULES.CORE.DATA]`
 
-### Action Definitions [ARCH.data.AttackActions]
+#### Action Definitions [ARCH.DOC.data.AttackActions]
 Blueprints for all combat maneuvers. Defines `focus_cost`, `action_type`, `attack_type` (e.g., AREA), and a list of `AttackEffects` (e.g., "add_gda").
 
-### Character Templates [ARCH.data.Characters]
+#### Character Templates [ARCH.DOC.data.Characters]
 Hydration templates for characters. Defines base attributes (`FIS`, `HAB`, `MEN`), starting `Weapon` and `Armor`, and initial lists of `Abilities` and `Passives`.
 
-### Combat Styles [ARCH.data.CombatStyles]
+#### Combat Styles [ARCH.DOC.data.CombatStyles]
 Archetype definitions that govern dice pool sizes (`atq_die`, `def_die`), the `main_stat` for damage calculation, and equipment requirements (`ArmorType`, `WeaponType`).
 
-### Game Rules [ARCH.data.Rules]
+#### Game Rules [ARCH.DOC.data.Rules]
 Global constants and progression tables. Defines `limite_foco`/`limite_mana` multipliers and scaling tables for HP, MP, and `action_cost` based on attribute scores.
 
-## MODULE: Utilities [ARCH.utilities]
+### MODULE: Utilities [ARCH.DOC.utilities]
 The `utilities` module provides cross-cutting tools for documentation management, system operations, and agent assistance.
 
-### Reference Manager [ARCH.utilities.ref_manager]
+#### Reference Manager [ARCH.DOC.utilities.ref_manager]
 The central tool for targeted documentation extraction, recursive dependency resolution, and automated documentation maintenance.
 
-- PATH_MAPPING [ARCH.utilities.ref_manager.GLOBAL:PATH_MAPPING]: Configuration dictionary mapping tag prefixes (e.g., `ARCH.`, `GDD.`, `WORKFLOWS.`) to their source markdown files, ensuring centralized path management.
-- resolve_tag() [ARCH.utilities.ref_manager.FUNCTION:resolve_tag]: The primary recursive solver. It fetches a tag's content and iteratively resolves all nested "DEPENDS:" tags. It maintains a `resolved_tags` registry to prevent circular dependencies. When a tag is found in a header (session), all other tags within that session are automatically marked as resolved to ensure clean extraction.
-- extract_section() [ARCH.utilities.ref_manager.FUNCTION:extract_section]: The parsing engine. It searches for a tag (prioritizing headers) and extracts the corresponding block of text. If the tag is found in a header, it captures all content until a header of equal or higher level is encountered.
-- update_section() [ARCH.utilities.ref_manager.FUNCTION:update_section]: The modification engine. Locates a tag and replaces its entire section (if a header) or line with new content. Supports reading content from a string or an external file via `--from-file`.
-- create_section() [ARCH.utilities.ref_manager.FUNCTION:create_section]: The creation engine. Implements **Smart Placement** and **Fail-Fast Validation**: it prevents duplicate tags and ensures hierarchical integrity. New tags are placed after their parent or last sibling based on prefix matching. It fails if a parent tag is missing (returning "Error: Parent tag [prefix] not found." for 3+ component tags) or if the file identifier is missing (for 2 component tags), ensuring documentation structure is maintained.
-- get_path_for_tag() [ARCH.utilities.ref_manager.FUNCTION:get_path_for_tag]: A utility that normalizes tags and determines the correct source file path by matching the tag's prefix against the `PATH_MAPPING`.
+- PATH_MAPPING [ARCH.DOC.utilities.ref_manager.GLOBAL:PATH_MAPPING]: Configuration dictionary mapping tag prefixes (e.g., `ARCH.`, `GDD.`, `WORKFLOWS.`) to their source markdown files, ensuring centralized path management.
+- resolve_tag() [ARCH.DOC.utilities.ref_manager.FUNCTION:resolve_tag]: The primary recursive solver. It fetches a tag's content and iteratively resolves all nested "DEPENDS:" tags. It maintains a `resolved_tags` registry to prevent circular dependencies. When a tag is found in a header (session), all other tags within that session are automatically marked as resolved to ensure clean extraction.
+- extract_section() [ARCH.DOC.utilities.ref_manager.FUNCTION:extract_section]: The parsing engine. It searches for a tag (prioritizing headers) and extracts the corresponding block of text. If the tag is found in a header, it captures all content until a header of equal or higher level is encountered.
+- update_section() [ARCH.DOC.utilities.ref_manager.FUNCTION:update_section]: The modification engine. Locates a tag and replaces its entire section (if a header) or line with new content. Supports reading content from a string or an external file via `--from-file`.
+- create_section() [ARCH.DOC.utilities.ref_manager.FUNCTION:create_section]: The creation engine. Implements **Smart Placement** and **Fail-Fast Validation**: it prevents duplicate tags and ensures hierarchical integrity. New tags are placed after their parent or last sibling based on prefix matching. It fails if a parent tag is missing (returning "Error: Parent tag [prefix] not found." for 3+ component tags) or if the file identifier is missing (for 2 component tags), ensuring documentation structure is maintained.
+- get_path_for_tag() [ARCH.DOC.utilities.ref_manager.FUNCTION:get_path_for_tag]: A utility that normalizes tags and determines the correct source file path by matching the tag's prefix against the `PATH_MAPPING`.
 
-## MODULE: views [ARCH.views]
-Contains modules responsible for presenting data to the user or translating internal state to human-readable formats.
-
-### BattleView.py [ARCH.views.BattleView]
-Translates structured history tags from the core into technical narrative strings. Adheres to `[ARCH.RULES.CORE.MVC]` and parses formats from `[ARCH.RULES.CORE.HISTORY]`.
-
-#### BattleView [ARCH.views.BattleView.CLASS:BattleView]
-Class responsible for parsing battle history logs.
-
-- parse() [ARCH.views.BattleView.METHOD:BattleView.parse]: Takes a list of structured history strings and returns a list of formatted narrative strings. Handles EXEC, ROLL, MOD, HIT, MISS, DMG, HP, FOCUS, MANA_F, MANA_T, MSG, DEATH, STATUS, and TURN_START tags. Unmatched tags are kept as is.
-
-#### CLI Usage [ARCH.utilities.ref_manager.CLI]
+##### CLI Usage [ARCH.DOC.utilities.ref_manager.CLI]
 - CLI Interface: A command-line wrapper that allows agents to request multiple tags or perform documentation maintenance.
   - **Extraction:** `python3 utilities/ref_manager.py [TAG1] [TAG2]`
   - **Update:** `python3 utilities/ref_manager.py --update [TAG] "Content" [--from-file path]`
   - **Creation:** `python3 utilities/ref_manager.py --create [NEW_TAG] "Content"`
   - **Deletion:** `python3 utilities/ref_manager.py --delete [TAG]`
+
+### MODULE: views [ARCH.DOC.views]
+Contains modules responsible for presenting data to the user or translating internal state to human-readable formats.
+
+#### BattleView.py [ARCH.DOC.views.BattleView]
+Translates structured history tags from the core into technical narrative strings. Adheres to `[ARCH.RULES.CORE.MVC]` and parses formats from `[ARCH.RULES.CORE.HISTORY]`.
+
+##### BattleView [ARCH.DOC.views.BattleView.CLASS:BattleView]
+Class responsible for parsing battle history logs.
+
+- parse() [ARCH.DOC.views.BattleView.METHOD:BattleView.parse]: Takes a list of structured history strings and returns a list of formatted narrative strings. Handles EXEC, ROLL, MOD, HIT, MISS, DMG, HP, FOCUS, MANA_F, MANA_T, MSG, DEATH, STATUS, and TURN_START tags. Unmatched tags are kept as is.
 
 ## Test Quality Standards [ARCH.TEST_QUALITY]
 

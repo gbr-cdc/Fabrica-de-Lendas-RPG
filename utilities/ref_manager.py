@@ -166,11 +166,19 @@ def create_section(content, file_path, target_tag=None):
             prefix = ".".join(parts[:-1])
             last_matching_tag = None
             
-            # Search backwards for the last tag matching the prefix or its children
+            # 1. Search for direct siblings first (same depth)
             for m, idx in reversed(tag_positions):
-                if m == prefix or m.startswith(prefix + "."):
+                m_parts = m.split('.')
+                if len(m_parts) == len(parts) and m.startswith(prefix + "."):
                     last_matching_tag = m
                     break
+            
+            # 2. Fallback to parent or any descendant
+            if not last_matching_tag:
+                for m, idx in reversed(tag_positions):
+                    if m == prefix or m.startswith(prefix + "."):
+                        last_matching_tag = m
+                        break
             
             if last_matching_tag:
                 start, end, is_header = find_tag_range(last_matching_tag, lines)
@@ -183,40 +191,34 @@ def create_section(content, file_path, target_tag=None):
                 else:
                     return False, f"Error: File identifier [{prefix}] not found. The target file is missing its root documentation tag."
 
-    # --- INÍCIO DA NOVA LÓGICA DE ESPAÇAMENTO ---
+    # --- IMPROVED SPACING LOGIC ---
     content = content.strip()
     is_section = content.startswith('#')
-    content_to_insert = content
     
-    if is_section:
-        # 1. Garantir UMA linha em branco ACIMA (se não for o topo do arquivo)
-        if insert_idx > 0:
-            # Checa se a linha imediatamente acima tem texto
-            if lines[insert_idx - 1].strip() != "":
-                content_to_insert = '\n' + content_to_insert
-                
-        # 2. Garantir UMA linha em branco ABAIXO (se não for o fim do arquivo)
-        if insert_idx < len(lines):
-            # Checa se a linha imediatamente abaixo tem texto
-            if lines[insert_idx].strip() != "":
-                content_to_insert = content_to_insert + '\n\n'
-            else:
-                content_to_insert = content_to_insert + '\n'
-        else:
-            # Se for o fim do arquivo, apenas uma quebra padrão é suficiente
-            content_to_insert = content_to_insert + '\n'
-            
-    else:
-        # Se for apenas uma linha (ex: tag solta), não adicionamos linhas em branco extras.
-        content_to_insert = content_to_insert + '\n'
-        
-        # Prevenção edge-case: Se a linha anterior (ex: última do arquivo) não tiver o '\n', 
-        # nós a adicionamos para que a nova tag não grude no texto anterior.
-        if insert_idx > 0 and not lines[insert_idx - 1].endswith('\n'):
+    # 1. Prepare previous line context
+    if insert_idx > 0:
+        prev_line = lines[insert_idx - 1]
+        # Ensure previous line ends with a newline
+        if not prev_line.endswith('\n'):
             lines[insert_idx - 1] += '\n'
-    # --- FIM DA NOVA LÓGICA DE ESPAÇAMENTO ---
+            prev_line = lines[insert_idx - 1]
+            
+        # For sections, ensure at least one blank line above
+        if is_section and prev_line.strip() != "":
+            content = '\n' + content
+    
+    # 2. Add final newline to content if missing
+    if not content.endswith('\n'):
+        content += '\n'
+        
+    # 3. For sections, ensure a blank line below if not at EOF
+    if is_section and insert_idx < len(lines):
+        next_line = lines[insert_idx]
+        if next_line.strip() != "":
+            content += '\n'
+    # --- END IMPROVED SPACING LOGIC ---
 
-    new_lines = lines[:insert_idx] + [content_to_insert] + lines[insert_idx:]
+    new_lines = lines[:insert_idx] + [content] + lines[insert_idx:]
 
     with open(file_path, 'w', encoding='utf-8') as f:
         f.writelines(new_lines)
