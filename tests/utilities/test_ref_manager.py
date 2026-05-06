@@ -89,7 +89,7 @@ def test_smart_placement():
         text = f.read()
     
     # It should be after SMART_2 because they share the pattern "TESTE.SMART."
-    assert "## Smart Placement Test [TESTE.SMART_2]\nContent 2.\n## New Smart Section [TESTE.SMART_NEW]" in text
+    assert "## Smart Placement Test [TESTE.SMART_2]\nContent 2.\n\n## New Smart Section [TESTE.SMART_NEW]" in text
 
 def test_resolve_tag_circular():
     # TESTE.DEP_A depends on TESTE.DEP_B which depends on TESTE.DEP_A
