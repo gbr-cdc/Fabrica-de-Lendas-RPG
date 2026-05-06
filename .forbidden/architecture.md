@@ -288,12 +288,15 @@ The central tool for targeted documentation extraction, recursive dependency res
 Contains modules responsible for presenting data to the user or translating internal state to human-readable formats.
 
 #### BattleView.py [ARCH.DOC.views.BattleView]
-Translates structured history tags from the core into technical narrative strings. Adheres to `[ARCH.RULES.CORE.MVC]` and parses formats from `[ARCH.RULES.CORE.HISTORY]`.
+Translates structured history tags from the core into technical narrative strings and handles terminal output. Adheres to `[ARCH.RULES.CORE.MVC]` and `[ARCH.RULES.CORE.HISTORY]`.
 
 ##### BattleView [ARCH.DOC.views.BattleView.CLASS:BattleView]
-Class responsible for parsing battle history logs.
+Class responsible for parsing battle history logs and presenting them.
 
-- parse() [ARCH.DOC.views.BattleView.METHOD:BattleView.parse]: Takes a list of structured history strings and returns a list of formatted narrative strings. Handles EXEC, ROLL, MOD, HIT, MISS, DMG, HP, FOCUS, MANA_F, MANA_T, MSG, DEATH, STATUS, and TURN_START tags. Unmatched tags are kept as is.
+- present_battle() [ARCH.DOC.views.BattleView.METHOD:BattleView.present_battle]: Takes a BattleResult, parses all history tags, and prints the battle narrative followed by a HP summary to the terminal.
+- present_summary() [ARCH.DOC.views.BattleView.METHOD:BattleView.present_summary]: Aggregates statistics (wins, draws, turns) for multiple BattleResult objects and prints a summary for the given character IDs.
+- parse() [ARCH.DOC.views.BattleView.METHOD:BattleView.parse]: Legacy static method. Takes a list of structured history strings and returns formatted narrative strings.
+- _parse_entry() [ARCH.DOC.views.BattleView.METHOD:BattleView._parse_entry]: Private method that translates a single history tag into a human-readable string.
 
 ## Test Quality Standards [ARCH.TEST_QUALITY]
 

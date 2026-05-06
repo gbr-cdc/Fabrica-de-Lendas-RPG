@@ -2,19 +2,6 @@
 
 ## ACTIVE MISSIONS [MISSION.ACTIVE]
 
-## MISSION: MVC Refactor for Simulator and BattleView [MISSION.ACTIVE.MVC_SIMULATOR_VIEW]
-- **Summary**: Refactor the pvp_simulator and views modules to strictly follow MVC. Simulator (Controller) handles data; BattleView (View) handles presentation.
-- **Rule References**: [ARCH.RULES.CORE.MVC], [ARCH.RULES.CORE.HISTORY]
-- **Definition of Done**: 
-    - Simulator.py contains no print() calls in simulation logic.
-    - BattleView handles all narrative parsing and terminal output.
-    - interface functions (mono/multy) orchestrate the MVC flow.
-- **Plan**: [docs/plans/mvc_refactor_simulator_view.md](file:///home/alice/Repositorios/RPG/docs/plans/mvc_refactor_simulator_view.md)
-- **Steps**:
-    - [BLUE]: Refactor BattleView.py to include present_battle() and present_summary() methods, migrating parsing and printing logic from the simulator. | Files: views/BattleView.py
-    - [BLUE]: Update PvPSimulator to return raw BattleResult models and remove pre-formatted dictionary returns. | Files: pvp_simulator/Simulator.py
-    - [BLUE]: Refactor mono() and multy() entry points to use BattleView for all output, completing the MVC decoupling. | Files: pvp_simulator/Simulator.py
-
 ## ARCHIVED MISSIONS [MISSION.ARCHIVE]
 
 ### 2026-04-23 00:18: Area Attacks Implementation [PART 2] [MISSION.ARCHIVE.AREA_ATTACKS_IMPLEMENTATION_PART_2]
@@ -201,3 +188,11 @@ Refactor the `history` field in `ActionLoad` and `AttackLoad` to use structured 
 - [x] [BLUE]: Create `views/` directory and `__init__.py`. | Files: views/__init__.py
 - [x] [RED] [Tag Parsing Verification]: Implement unit tests for all history tags defined in the plan. | Files: tests/test_BattleView.py
 - [x] [GREEN] [BattleView Implementation]: Implement the `BattleView` class with logic to parse structured strings into technical narrative. | Files: views/BattleView.py | State: Implemented `BattleView.parse` which correctly parses 12 event tag types and unmatched tags, verified by 13 unit tests achieving 100% coverage.
+
+## 2026-05-06 20:20: MVC Refactor for Simulator and BattleView (COMPLETE)
+- **Summary**: Refactor the pvp_simulator and views modules to strictly follow MVC. Simulator (Controller) handles data; BattleView (View) handles presentation.
+- **Plan**: [docs/plans/mvc_refactor_simulator_view.md](file:///home/alice/Repositorios/RPG/docs/plans/mvc_refactor_simulator_view.md)
+- **Steps**:
+    - [x]: Refactor BattleView.py to include present_battle() and present_summary() methods, migrating parsing and printing logic from the simulator. See "pvp_simulator/Simulator.py" to see how presentation is currently made. | Files: views/BattleView.py | State: BattleView converted to instance-based class with present_battle and present_summary methods. Legacy parse method maintained for compatibility.
+    - [x]: Update PvPSimulator to return raw BattleResult models and remove pre-formatted dictionary returns. | Files: pvp_simulator/Simulator.py | State: Simulator.py refactored to use run_simulation() returning BattleResult. Removed dictionary-based returns.
+    - [x]: Refactor mono() and multy() entry points to use BattleView for all output, completing the MVC decoupling. | Files: pvp_simulator/Simulator.py | State: Interface functions mono and multy now instantiate BattleView and delegate all terminal output to it.
