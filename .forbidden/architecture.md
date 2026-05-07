@@ -12,8 +12,8 @@ These rules are context-exclusive and MUST be referenced in `MISSION_LOG.md` whe
 ### Core Patterns [ARCH.RULES.CORE]
 - **Game-MVC [ARCH.RULES.CORE.MVC]:** **Models:** Files in `core/`, `battle/`, `entities/`, `data/`. Represents the game world, rules and entities; **Controllers:** Files in `controllers/`. Scripts that instantiates and orquestrates models; **Views**: Presentation layer (Logs/UI) is decoupled from the engine.
 - **Command Pattern [ARCH.RULES.CORE.COMMAND]:** All actions (Skills, Basic Attacks, Movements) MUST inherit from `GameAction` and implement `can_execute()` and `execute()`. The `execute()` function returns a `ActionLoad` with a execution history.
-- **Observer/EventBus [ARCH.RULES.CORE.OBSERVER]:** Decouple reactive logic (Effects/Passives) via an EventBus. Orchestrators (e.g., `BattleManager`) manage subscriptions.
-- **IoC (Inversion of Control) [ARCH.RULES.CORE.IOC]:** Implementations using hooks MUST expose them via `get_hooks()`. Only the EventBus orchestrator (e.g., `BattleManager`) handles event registration.
+- **Observer/EventBus [ARCH.RULES.CORE.OBSERVER]:** Decouples reactive logic (Passives/Status Effects) from core execution via an EventBus. Orchestrators manage "hooks" (listener functions) that are registered to specific battle events.
+- **IoC (Inversion of Control) [ARCH.RULES.CORE.IOC]:** Reactive components (Passives/Status/Actions) do not register themselves. They MUST expose their listener functions via `get_hooks()`, returning a mapping of event keys to callbacks. The `BattleManager` remains the sole authority for subscribing and unsubscribing these hooks.
 - **Data-Driven [ARCH.RULES.CORE.DATA]:** GameAction templates, CombatStyles, and GameRules are defined in JSON files (`data/`). Use `DataManager` for loading. JSON configurations should be preferred over hard coded implementations.
 - **CQRS [ARCH.RULES.CORE.CQRS]:** Use Methods for direct state changes (e.g., `take_damage`); use Events for notifications and event payload modifications ONLY.
 - **Modifier Stack Pattern [ARCH.RULES.CORE.MODIFIER]:** Stats are immutable. All dynamic changes (buffs/debuffs) MUST be implemented as `StatModifier` objects in the character's `modifiers` list.
@@ -29,7 +29,7 @@ These rules are context-exclusive and MUST be referenced in `MISSION_LOG.md` whe
 - **Targeting Cardinality [ARCH.RULES.BATTLE.TARGETING]:** All `BattleAction` subclasses MUST support a `targets: List[Character]` interface. Single-target actions should use a list with one element.
 - **Area Attack Resolution (Master Roll) [ARCH.RULES.BATTLE.AREA_ATTACK]:** For `AttackType.AREA`, the attacker’s roll MUST be performed once (Master Roll) with `target=None` in the `AttackLoad`. This ensures only target-agnostic passives influence the shared roll, followed by individual resolution phases for each target.
 - **Defensive Payload Auditing [ARCH.RULES.BATTLE.PAYLOAD_TARGET_CHECK]:** Any hook that accesses `AttackLoad.target` MUST perform a null-check if the event it listens to could potentially be emitted during a Master Roll phase or a targetless context..
-- **Action-Scoped Interceptors [ARCH.RULES.BATTLE.EPHEMERAL_HOOKS]:** `BattleManager` MUST execute actions within a `try...finally` block to guarantee that ephemeral hooks (used by self-modifying actions like `AttackAction`) are unsubscribed, even if the action results in an error. This prevents memory leaks and state pollution.
+- **Action-Scoped Interceptors [ARCH.RULES.BATTLE.EPHEMERAL_HOOKS]:** Hooks that exist only for the duration of a single action. `BattleManager` MUST execute actions within a `try...finally` block to guarantee these hooks are unsubscribed, allowing actions (like `AttackAction`) to modify their own resolution steps via the event bus.
 
 ## Project Structure [ARCH.STRUCT_MAP]
 
@@ -156,24 +156,24 @@ Long-term changes typically originating from equipment, traits, or permanent con
 The `battle` module handles combat orchestration, action resolution, and reactive logic.
 
 #### Battle Manager [ARCH.DOC.battle.BattleManager]
-The central orchestrator of the combat engine, managing time and event propagation. `[ARCH.RULES.CORE.OBSERVER]`
+The central orchestrator of the combat engine. It manages the timeline and serves as the Event Bus. It is responsible for collecting hook functions from active components (Passives, Actions, Status) and executing them when battle events are emitted, allowing for decoupled reactive behavior. [ARCH.RULES.CORE.OBSERVER]
 
 ##### BattleManager [ARCH.DOC.battle.BattleManager.CLASS:BattleManager]
-Manages the `timeline` (Min-Heap), the `listeners` registry (Event Bus), and the character lifecycle. Tracks `current_tick` and maintains a `graveyard`. `[ARCH.RULES.BATTLE.TIMELINE]`, `[ARCH.RULES.BATTLE.TICKS]`
+Manages the `timeline` (Min-Heap), the `listeners` registry (Event Bus), and the character lifecycle. Tracks `current_tick` and maintains a `graveyard`. [ARCH.RULES.BATTLE.TIMELINE], [ARCH.RULES.BATTLE.TICKS]
 
-- run_battle() [ARCH.DOC.battle.BattleManager.METHOD:BattleManager.run_battle]: The main engine loop. Executes characters turns in tick order. Registers `TURN_START` tags and ensures `resolve_deaths()` and `judge.rule(context, result)` are checked. `[ARCH.RULES.BATTLE.DECISION]`, `[ARCH.RULES.BATTLE.TICKS]`
-- emit() [ARCH.DOC.battle.BattleManager.METHOD:BattleManager.emit]: Triggers events on the Event Bus. Listeners modify the `ActionLoad` or `AttackLoad` payload objects directly. `[ARCH.RULES.BATTLE.PAYLOAD]`
-- subscribe() [ARCH.DOC.battle.BattleManager.METHOD:BattleManager.subscribe]: Manages dynamic listener registration, used by Passives and Status Effects. `[ARCH.RULES.BATTLE.EPHEMERAL_HOOKS]`
-- unsubscribe() [ARCH.DOC.battle.BattleManager.METHOD:BattleManager.unsubscribe]: Manages dynamic listener registration, used by Passives and Status Effects. `[ARCH.RULES.BATTLE.EPHEMERAL_HOOKS]`
-- delay_character() [ARCH.DOC.battle.BattleManager.METHOD:BattleManager.delay_character]: Pushes a character next turn further into the future on the timeline (e.g., due to Stun). `[ARCH.RULES.BATTLE.TIMELINE]`
+- run_battle() [ARCH.DOC.battle.BattleManager.METHOD:BattleManager.run_battle]: The main engine loop. Executes characters turns in tick order. Registers `TURN_START` tags and ensures `resolve_deaths()` and `judge.rule(context, result)` are checked. [ARCH.RULES.BATTLE.DECISION], [ARCH.RULES.BATTLE.TICKS]
+- emit() [ARCH.DOC.battle.BattleManager.METHOD:BattleManager.emit]: Triggers events on the Event Bus. Listeners modify the `ActionLoad` or `AttackLoad` payload objects directly. [ARCH.RULES.BATTLE.PAYLOAD]
+- subscribe() [ARCH.DOC.battle.BattleManager.METHOD:BattleManager.subscribe]: Manages dynamic listener registration, used by Passives and Status Effects. [ARCH.RULES.BATTLE.EPHEMERAL_HOOKS]
+- unsubscribe() [ARCH.DOC.battle.BattleManager.METHOD:BattleManager.unsubscribe]: Manages dynamic listener registration, used by Passives and Status Effects. [ARCH.RULES.BATTLE.EPHEMERAL_HOOKS]
+- delay_character() [ARCH.DOC.battle.BattleManager.METHOD:BattleManager.delay_character]: Pushes a character next turn further into the future on the timeline (e.g., due to Stun). [ARCH.RULES.BATTLE.TIMELINE]
 - resolve_deaths() [ARCH.DOC.battle.BattleManager.METHOD:BattleManager.resolve_deaths]: Identifies characters at 0 HP, removes them from active play, moves them to the `graveyard`, and registers `DEATH` tags.
 - get_graveyard() [ARCH.DOC.battle.BattleManager.METHOD:BattleManager.get_graveyard]: Returns a list of all characters currently in the graveyard.
 
 #### Battle Actions [ARCH.DOC.battle.BattleActions]
-Implementations of the Command Pattern for combat maneuvers. `[ARCH.RULES.CORE.COMMAND]`
+Implementations of the Command Pattern for combat maneuvers. Certain actions (like `AttackAction`) use hooks to allow their resolution logic to be modified by external reactive components. [ARCH.RULES.CORE.COMMAND]
 
 ##### AttackAction [ARCH.DOC.battle.BattleActions.CLASS:AttackAction]
-Generic data-driven offensive resolution. Implements the complete attack flow (Roll -> Hit Check -> GdA -> Damage -> Application). Registers structured tags for every phase of resolution (ROLL, HIT, DMG, HP). Supports `AttackType.AREA` with a Master Roll. `[ARCH.RULES.BATTLE.TARGETING]`, `[ARCH.RULES.BATTLE.AREA_ATTACK]`, `[ARCH.RULES.BATTLE.EPHEMERAL_HOOKS]`
+Generic data-driven offensive resolution. Implements a multi-phase flow (Roll -> Hit Check -> GdA -> Damage -> Application). It triggers `emit()` at each phase, allowing hook functions to intercept and modify the `AttackLoad` payload (e.g., modifying damage or adding status triggers). It uses [ARCH.RULES.BATTLE.EPHEMERAL_HOOKS] to manage these temporary resolution modifiers. Registers structured tags for every phase. Supports `AttackType.AREA` with a Master Roll. [ARCH.RULES.BATTLE.TARGETING], [ARCH.RULES.BATTLE.AREA_ATTACK]
 
 ##### GenerateManaAction [ARCH.DOC.battle.BattleActions.CLASS:GenerateManaAction]
 A Move Action that manifest mana from the daily pool (`MANA_T`) into the floating pool (`MANA_F`).
@@ -185,10 +185,10 @@ A Move Action that replenishes the `floating_focus` pool, emitting `FOCUS` tags.
 A Free Action that interacts with the `PosturaDefensiva` passive to toggle combat stances.
 
 #### Battle Passives [ARCH.DOC.battle.BattlePassives]
-Reactive logic and hooks for character-specific traits and abilities. `[ARCH.RULES.CORE.IOC]`
+Reactive logic and listeners for character traits. Passives define hook functions that "hook" into battle events (e.g., `on_hit`, `on_dmg_modify`). When an event is emitted, the passive's hook is executed to apply its effects or modify a payload. They follow [ARCH.RULES.CORE.IOC] by exposing these listeners via `get_hooks()`.
 
 ##### PosturaDefensiva [ARCH.DOC.battle.BattlePassives.CLASS:PosturaDefensiva]
-A stateful stance that modifies the owner's dice pools and applies persistent `EphemeralModifier` penalties to enemies it has previously hit. `[ARCH.RULES.BATTLE.PAYLOAD_TARGET_CHECK]`
+A stateful stance that modifies the owner's dice pools and applies persistent `EphemeralModifier` penalties to enemies it has previously hit. [ARCH.RULES.BATTLE.PAYLOAD_TARGET_CHECK]
 
 ##### GracaDoDuelista [ARCH.DOC.battle.BattlePassives.CLASS:GracaDoDuelista]
 Grants GdA bonuses on `on_gda_modify` and provides an optional defensive reaction (Evasão) that uses `choose_reaction()`.
@@ -210,10 +210,10 @@ Evaluates the presence of living characters in each team to determine the `Battl
 - rule() [ARCH.DOC.battle.Judges.METHOD:BattleJudge.rule]: Evaluates the context to determine victory, defeat, or draw. Updates the `BattleResult` object with winners and losers based on team outcome.
 
 #### Status Effects [ARCH.DOC.battle.StatusEffects]
-Temporary modifiers and behavioral changes with a turn-based duration. `[ARCH.RULES.CORE.MODIFIER]`
+Temporary modifiers and behavioral changes with a turn-based duration. They function as dynamic passives, subscribing hooks to the battle context upon application and unsubscribing when they expire. [ARCH.RULES.CORE.MODIFIER]
 
 ##### StatusEffect [ARCH.DOC.battle.StatusEffects.CLASS:StatusEffect]
-Abstract base that extends `BattlePassive`. Implements `apply()` and `remove()` logic, including `EphemeralModifier` management. `[ARCH.RULES.CORE.MODIFIER]`
+Abstract base extending `BattlePassive`. Status effects act as temporary passives; they use hook functions to monitor events like `on_turn_start` while active. Upon `apply()`, their hooks are subscribed to the `BattleManager`, and upon `remove()`, they are unsubscribed, ensuring their behavioral changes are strictly limited to their duration. [ARCH.RULES.CORE.MODIFIER]
 
 ##### Atordoado [ARCH.DOC.battle.StatusEffects.CLASS:Atordoado]
 Stun effect. Upon application, it immediately calls `delay_character()`. It subscribes to `on_turn_start` to decrement duration or expire. Registers `STATUS` tags when applied/removed.
