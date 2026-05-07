@@ -9,11 +9,11 @@
   },
   "Duelista": {
     "name": "Duelista",
-    "atq_die": 10,
+    "atq_die": 8,
     "def_die": 10,
     "main_stat": "HAB",
     "armor_type": "light",
-    "weapon_type": "medium_weapon"
+    "weapon_type": "light_weapon"
   },
   "Defensor": {
     "name": "Defensor",

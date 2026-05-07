@@ -46,5 +46,29 @@
     ],
     "Passives": [],
     "CombatStyle": "Cavaleiro"
+  },
+  "Duelista": {
+    "Nome": "Duelista",
+    "FIS": 3,
+    "HAB": 5,
+    "MEN": 2,
+    "Weapon": {
+      "name": "Espada Longa",
+      "db": 3,
+      "mda": 1,
+      "type": "light_weapon"
+    },
+    "Armor": {
+      "name": "Armadura Pesada",
+      "hp_bonus": 15,
+      "type": "light"
+    },
+    "Abilities": [
+      "BasicAttack",
+      "SkillNivelUm",
+      "GenerateFocusAction"
+    ],
+    "Passives": [],
+    "CombatStyle": "Duelista"
   }
 }

@@ -108,6 +108,9 @@ class BattleManager:
     def get_controller(self, char_id: str) -> 'CharacterController':
         return self.controllers.get(char_id)
 
+    def get_graveyard(self) -> List[Character]:
+        return list(self.graveyard.values())
+
     def get_active_passive(self, char_id: str, name: str) -> 'BattlePassive' | None:
         if char_id in self.active_passives:
             for passive_instance, hooks in self.active_passives[char_id]:
@@ -216,7 +219,7 @@ class BattleManager:
 
     def run_battle(self):
         while True:
-            self.battle_state = self.judge.rule(self)
+            self.battle_state = self.judge.rule(self, self.battle_result)
             if self.battle_state is not BattleState.RUNNING:
                 break
             actor = self.get_next_actor()
@@ -287,7 +290,7 @@ class BattleManager:
                         break
                     
                     self.resolve_deaths()
-                    self.battle_state = self.judge.rule(self)
+                    self.battle_state = self.judge.rule(self, self.battle_result)
 
                 finally:
                     for event_name, callback in action_hooks.items():

@@ -108,8 +108,10 @@ Specialized `GameAction` for combat. Injected with `IBattleContext`, `targets`, 
 Base for reactive logic. Holds a reference to the `owner` and `IBattleContext`. Subclasses MUST implement `get_hooks()` to return event subscriptions. `[ARCH.RULES.CORE.IOC]`
 
 ##### IBattleContext [ARCH.DOC.core.BaseClasses.PROTOCOL:IBattleContext]
-Structural typing (Protocol) for the battle orchestrator. Provides methods for `emit()`, `subscribe()`, `delay_character()`, and accessing character/controller registries. `[ARCH.RULES.CORE.TYPING]`
+Structural typing (Protocol) for the battle orchestrator. Provides methods for `emit()`, `subscribe()`, `delay_character()`, `get_graveyard()` and accessing character/controller registries. `[ARCH.RULES.CORE.TYPING]`
 
+##### IBattleJudge [ARCH.DOC.core.BaseClasses.PROTOCOL:IBattleJudge]
+Structural typing (Protocol) for victory/defeat logic. Defines `rule(context, result)` to evaluate battle state and populate final results.
 #### Character System [ARCH.DOC.core.CharacterSystem]
 Stateless domain logic for manipulating `Character` entities. Isolates rule-heavy operations from data containers. `[ARCH.RULES.CORE.ENTITIES]`
 
@@ -159,12 +161,13 @@ The central orchestrator of the combat engine, managing time and event propagati
 ##### BattleManager [ARCH.DOC.battle.BattleManager.CLASS:BattleManager]
 Manages the `timeline` (Min-Heap), the `listeners` registry (Event Bus), and the character lifecycle. Tracks `current_tick` and maintains a `graveyard`. `[ARCH.RULES.BATTLE.TIMELINE]`, `[ARCH.RULES.BATTLE.TICKS]`
 
-- run_battle() [ARCH.DOC.battle.BattleManager.METHOD:BattleManager.run_battle]: The main engine loop. Executes characters turns in tick order. Registers `TURN_START` tags and ensures `resolve_deaths()` and `judge.rule()` are checked. `[ARCH.RULES.BATTLE.DECISION]`, `[ARCH.RULES.BATTLE.TICKS]`
+- run_battle() [ARCH.DOC.battle.BattleManager.METHOD:BattleManager.run_battle]: The main engine loop. Executes characters turns in tick order. Registers `TURN_START` tags and ensures `resolve_deaths()` and `judge.rule(context, result)` are checked. `[ARCH.RULES.BATTLE.DECISION]`, `[ARCH.RULES.BATTLE.TICKS]`
 - emit() [ARCH.DOC.battle.BattleManager.METHOD:BattleManager.emit]: Triggers events on the Event Bus. Listeners modify the `ActionLoad` or `AttackLoad` payload objects directly. `[ARCH.RULES.BATTLE.PAYLOAD]`
 - subscribe() [ARCH.DOC.battle.BattleManager.METHOD:BattleManager.subscribe]: Manages dynamic listener registration, used by Passives and Status Effects. `[ARCH.RULES.BATTLE.EPHEMERAL_HOOKS]`
 - unsubscribe() [ARCH.DOC.battle.BattleManager.METHOD:BattleManager.unsubscribe]: Manages dynamic listener registration, used by Passives and Status Effects. `[ARCH.RULES.BATTLE.EPHEMERAL_HOOKS]`
 - delay_character() [ARCH.DOC.battle.BattleManager.METHOD:BattleManager.delay_character]: Pushes a character next turn further into the future on the timeline (e.g., due to Stun). `[ARCH.RULES.BATTLE.TIMELINE]`
 - resolve_deaths() [ARCH.DOC.battle.BattleManager.METHOD:BattleManager.resolve_deaths]: Identifies characters at 0 HP, removes them from active play, moves them to the `graveyard`, and registers `DEATH` tags.
+- get_graveyard() [ARCH.DOC.battle.BattleManager.METHOD:BattleManager.get_graveyard]: Returns a list of all characters currently in the graveyard.
 
 #### Battle Actions [ARCH.DOC.battle.BattleActions]
 Implementations of the Command Pattern for combat maneuvers. `[ARCH.RULES.CORE.COMMAND]`
@@ -203,7 +206,8 @@ Triggers the application of `Atordoado` status if GdA exceeds a threshold during
 Victory and defeat condition logic, called at the start of every turn and after every standard action.
 
 ##### BattleJudge [ARCH.DOC.battle.Judges.CLASS:BattleJudge]
-Evaluates the presence of living characters in each team to determine the `BattleState`.
+Evaluates the presence of living characters in each team to determine the `BattleState`. Populates `BattleResult.winners` and `BattleResult.losers` when reaching a terminal state.
+- rule() [ARCH.DOC.battle.Judges.METHOD:BattleJudge.rule]: Evaluates the context to determine victory, defeat, or draw. Updates the `BattleResult` object with winners and losers based on team outcome.
 
 #### Status Effects [ARCH.DOC.battle.StatusEffects]
 Temporary modifiers and behavioral changes with a turn-based duration. `[ARCH.RULES.CORE.MODIFIER]`

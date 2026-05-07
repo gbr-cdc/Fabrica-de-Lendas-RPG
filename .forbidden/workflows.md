@@ -20,13 +20,15 @@
 
 ## INDEPENDENT EXECUTION [WORKFLOWS.INDEPENDENT_EXECUTION]
 1. **Understand:** Analyze the problem statement and the desired outcome. Challenge the instructions if you have a structurally better solution.
-2. **Propose:** Create/edit `docs/plans/[IE_task_description].md` with an execution plan.
+2. **Propose:** Create/edit `docs/plans/"IE_task_description".md` with an execution plan.
 3. **HALT EXECUTION:** Present the plan to the user and ask for approval. **YOU MUST STOP GENERATING TEXT HERE.** Do not proceed to Step 4 under any circumstances until the user explicitly replies with approval.
 4. **Implement:** Execute the approved plan.
 5. **Test:** Verify that the implementation correctly achieves the desired outcome.
-6. **Evaluate**: Check if the project documentation need to be updated.
-    - **Filter**: From the list of files you modified this session. Exclude `tests/` and root files.
-    - **Document:** If tere is any modified files left after filtering, transition to the [WORKFLOWS.DOC_MODULES] workflow.
+6. **Evaluate:** Check if the project documentation need to be updated.
+    - **Filter:** From the list of files you modified this session. Exclude `tests/` and root files.
+    - **Document:** If tere is any modified files left after filtering, transition to the [WORKFLOWS.DOC_MODULES] workflow. Then, go to next step.
+    - **Report:** Create a report in `docs/reports` as `IE_YYYY-MM-DD_HH:MM.md` with everything done during this workflow.
+    - **Git Protocol:** Stop and ask user to commit with mensage `IE: execution description`.
 
 ## FLASH EXECUTION [WORKFLOWS.FLASH_EXECUTION]
 1. **Understand:** Undestand the objective of the execution and what needs to be done.
@@ -65,7 +67,8 @@
         - If there are no steps left to complete, go to "Mission Completion", then proceed to "Evaluate"
     2. **Evaluate**: Check if the project documentation need to be updated.
         - **Filter**: From the list of files you modified this session. Exclude `tests/` and root files.
-        - **Document:** If tere is any modified files left after filtering, transition to the [WORKFLOWS.DOC_MODULES] workflow.
+        - **Document:** If tere is any modified files left after filtering, transition to the [WORKFLOWS.DOC_MODULES] workflow. Go to **Git Protocol** when done.
+        - **Git Protocol:** STOP and ask user to commit with mensage "[MISSION_TAG]: Steps executed".
 
 ### Mission Completion
 1. All tests MUST pass.
@@ -80,4 +83,3 @@
 3. **Evaluate**: Fetch all required file documentation tags in a single batched `ref_manager.py` call. Check for missing elements or discrepancies vs [ARCH.DOC_STANDARDS.MODULE] based on recent changes (e.g., public APIs, state transitions, or core logic).
 4. **Sync**: Use `ref_manager.py --update` or `--create` to align the module documentation with the code.
     - If `--create` fails with `"Error: Parent tag [ARCH.module_name] not found."`, default to creating the missing module documentation (`[ARCH.module_name]`) with the file documentation (`[ARCH.module_name.FileName]`) inside, strictly following [ARCH.DOC_STANDARDS.MODULE].
-5. **Git Protocol**: STOP and ask USER to commit changes and suggest message: `execution: description_of_changes`. 

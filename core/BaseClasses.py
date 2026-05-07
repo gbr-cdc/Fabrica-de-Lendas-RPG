@@ -6,8 +6,8 @@ if TYPE_CHECKING:
     from entities.Characters import Character
     from battle.BattleManager import BattleManager
     from core.DiceManager import DiceManager
-    from core.Structs import AttackActionTemplate
-    from core.Enums import BattleActionType
+    from core.Enums import BattleActionType, BattleState
+    from core.Structs import AttackActionTemplate, BattleResult
     from controllers.CharacterController import CharacterController
 
 
@@ -50,8 +50,12 @@ class IBattleContext(Protocol):
     def subscribe(self, event_name: str, callback: Callable) -> None: ...
     def unsubscribe(self, event_name: str, callback: Callable) -> None: ...
     def get_characters(self) -> List[Character]: ...
+    def get_graveyard(self) -> List[Character]: ...
     def get_controller(self, char_id: str) -> 'CharacterController': ...
     def get_active_passive(self, char_id: str, name: str) -> 'BattlePassive' | None: ...
+
+class IBattleJudge(Protocol):
+    def rule(self, context: 'IBattleContext', result: 'BattleResult') -> 'BattleState': ...
 
 class BattleAction(GameAction):
     """

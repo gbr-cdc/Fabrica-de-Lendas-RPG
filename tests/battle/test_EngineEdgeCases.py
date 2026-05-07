@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 from battle.BattleManager import BattleManager
 from battle.Judges import BattleJudge
 from core.Enums import BattleState, RollState, BattleActionType
+from core.Structs import BattleResult
 from core.Events import ActionLoad
 from battle.StatusEffects import StatusEffect
 from controllers.CharacterController import PvP1v1Controller
@@ -20,9 +21,13 @@ def test_battle_judge_defeat():
     char2.team = 2
     char2.current_hp = 10
     
-    context.get_characters.return_value = [char1, char2]
+    context.get_characters.return_value = [char2]
+    context.get_graveyard.return_value = [char1]
+    result = BattleResult()
     
-    assert judge.rule(context) == BattleState.DEFEAT
+    assert judge.rule(context, result) == BattleState.DEFEAT
+    assert char2 in result.winners
+    assert char1 in result.losers
 
 def test_battle_judge_draw():
     judge = BattleJudge()
@@ -36,9 +41,14 @@ def test_battle_judge_draw():
     char2.team = 2
     char2.current_hp = 0
     
-    context.get_characters.return_value = [char1, char2]
+    context.get_characters.return_value = []
+    context.get_graveyard.return_value = [char1, char2]
+    result = BattleResult()
     
-    assert judge.rule(context) == BattleState.DRAW
+    assert judge.rule(context, result) == BattleState.DRAW
+    assert len(result.winners) == 0
+    assert char1 in result.losers
+    assert char2 in result.losers
 
 def test_battle_manager_get_controller():
     bm = BattleManager(MagicMock(), MagicMock(), MagicMock())
