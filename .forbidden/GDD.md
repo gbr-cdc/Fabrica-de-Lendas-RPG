@@ -228,7 +228,7 @@ The combat style represents how the character fights, what equipment they use, a
 
 ### Abilities:
 **Bloquear [GDD.STYLES.DEFENSOR.BLOQUEAR]:** While shielding, spend 2 Focus to add 1d4 to defense. If defense > attacker's roll and GdA < -3, gain +1 Attack against that opponent.
-**Golpe de Escudo [GDD.STYLES.DEFENSOR.GOLPE_ESCUDO]:** Spend 2 Focus to attack using defense die. Damage halved, GdA treated as 0. If GdA > 3, target is ATORDOADO.
+**Golpe de Escudo [GDD.STYLES.DEFENSOR.GOLPE_ESCUDO]:** Spend 2 Focus to attack using defense die. GdA treated as 0 for damage calculation. If GdA > 3, target is ATORDOADO.
 **Pressionar [GDD.STYLES.DEFENSOR.PRESSIONAR]:** Spend 2 Focus to gain advantage on menace tests. Every time you succeed in a menace test you gain advantage to attack that target in your next action.
 **Proteger [GDD.STYLES.DEFENSOR.PROTEGER]:** Spend 2 Focus to redirect a melee attack from an adjacent ally to yourself. Does not work against SKILL or MAGIC.
 
