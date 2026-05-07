@@ -10,39 +10,6 @@ if TYPE_CHECKING:
 from battle.StatusEffects import Atordoado
 from battle.BattleActions import AttackAction, registry as action_registry
 
-class GracaDoDuelista(BattlePassive):
-    def __init__(self, owner: 'Character', context: 'IBattleContext'):
-        super().__init__(name="Graça do Duelista", owner=owner, context=context)
-
-    def get_hooks(self) -> Dict[str, Callable]:
-        
-        def passiva_acerto_hook(attack_load: 'AttackLoad') -> None: 
-            if attack_load.character.char_id == self.owner.char_id:
-                roll = self.dice_service.roll_dice(6, RollState.NEUTRAL)
-                attack_load.gda += roll.final_roll
-                attack_load.add_event("MOD", self.name, roll.final_roll, self.owner.char_id)
-
-        def reacao_evasao_hook(attack_load: 'AttackLoad') -> None:
-            if attack_load.target is None:
-                return
-            if attack_load.target.char_id == self.owner.char_id:
-                if attack_load.gda > (0 + self.owner.grd - attack_load.character.pre):
-                    custo_evasao = 2
-                    if self.owner.floating_focus >= custo_evasao:
-                        controller = self.context.get_controller(self.owner.char_id)
-                        if controller and controller.choose_reaction(self.owner, self.name, attack_load, self.context):
-                            CharacterSystem.spend_focus(self.owner, custo_evasao)
-                            attack_load.add_event("FOCUS", self.owner.char_id, -custo_evasao, self.owner.floating_focus)
-                            
-                            roll = self.dice_service.roll_dice(4, RollState.NEUTRAL)
-                            attack_load.gda -= roll.final_roll
-                            attack_load.add_event("MOD", f"{self.name}_EVASAO", -roll.final_roll, self.owner.char_id)
-
-        return {
-            "on_gda_modify": passiva_acerto_hook,
-            "on_defensive_reaction": reacao_evasao_hook
-        }
-
 class ForçaBruta(BattlePassive):
     def __init__(self, owner: 'Character', context: 'IBattleContext'):
         super().__init__(name="Força Bruta", owner=owner, context=context)
@@ -70,59 +37,6 @@ class MãosPesadas(BattlePassive):
                         Atordoado(duration=0, target=attack_load.target, context=self.context)
                         attack_load.add_event("STATUS", attack_load.target.char_id, "Atordoado", 0, "APPLIED")
         return {'on_gda_modify': effect_hook}
-
-class Combo(BattlePassive):
-    def __init__(self, owner: 'Character', context: 'IBattleContext'):
-        super().__init__(name="Combo", owner=owner, context=context)
-        self.stage = 0
-        self.hit = False
-    
-    def get_hooks(self) -> Dict[str, Callable]:
-        def checar_ataque_bonus(attack_load: 'AttackLoad'):
-            if attack_load.target is None:
-                return
-            if attack_load.character.char_id != self.owner.char_id:
-                return
-
-            basic_attack_template = self.context.get_template("BasicAttack")
-            
-            if self.stage == 0:
-                self.stage += 1
-                if attack_load.hit:
-                    self.hit = True
-
-                response = action_registry["AttackAction"](basic_attack_template, attack_load.character, [attack_load.target], self.context, attack_type=AttackType.EXTRA_ATTACK).execute_if_possible()
-
-                self.stage = 0
-                self.hit = False
-                
-                if response.success:
-                    attack_load.add_event("COMBO", self.owner.char_id, 1)
-                    attack_load.history.extend(response.history)
-
-            elif self.stage == 1:
-                if not self.hit or not attack_load.hit:
-                    self.hit = False
-                    self.stage = 0
-                    return
-                
-                self.stage += 1
-                response = action_registry["AttackAction"](basic_attack_template, attack_load.character, [attack_load.target], self.context, attack_type=AttackType.EXTRA_ATTACK).execute_if_possible()
-                
-                if response.success:
-                    attack_load.add_event("COMBO", self.owner.char_id, 2)
-                    attack_load.history.extend(response.history)
-                else:
-                    self.stage = 0
-                    self.hit = False
-
-            elif self.stage > 1:
-                if attack_load.hit:
-                    Atordoado(0, attack_load.target, attack_load.battle_context)
-                    attack_load.add_event("STATUS", attack_load.target.char_id, "Atordoado", 0, "APPLIED")
-                    attack_load.add_event("COMBO", self.owner.char_id, self.stage, "FINAL")
-        
-        return {'on_attack_end': checar_ataque_bonus}
 
 class PosturaDefensiva(BattlePassive):
     def __init__(self, owner: 'Character', context: 'IBattleContext'):
@@ -200,6 +114,92 @@ class PosturaDefensiva(BattlePassive):
             'on_attack_end': cleanup_hook,
             'on_turn_end': turn_end_hook
         }
+
+class GracaDoDuelista(BattlePassive):
+    def __init__(self, owner: 'Character', context: 'IBattleContext'):
+        super().__init__(name="Graça do Duelista", owner=owner, context=context)
+
+    def get_hooks(self) -> Dict[str, Callable]:
+        
+        def passiva_acerto_hook(attack_load: 'AttackLoad') -> None: 
+            if attack_load.character.char_id == self.owner.char_id:
+                roll = self.dice_service.roll_dice(6, RollState.NEUTRAL)
+                attack_load.gda += roll.final_roll
+                attack_load.add_event("MOD", self.name, roll.final_roll, self.owner.char_id)
+
+        def reacao_evasao_hook(attack_load: 'AttackLoad') -> None:
+            if attack_load.target is None:
+                return
+            if attack_load.target.char_id == self.owner.char_id:
+                if attack_load.gda > (0 + self.owner.grd - attack_load.character.pre):
+                    custo_evasao = 2
+                    if self.owner.floating_focus >= custo_evasao:
+                        controller = self.context.get_controller(self.owner.char_id)
+                        if controller and controller.choose_reaction(self.owner, self.name, attack_load, self.context):
+                            CharacterSystem.spend_focus(self.owner, custo_evasao)
+                            attack_load.add_event("FOCUS", self.owner.char_id, -custo_evasao, self.owner.floating_focus)
+                            
+                            roll = self.dice_service.roll_dice(4, RollState.NEUTRAL)
+                            attack_load.gda -= roll.final_roll
+                            attack_load.add_event("MOD", f"{self.name}_EVASAO", -roll.final_roll, self.owner.char_id)
+
+        return {
+            "on_gda_modify": passiva_acerto_hook,
+            "on_defensive_reaction": reacao_evasao_hook
+        }
+
+class Combo(BattlePassive):
+    def __init__(self, owner: 'Character', context: 'IBattleContext'):
+        super().__init__(name="Combo", owner=owner, context=context)
+        self.stage = 0
+        self.hit = False
+    
+    def get_hooks(self) -> Dict[str, Callable]:
+        def checar_ataque_bonus(attack_load: 'AttackLoad'):
+            if attack_load.target is None:
+                return
+            if attack_load.character.char_id != self.owner.char_id:
+                return
+
+            basic_attack_template = self.context.get_template("BasicAttack")
+            
+            if self.stage == 0:
+                self.stage += 1
+                if attack_load.hit:
+                    self.hit = True
+
+                response = action_registry["AttackAction"](basic_attack_template, attack_load.character, [attack_load.target], self.context, attack_type=AttackType.EXTRA_ATTACK).execute_if_possible()
+
+                self.stage = 0
+                self.hit = False
+                
+                if response.success:
+                    attack_load.add_event("COMBO", self.owner.char_id, 1)
+                    attack_load.history.extend(response.history)
+
+            elif self.stage == 1:
+                if not self.hit or not attack_load.hit:
+                    self.hit = False
+                    self.stage = 0
+                    return
+                
+                self.stage += 1
+                response = action_registry["AttackAction"](basic_attack_template, attack_load.character, [attack_load.target], self.context, attack_type=AttackType.EXTRA_ATTACK).execute_if_possible()
+                
+                if response.success:
+                    attack_load.add_event("COMBO", self.owner.char_id, 2)
+                    attack_load.history.extend(response.history)
+                else:
+                    self.stage = 0
+                    self.hit = False
+
+            elif self.stage > 1:
+                if attack_load.hit:
+                    Atordoado(0, attack_load.target, attack_load.battle_context)
+                    attack_load.add_event("STATUS", attack_load.target.char_id, "Atordoado", 0, "APPLIED")
+                    attack_load.add_event("COMBO", self.owner.char_id, self.stage, "FINAL")
+        
+        return {'on_attack_end': checar_ataque_bonus}
 
 registry = {
     "MãosPesadas": MãosPesadas,
