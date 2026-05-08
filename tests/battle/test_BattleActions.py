@@ -186,3 +186,36 @@ def test_generate_focus_action_failures():
     assert can is False
     assert "limite" in msg
 
+def test_attack_action_uses_registry():
+    from battle.BattleActions import EFFECT_HOOK_BUILDERS
+    
+    # 1. Add a dummy builder to registry
+    def dummy_builder(effect, action):
+        def dummy_hook(load):
+            load.dummy_triggered = True
+        return {"on_hit_check": dummy_hook}
+    
+    EFFECT_HOOK_BUILDERS["dummy_effect"] = dummy_builder
+    
+    try:
+        actor = create_dummy_character()
+        template = AttackActionTemplate(
+            id="T", nome="T", action_type=BattleActionType.STANDARD_ACTION, 
+            attack_type=AttackType.BASIC_ATTACK, focus_cost=0, 
+            effects=[AttackEffects("dummy_effect", {})]
+        )
+        action = AttackAction(template, actor, [], MagicMock())
+        
+        # 2. Get hooks
+        hooks = action.get_hooks()
+        
+        # 3. Assert dummy hook exists and works
+        assert "on_hit_check" in hooks
+        load = MagicMock()
+        hooks["on_hit_check"](load)
+        assert load.dummy_triggered is True
+        
+    finally:
+        # Cleanup registry
+        del EFFECT_HOOK_BUILDERS["dummy_effect"]
+

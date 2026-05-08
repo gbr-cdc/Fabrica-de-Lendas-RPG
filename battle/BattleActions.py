@@ -8,6 +8,19 @@ from core.CharacterSystem import CharacterSystem
 
 if TYPE_CHECKING:
     from entities.Characters import Character
+    from core.Events import AttackLoad
+
+def _build_add_gda(effect, action: 'AttackAction'):
+    amount = effect.parameters.get("amount", 0)
+    def add_gda_hook(attack_load: 'AttackLoad'):
+        if attack_load.character.char_id == action.actor.char_id:
+            attack_load.gda += amount
+            attack_load.add_event("MOD", action.name, amount, attack_load.character.char_id)
+    return {'on_damage_calculation': add_gda_hook}
+
+EFFECT_HOOK_BUILDERS: Dict[str, Callable] = {
+    "add_gda": _build_add_gda
+}
 
 class AttackAction(BattleAction):
     """
@@ -32,15 +45,9 @@ class AttackAction(BattleAction):
     def get_hooks(self) -> Dict[str, Callable]:
         hooks = {}
         for effect in self.template.effects:
-            if effect.id == "add_gda":
-                amount = effect.parameters.get("amount", 0)
-                def make_hook(amt):
-                    def add_gda_hook(attack_load: 'AttackLoad'):
-                        if attack_load.character.char_id == self.actor.char_id:
-                            attack_load.gda += amt
-                            attack_load.add_event("MOD", self.name, amt, attack_load.character.char_id)
-                    return add_gda_hook
-                hooks['on_damage_calculation'] = make_hook(amount)
+            builder = EFFECT_HOOK_BUILDERS.get(effect.id)
+            if builder:
+                hooks.update(builder(effect, self))
         return hooks
 
     def execute(self) -> ActionLoad:
