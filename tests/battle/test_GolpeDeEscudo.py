@@ -8,6 +8,7 @@ from core.DiceManager import DiceManager
 from tests.utils.entity_factory import create_dummy_character
 from core.Modifiers import EphemeralModifier
 from battle.StatusEffects import Atordoado
+from core.DataManager import DataManager
 
 def test_golpe_de_escudo_mechanics():
     dice = DiceManager(seed=42)
@@ -24,19 +25,10 @@ def test_golpe_de_escudo_mechanics():
     context = MagicMock()
     context.dice_service = dice
     
-    # Template for Golpe de Escudo
-    template = AttackActionTemplate(
-        id="golpe_escudo",
-        nome="Golpe de Escudo",
-        action_type=BattleActionType.STANDARD_ACTION,
-        attack_type=AttackType.BASIC_ATTACK,
-        focus_cost=2,
-        effects=[
-            AttackEffects("swap_atk_def_die", {}),
-            AttackEffects("set_gda_zero_on_dmg", {}),
-            AttackEffects("apply_status_on_hit_threshold", {"status": "Atordoado", "threshold": 3, "duration": 1})
-        ]
-    )
+    # Load template for Golpe de Escudo from data
+    dm = DataManager()
+    dm.load_action_templates('data/AttackActions.json')
+    template = dm.get_action_template("GolpeEscudo")
     
     action = AttackAction(template, actor, [target], context)
     hooks = action.get_hooks()
@@ -94,11 +86,9 @@ def test_swap_atk_def_die_cleanup():
     actor.base_atk_die = 6
     actor.base_def_die = 12
     
-    template = AttackActionTemplate(
-        id="swap", nome="Swap", action_type=BattleActionType.STANDARD_ACTION,
-        attack_type=AttackType.BASIC_ATTACK, focus_cost=0,
-        effects=[AttackEffects("swap_atk_def_die", {})]
-    )
+    dm = DataManager()
+    dm.load_action_templates('data/AttackActions.json')
+    template = dm.get_action_template("GolpeEscudo")
     
     context = MagicMock()
     action = AttackAction(template, actor, [create_dummy_character()], context)

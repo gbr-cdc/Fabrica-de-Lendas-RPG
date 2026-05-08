@@ -19,5 +19,29 @@
                 }
             }
         ]
+    },
+    "GolpeEscudo": {
+        "nome": "Golpe de Escudo",
+        "action_type": "standard_action",
+        "attack_type": "skill",
+        "focus_cost": 2,
+        "effects": [
+            {
+                "id": "swap_atk_def_die",
+                "parameters": {}
+            },
+            {
+                "id": "set_gda_zero_on_dmg",
+                "parameters": {}
+            },
+            {
+                "id": "apply_status_on_hit_threshold",
+                "parameters": {
+                    "status": "Atordoado",
+                    "threshold": 3,
+                    "duration": 1
+                }
+            }
+        ]
     }
 }
