@@ -30,6 +30,9 @@ Agents must use `python3 utilities/ref_manager.py` for all documentation operati
         - **Fail-Fast:** If neither a sibling nor the parent is found, it will fail.
     - **Shell Safety:** ALWAYS use single quotes `' '` for the content argument to prevent shell interpretation of special characters.
 - **Update a tag:** Replace existing section or line. Use: `python3 utilities/ref_manager.py --update [TAG] 'New Content' [--from-file path]`
+    - **Single Operation Constraint:** `ref_manager` only supports ONE write operation (`--create`, `--update`, `--delete`) per command. Run separate commands for multiple changes.
+    - **Avoid Destructive Updates:** Updating a parent section tag replaces its entire content and destroys all subsections. ALWAYS prefer using `--create` with a more specific sub-tag (e.g., `[ARCH.DOC.battle.BattleActions.GLOBAL:EFFECT_HOOK_BUILDERS]`) when adding new information.
+    - **Granular Updates:** When you MUST use `--update`, target the most specific tag possible to minimize collateral damage.
     - Single-Line Constraint: If updating a line tag, the "New Content" MUST be exactly one line. Do not pass multi-line strings. 
     - Line Tag Preservation: When updating a line, you MUST include the exact original line tag within your "New Content".
     - Section Tag Preservation: When updating a section, your "New Content" MUST start with the original Markdown header containing the tag (e.g., ## Section Name [TAG]). Do not strip the header away.
@@ -52,7 +55,6 @@ Considering filepath = module_name/FileName.py
     - Example: `[ARCH.DOC.core.CharacterSystem.FUNCTION:take_damage]`
 - **Method Documentation:** To access documentation for a class method, use: `[ARCH.DOC.module_name.FileName.METHOD:Class.method]`
     - Example: `[ARCH.DOC.battle.BattleManager.METHOD:BattleManager.emit]`
-
 ## File Access Rules [AGENT.ACCESS_RULES]
 
 Files listed in [AGENT.ACCESS_RULES.FORBIDDEN_FILES] are NOT regular files. They are managed knowledge resources.
