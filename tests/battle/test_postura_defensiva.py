@@ -5,10 +5,11 @@ from core.Events import AttackLoad, ActionLoad
 from core.Enums import BattleActionType, AttackType, RollState
 from tests.utils.entity_factory import create_dummy_character
 from unittest.mock import MagicMock
+from tests.utils.test_context import BattleTestContext
 
 def test_postura_defensiva_toggle_modifiers():
     char = create_dummy_character()
-    context = MagicMock()
+    context = BattleTestContext()
     
     passive = PosturaDefensiva(char, context)
     
@@ -28,18 +29,22 @@ def test_postura_defensiva_toggle_modifiers():
 def test_postura_defensiva_hit_tracking():
     char = create_dummy_character(char_id="owner")
     target = create_dummy_character(char_id="target")
-    context = MagicMock()
+    context = BattleTestContext()
     
     passive = PosturaDefensiva(char, context)
     passive.is_active = True
     hooks = passive.get_hooks()
+    
+    for ev, cb in hooks.items():
+        context.subscribe(ev, cb)
+    baseline = context.subscriber_count
     
     # 1. Hit target
     load = AttackLoad(character=char, target=target, battle_context=context, 
                       attack_type=AttackType.BASIC_ATTACK, attack_state=RollState.NEUTRAL, defense_state=RollState.NEUTRAL, 
                       gda=5, damage=0)
     load.hit = True
-    hooks["on_gda_modify"](load)
+    context.emit("on_gda_modify", load)
     
     assert target.char_id in passive._tracked_targets
     assert "POSTURA|owner|OBSERVE|target" in load.history[0]
@@ -48,17 +53,18 @@ def test_postura_defensiva_hit_tracking():
     atk_load = AttackLoad(character=target, target=char, battle_context=context, 
                           attack_type=AttackType.BASIC_ATTACK, attack_state=RollState.NEUTRAL, defense_state=RollState.NEUTRAL, 
                           gda=0, damage=0)
-    hooks["on_roll_modify"](atk_load)
+    context.emit("on_roll_modify", atk_load)
     
     assert passive._tracked_targets[target.char_id] is True
     assert any(m.stat_name == 'pre' and m.value == -1 for m in target.modifiers)
     assert "MOD|PosturaDefensiva" in atk_load.history[0]
+    assert context.subscriber_count == baseline
 
 def test_postura_defensiva_cleanup_success():
     char = create_dummy_character(char_id="owner")
     target = create_dummy_character(char_id="target")
-    context = MagicMock()
-    context.get_characters.return_value = [target]
+    context = BattleTestContext()
+    context.add_character(target)
     
     passive = PosturaDefensiva(char, context)
     passive.is_active = True
@@ -67,67 +73,79 @@ def test_postura_defensiva_cleanup_success():
     target.add_modifier(EphemeralModifier(stat_name='pre', value=-1, source='PosturaDefensiva_Penalidade'))
     
     hooks = passive.get_hooks()
+    for ev, cb in hooks.items():
+        context.subscribe(ev, cb)
+    baseline = context.subscriber_count
     
     # Target attack ends
     atk_load = AttackLoad(character=target, target=char, battle_context=context, 
                           attack_type=AttackType.BASIC_ATTACK, attack_state=RollState.NEUTRAL, defense_state=RollState.NEUTRAL, 
                           gda=5, damage=0)
-    hooks["on_attack_end"](atk_load)
+    context.emit("on_attack_end", atk_load)
     
     assert not any(m.source == "PosturaDefensiva_Penalidade" for m in target.modifiers)
     assert target.char_id not in passive._tracked_targets
+    assert context.subscriber_count == baseline
 
 def test_postura_defensiva_cleanup_miss():
     char = create_dummy_character(char_id="owner")
     target = create_dummy_character(char_id="target")
-    context = MagicMock()
-    context.get_characters.return_value = [target]
+    context = BattleTestContext()
+    context.add_character(target)
     
     passive = PosturaDefensiva(char, context)
     passive.is_active = True
     passive._tracked_targets[target.char_id] = False # No attack against owner happened
     hooks = passive.get_hooks()
+    for ev, cb in hooks.items():
+        context.subscribe(ev, cb)
+    baseline = context.subscriber_count
     
     # Target turn ends
     action_load = ActionLoad(character=target)
-    hooks["on_turn_end"](action_load)
+    context.emit("on_turn_end", action_load)
     
     assert target.char_id not in passive._tracked_targets
     assert not any(m.source == "PosturaDefensiva_Penalidade" for m in target.modifiers)
+    assert context.subscriber_count == baseline
 
 def test_postura_defensiva_multi_tracking():
     char = create_dummy_character(char_id="owner")
     t1 = create_dummy_character(char_id="t1")
     t2 = create_dummy_character(char_id="t2")
-    context = MagicMock()
+    context = BattleTestContext()
     
     passive = PosturaDefensiva(char, context)
     passive.is_active = True
     hooks = passive.get_hooks()
+    for ev, cb in hooks.items():
+        context.subscribe(ev, cb)
+    baseline = context.subscriber_count
     
     # Hit T1
     load1 = AttackLoad(character=char, target=t1, battle_context=context, 
                        attack_type=AttackType.BASIC_ATTACK, attack_state=RollState.NEUTRAL, defense_state=RollState.NEUTRAL, 
                        hit=True)
-    hooks["on_gda_modify"](load1)
+    context.emit("on_gda_modify", load1)
     
     # Hit T2
     load2 = AttackLoad(character=char, target=t2, battle_context=context, 
                        attack_type=AttackType.BASIC_ATTACK, attack_state=RollState.NEUTRAL, defense_state=RollState.NEUTRAL, 
                        hit=True)
-    hooks["on_gda_modify"](load2)
+    context.emit("on_gda_modify", load2)
     
     assert "t1" in passive._tracked_targets
     assert "t2" in passive._tracked_targets
     assert len(passive._tracked_targets) == 2
+    assert context.subscriber_count == baseline
 
 def test_toggle_action_execution():
     char = create_dummy_character(char_id="c1")
-    context = MagicMock()
+    context = BattleTestContext()
+    
     passive = MagicMock()
-    # Mock the return value of toggle to match the expected format
     passive.toggle.return_value = "POSTURA|c1|ON"
-    context.get_active_passive.return_value = passive
+    context.get_active_passive = MagicMock(return_value=passive)
     
     action = TogglePosturaDefensiva(char, [], context)
     assert action.action_type == BattleActionType.FREE_ACTION
@@ -140,13 +158,16 @@ def test_toggle_action_execution():
 def test_postura_defensiva_on_roll_modify_no_target():
     char = create_dummy_character(char_id="owner")
     attacker = create_dummy_character(char_id="attacker")
-    context = MagicMock()
+    context = BattleTestContext()
     
     passive = PosturaDefensiva(char, context)
     passive.is_active = True
     passive._tracked_targets["attacker"] = False
     
     hooks = passive.get_hooks()
+    for ev, cb in hooks.items():
+        context.subscribe(ev, cb)
+    baseline = context.subscriber_count
     
     # Attack with target=None (Master Roll scenario)
     load = AttackLoad(
@@ -159,7 +180,7 @@ def test_postura_defensiva_on_roll_modify_no_target():
     )
     
     # This should NOT crash
-    hooks["on_roll_modify"](load)
+    context.emit("on_roll_modify", load)
     
     assert passive._tracked_targets["attacker"] is False
-
+    assert context.subscriber_count == baseline

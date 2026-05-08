@@ -43,5 +43,12 @@
                 }
             }
         ]
+    },
+    "AreaAttack": {
+        "nome": "Ataque em Área",
+        "action_type": "standard_action",
+        "attack_type": "area",
+        "focus_cost": 5,
+        "effects": []
     }
 }

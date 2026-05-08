@@ -15,6 +15,10 @@ class BattleTestContext(IBattleContext):
         self.subscriptions = {}
         self.controllers = {}
 
+    @property
+    def subscriber_count(self) -> int:
+        return sum(len(subs) for subs in self.subscriptions.values())
+
     def emit(self, event_name: str, payload: ActionLoad) -> None:
         self.emitted_events.append((event_name, payload))
         if event_name in self.subscriptions:
