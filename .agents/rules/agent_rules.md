@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 # Agent Context Configuration [AGENT.GLOBAL]
 
 This document defines the operational rules and skills for AI agents. Adherence to these rules is MANDATORY.
@@ -38,16 +42,16 @@ To minimize redundant operations and maximize context utility:
 
 ### Reference Conventions [AGENT.REF_MANAGER.CONVENTIONS]
 Considering filepath = module_name/FileName.py
-- **Module Documentation:** To access documentation for a specific module, use the pattern: `[ARCH.module_name]`
-    - Example: `[ARCH.core]`
-- **File Documentation:** To access documentation for a specific file, use the pattern: `[ARCH.module_name.FileName]`
-    - Example: `[ARCH.core.BaseClasses]`
-- **Class Documentation:** To access documentation for a class, use: `[ARCH.module_name.FileName.CLASS:ClassName]`
-    - Example: `[ARCH.core.BaseClasses.CLASS:GameAction]`
-- **Function Documentation:** To access documentation for a standalone function, use: `[ARCH.module_name.FileName.FUNCTION:function_name]`
-    - Example: `[ARCH.core.CharacterSystem.FUNCTION:take_damage]`
-- **Method Documentation:** To access documentation for a class method, use: `[ARCH.module_name.FileName.METHOD:Class.method]`
-    - Example: `[ARCH.battle.BattleManager.METHOD:BattleManager.emit]`
+- **Module Documentation:** To access documentation for a specific module, use the pattern: `[ARCH.DOC.module_name]`
+    - Example: `[ARCH.DOC.core]`
+- **File Documentation:** To access documentation for a specific file, use the pattern: `[ARCH.DOC.module_name.FileName]`
+    - Example: `[ARCH.DOC.core.BaseClasses]`
+- **Class Documentation:** To access documentation for a class, use: `[ARCH.DOC.module_name.FileName.CLASS:ClassName]`
+    - Example: `[ARCH.DOC.core.BaseClasses.CLASS:GameAction]`
+- **Function Documentation:** To access documentation for a standalone function, use: `[ARCH.DOC.module_name.FileName.FUNCTION:function_name]`
+    - Example: `[ARCH.DOC.core.CharacterSystem.FUNCTION:take_damage]`
+- **Method Documentation:** To access documentation for a class method, use: `[ARCH.DOC.module_name.FileName.METHOD:Class.method]`
+    - Example: `[ARCH.DOC.battle.BattleManager.METHOD:BattleManager.emit]`
 
 ## File Access Rules [AGENT.ACCESS_RULES]
 

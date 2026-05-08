@@ -9,7 +9,7 @@ PATH_MAPPING = {
     "GDD.": ".forbidden/GDD.md",
     "WORKFLOWS.": ".forbidden/workflows.md",
     "MISSION.": ".forbidden/MISSION_LOG.md",
-    "AGENT.": "agent_rules.md",
+    "AGENT.": ".agents/rules/agent_rules.md",
     "TESTE.": "tests/test.md",
 }
 
