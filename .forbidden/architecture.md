@@ -315,6 +315,7 @@ Class responsible for parsing battle history logs and presenting them.
 - **Lifecycle Auditing** [ARCH.TEST_QUALITY.LIFECYCLE]: Tests involving the EventBus MUST verify that all ephemeral hooks ([ARCH.RULES.BATTLE.EPHEMERAL_HOOKS]) used by self modifying actions are successfully unsubscribed after the action cycle. Assert that the EventBus subscriber count returns to its baseline.
 - **Battle Context [ARCH.TEST_QUALITY.IBATTLECONTEXT]:** Use `tests.utils.test_context.BattleTestContext` when a concrete implementation of `IBattleContext` is required for behavioral tests, avoiding excessive mocking of the battle state.
 - **Structured History [ARCH.TEST_QUALITY.STRUCTURED_HISTORY]:** Tests verifying action outcomes MUST assert against structured event tags (`TAG|PARAM1|PARAM2...`) rather than narrative strings or partial substrings of `MSG` tags. This ensures tests remain resilient to localization changes and narrative polish. `[ARCH.RULES.CORE.HISTORY]`
+- **AttackAction Data Loading [ARCH.TEST_QUALITY.ATTACK_ACTION_DATA]:** Abilities implemented through `AttackActions` MUST be tested by loading their `AttackActionTemplate` through `DataManager` from `data/AttackActions.json`. This ensures tests reflect actual game data definitions and prevents discrepancies between hardcoded mocks and production content.
 
 ## Documentation Standards [ARCH.DOC_STANDARDS]
 
