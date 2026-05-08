@@ -5,6 +5,7 @@ from core.Events import ActionLoad, AttackLoad, HistoryEmitter
 from core.Structs import AttackActionTemplate
 from core.Enums import RollState, BattleActionType, AttackType
 from core.CharacterSystem import CharacterSystem
+from core.Modifiers import EphemeralModifier
 
 if TYPE_CHECKING:
     from entities.Characters import Character
@@ -18,8 +19,45 @@ def _build_add_gda(effect, action: 'AttackAction'):
             attack_load.add_event("MOD", action.name, amount, attack_load.character.char_id)
     return {'on_damage_calculation': add_gda_hook}
 
+def _build_swap_atk_def_die(effect, action: 'AttackAction'):
+    def swap_die_hook(attack_load: 'AttackLoad'):
+        if attack_load.character.char_id == action.actor.char_id:
+            diff = action.actor.def_die - action.actor.atk_die
+            mod = EphemeralModifier(stat_name="atk_die", value=diff, source=action.name)
+            action.actor.add_modifier(mod)
+
+    def cleanup_hook(attack_load: 'AttackLoad'):
+        if attack_load.character.char_id == action.actor.char_id:
+            action.actor.remove_modifiers_by_source(action.name)
+            
+    return {'on_roll_modify': swap_die_hook, 'on_attack_end': cleanup_hook}
+
+def _build_set_gda_zero_on_dmg(effect, action: 'AttackAction'):
+    def set_gda_zero_hook(attack_load: 'AttackLoad'):
+        if attack_load.character.char_id == action.actor.char_id:
+            attack_load.gda = 0
+            attack_load.add_event("MOD", action.name, 0, attack_load.character.char_id)
+    return {'on_damage_calculation': set_gda_zero_hook}
+
+def _build_apply_status_on_hit_threshold(effect, action: 'AttackAction'):
+    status_name = effect.parameters.get("status")
+    threshold = effect.parameters.get("threshold", 0)
+    duration = effect.parameters.get("duration", 1)
+    
+    def apply_status_hook(attack_load: 'AttackLoad'):
+        if attack_load.character.char_id == action.actor.char_id and attack_load.hit:
+            if attack_load.gda > threshold:
+                if status_name == "Atordoado":
+                    from battle.StatusEffects import Atordoado
+                    Atordoado(duration=duration, target=attack_load.target, context=action.context)
+                    attack_load.add_event("STATUS", attack_load.target.char_id, status_name, duration, "APPLIED")
+    return {'on_hit_check': apply_status_hook}
+
 EFFECT_HOOK_BUILDERS: Dict[str, Callable] = {
-    "add_gda": _build_add_gda
+    "add_gda": _build_add_gda,
+    "swap_atk_def_die": _build_swap_atk_def_die,
+    "set_gda_zero_on_dmg": _build_set_gda_zero_on_dmg,
+    "apply_status_on_hit_threshold": _build_apply_status_on_hit_threshold
 }
 
 class AttackAction(BattleAction):
@@ -207,6 +245,7 @@ class TogglePosturaDefensiva(BattleAction):
 
 registry = {
     "AttackAction": AttackAction,
+    "GolpeDeEscudo": AttackAction,
     "GenerateMana": GenerateManaAction,
     "GenerateFocus": GenerateFocusAction,
     "TogglePosturaDefensiva": TogglePosturaDefensiva,

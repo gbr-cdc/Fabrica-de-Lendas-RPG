@@ -47,7 +47,7 @@
 
 ## MISSION EXECUTION [WORKFLOWS.MISSION_EXECUTION]
 1. **Receive:** You MUST receive a [MISSION.ACTIVE.(...)] tag in the SAME prompt as the workflow trigger. Do NOT search MISSION_LOG or conversation history for it. If missing, STOP and ask: "Please provide the active mission tag to proceed."
-2. **State Check:** Check last `State: (...)` notes in previous completed steps if available for context. If active mission have no steps to complete this is an ERROR. You MUST STOP and inform the situation. DO NOT try to continue the workflow.
+2. **State Check:** Fetch all tags in mission's "Rule References". Read the mission's plan. Check last `State: (...)` notes in previous completed steps if available for context. If active mission have no steps to complete this is an ERROR. You MUST STOP and inform the situation. DO NOT try to continue the workflow.
 3. **Phase Execution:** Select a project phase to execute.
 
 ### Phase execution

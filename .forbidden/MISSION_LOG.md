@@ -2,16 +2,6 @@
 
 ## ACTIVE MISSIONS [MISSION.ACTIVE]
 
-## MISSION: Implement Golpe de Escudo [MISSION.ACTIVE.GOLPE_ESCUDO]
-**Summary**: Implement "Golpe de Escudo" ability using the new `AttackAction` hook registry.
-**Rule References**: [ARCH.RULES.BATTLE.EPHEMERAL_HOOKS], [ARCH.RULES.BATTLE.PAYLOAD]
-**Definition of Done**: "Golpe de Escudo" correctly uses `def_die`, sets GdA to 0 for damage, and applies `Atordoado` if GdA > 3.
-**Plan**: [defensor_abilities.md](file:///home/alice/Repositorios/RPG/docs/plans/defensor_abilities.md)
-**Steps**:
-- [BLUE] Implement `swap_atk_def_die`, `set_gda_zero_on_dmg`, and `apply_status_on_hit_threshold` hook builders in the registry. | Files: battle/BattleActions.py
-- [RED] Create a test case for "Golpe de Escudo" verifying die swap, GdA modification, and status application. | Files: tests/battle/test_BattleActions.py
-- [BLUE] Add "Golpe de Escudo" to the `registry` and ensure it can be instantiated with its specific effects. | Files: battle/BattleActions.py
-
 ## MISSION: Implement Bloquear [MISSION.ACTIVE.BLOQUEAR]
 **Summary**: Implement "Bloquear" passive for the Defensor style, including a defensive reaction and a counter-bonus mechanism.
 **Rule References**: [ARCH.RULES.CORE.OBSERVER], [ARCH.RULES.BATTLE.PAYLOAD]
@@ -209,6 +199,14 @@ Refactor the `history` field in `ActionLoad` and `AttackLoad` to use structured 
 - [x] [BLUE]: Create `views/` directory and `__init__.py`. | Files: views/__init__.py
 - [x] [RED] [Tag Parsing Verification]: Implement unit tests for all history tags defined in the plan. | Files: tests/test_BattleView.py
 - [x] [GREEN] [BattleView Implementation]: Implement the `BattleView` class with logic to parse structured strings into technical narrative. | Files: views/BattleView.py | State: Implemented `BattleView.parse` which correctly parses 12 event tag types and unmatched tags, verified by 13 unit tests achieving 100% coverage.
+
+## 2026-05-08 01:00: Implement Golpe de Escudo (Completed) [MISSION.ARCHIVE.GOLPE_ESCUDO]
+**Summary**: Implement "Golpe de Escudo" ability using the new `AttackAction` hook registry.
+**Plan**: [defensor_abilities.md](file:///home/alice/Repositorios/RPG/docs/plans/defensor_abilities.md)
+**Steps**:
+- [x] Implement `swap_atk_def_die`, `set_gda_zero_on_dmg`, and `apply_status_on_hit_threshold` hook builders in the registry. | Files: battle/BattleActions.py | State: Builders implemented and exported in EFFECT_HOOK_BUILDERS.
+- [x] Create a test case for "Golpe de Escudo" verifying die swap, GdA modification, and status application. | Files: tests/battle/test_BattleActions.py | State: Integration tests passed in tests/battle/test_GolpeDeEscudo.py.
+- [x] Add "Golpe de Escudo" to the `registry` and ensure it can be instantiated with its specific effects. | Files: battle/BattleActions.py | State: Added "GolpeDeEscudo" mapping to registry.
 
 ## 2026-05-06 20:20: MVC Refactor for Simulator and BattleView (COMPLETE)
 - **Summary**: Refactor the pvp_simulator and views modules to strictly follow MVC. Simulator (Controller) handles data; BattleView (View) handles presentation.
