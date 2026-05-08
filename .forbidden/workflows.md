@@ -47,35 +47,20 @@
 
 ## MISSION EXECUTION [WORKFLOWS.MISSION_EXECUTION]
 1. **Receive:** You MUST receive a [MISSION.ACTIVE.(...)] tag in the SAME prompt as the workflow trigger. Do NOT search MISSION_LOG or conversation history for it. If missing, STOP and ask: "Please provide the active mission tag to proceed."
-2. **State Check:** Fetch all tags in mission's "Rule References". Read the mission's plan. Check last `State: (...)` notes in previous completed steps if available for context. If active mission have no steps to complete this is an ERROR. You MUST STOP and inform the situation. DO NOT try to continue the workflow.
-3. **Phase Execution:** Select a project phase to execute.
-
-### Phase execution
-- **TDD Phases:**
-    1. **Quality Standards:** Fetch [ARCH.TEST_QUALITY]
-    2. **RED (Test Objective):** Pick a [RED] step -> Create/Update Integration/Scenario Test based on the detailed objective -> `pytest` (Must Fail).
-    3. **GREEN (Implementation):** Pick the corresponding [GREEN] step -> Implement approved logic -> `pytest` (Must Pass).
-    4. Go to **PhaseComplete**
-- **Non-TDD Phases**:
-    1. **BLUE (Implementation)**: Pick the corresponding [BLUE] step -> Implement approved logic -> pytest (Regression: Full suite must pass)
-    2. Go to **PhaseComplete**
-- **PhaseComplete ([RED/GREEN] or [BLUE])**:
-    1. Update [MISSION.ACTIVE.(...)] with:
-        - Mark completed steps [ ] -> [x]
-        - Append `| State: description of step results with all information summarized for the next step` to the [GREEN] or [BLUE] step.
-            - **Source of truth**: Consider this state note is all next agent will have from previous context, so make sure it is descriptive and concise.
-        - If there are no steps left to complete, go to "Mission Completion", then proceed to "Evaluate"
-    2. **Evaluate**: Check if the project documentation need to be updated.
-        - **Filter**: From the list of files you modified this session. Exclude `tests/` and root files.
-        - **Document:** If tere is any modified files left after filtering, transition to the [WORKFLOWS.DOC_MODULES] workflow. Go to **Git Protocol** when done.
-        - **Git Protocol:** STOP and ask user to commit with mensage "[MISSION_TAG]: Steps executed".
-
-### Mission Completion
-1. All tests MUST pass.
-2. At least 80% test coverage for the modified modules (`pytest --cov`).
-3. **DoD Check**: Explicitly verify each item in the mission's "Definition of Done".
-4. **Archive**: Fetch [ARCH.DOC_STANDARDS.MISSION.ARCHIVED]. Delete [MISSION.ACTIVE.(...)]. Create [MISSION.ARCHIVE.(...)] following [ARCH.DOC_STANDARDS.MISSION.ARCHIVED].
-
+2. **State Check:** Fetch all tags in the mission's "Rule References". Read the mission's plan.
+3. **Execution Loop:** Read all steps in the mission. Execute them sequentially:
+    - **If `[RED]`:** Create/Update Test based on objective -> `pytest` (Must Fail).
+    - **If `[GREEN]`:** Implement logic -> `pytest` (Must Pass).
+    - **If `[BLUE]`:** Implement logic -> `pytest` (Regression: Full suite must pass).
+4. **Mission Completion:** Once all steps are executed:
+    - **Verification**: All tests MUST pass.
+    - **Coverage**: At least 80% test coverage for modified modules (`pytest --cov`).
+    - **DoD Check**: Explicitly verify each item in the mission's "Definition of Done".
+5. **Evaluate Documentation**: 
+    - **Filter**: List files modified this session. Exclude `tests/` and root files.
+    - **Document**: If there are files left, transition to [WORKFLOWS.DOC_MODULES]. Return here when done.
+6. **Archive**: Fetch [ARCH.DOC_STANDARDS.MISSION.ARCHIVED]. Delete [MISSION.ACTIVE.(...)]. Create [MISSION.ARCHIVE.(...)] following the standard.
+7. **Git Protocol:** STOP and ask user to commit with message "[MISSION_TAG]: Completed".
 
 ## DOCUMENT MODULES [WORKFLOWS.DOC_MODULES]
 1. **Get template**: Fetch [ARCH.DOC_STANDARDS.MODULE] for documentation template. 

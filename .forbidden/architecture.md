@@ -342,7 +342,7 @@ Class responsible for parsing battle history logs and presenting them.
 - **Header:** `## YYYY-MM-DD HH:MM: [Title] ([Status]) [PART X]`. Add `[PART X]` only if mission have more parts.
 - **Summary**: Mission summary.
 - **Plan**: Link to the approved `docs/plans/[mission].md`.
-- **Steps**: List of completed steps. (with everything including parts "Files:" and "State:")
+- **Steps**: List of completed steps.
 ```
 
 #### Rules [ARCH.DOC_STANDARDS.MISSION.RULES]
