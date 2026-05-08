@@ -14,8 +14,8 @@ if TYPE_CHECKING:
     from core.DiceManager import DiceManager
     from entities.Characters import Character
     from controllers.CharacterController import CharacterController
-    from core.BaseClasses import BattlePassive
-    from battle.StatusEffects import StatusEffect
+    from core.BaseClasses import BattlePassive, BattleAction
+    from core.BaseClasses import StatusEffect
 
 class BattleManager:
     """
@@ -130,7 +130,7 @@ class BattleManager:
         self.active_status_effects[effect.character.char_id].append((effect, hooks))
         for event_name, callback in hooks.items():
             self.subscribe(event_name, callback)
-        effect.apply(self)
+        effect.apply()
 
     def remove_status_effect(self, effect: StatusEffect):
         char_id = effect.character.char_id
@@ -141,7 +141,6 @@ class BattleManager:
                         self.unsubscribe(event_name, callback)
                     self.active_status_effects[char_id].pop(i)
                     break
-        effect.remove()
 
     def subscribe(self, event_name: str, callback: Callable):
         """
@@ -195,6 +194,31 @@ class BattleManager:
         
         heapq.heappush(self.timeline, (next_tick, -character.hab, -roll, character.char_id, character))
     
+    def set_tick(self, character: 'Character', tick: int):
+        """
+        Modifica o tempo de um personagem na linha do tempo.
+        Substitui delay_character (que será mantido por compatibilidade).
+        """
+        for i, entry in enumerate(self.timeline):
+            t, neg_hab, neg_roll, char_id, char = entry 
+            hab, roll = -neg_hab, -neg_roll
+            
+            if char_id == character.char_id:
+                # 1. Libera o slot antigo
+                if (t, hab, roll) in self.timeline_slots:
+                    self.timeline_slots.remove((t, hab, roll))
+                
+                # 2. Calcula o novo roll para o novo tick
+                novo_roll = self._get_unique_roll(tick, hab)
+                self.timeline_slots.add((tick, hab, novo_roll))
+                
+                # 3. Atualiza a entrada
+                self.timeline[i] = (tick, -hab, -novo_roll, char_id, char)
+                
+                # 4. Re-heapify
+                heapq.heapify(self.timeline)
+                break
+
     def delay_character(self, character: 'Character', extra_ticks: int):
         """
         Encontra o personagem na linha do tempo e empurra a ação dele mais para o futuro.
@@ -241,6 +265,59 @@ class BattleManager:
                 
                 # Registra no histórico global
                 self.battle_result.history.append(HistoryEmitter.death(personagem.char_id))
+
+    def run_action(self, action: 'BattleAction') -> ActionLoad:
+        """
+        Executa uma ação isolada de um personagem, simulando um turno.
+        Útil para testes unitários granulares.
+        O personagem deve estar fora da timeline (já removido por get_next_actor).
+        """
+        actor = action.actor
+        
+        # 1. Início do turno
+        self.emit("on_turn_start", ActionLoad(character=actor))
+        self.resolve_deaths()
+        
+        # 2. Captura hooks da ação
+        action_hooks = {}
+        if hasattr(action, 'get_hooks'):
+            action_hooks = action.get_hooks()
+            
+        try:
+            # 3. Inscreve hooks temporários
+            for event_name, callback in action_hooks.items():
+                self.subscribe(event_name, callback)
+                
+            # 4. Executa a ação
+            action_load = action.execute_if_possible()
+            
+            # 5. Registra no histórico e resolve mortes
+            self.battle_result.history.extend(action_load.history)
+            self.resolve_deaths()
+            
+            # 6. Fim do turno
+            self.emit("on_turn_end", action_load)
+            self.resolve_deaths()
+
+            # 7. Agenda o próximo turno se não for ação livre
+            if action.action_type != BattleActionType.FREE_ACTION:
+                action_cost = actor.action_cost_base
+                if action.action_type == BattleActionType.MOVE_ACTION:
+                    action_cost = action_cost // 2
+                self.schedule_next_action(actor, action_cost)
+
+            # 8. Atualiza estatísticas da batalha
+            self.battle_result.duration += 1
+            if actor.char_id not in self.battle_result.action_per_character:
+                self.battle_result.action_per_character[actor.char_id] = 0
+            self.battle_result.action_per_character[actor.char_id] += 1
+            
+            return action_load
+            
+        finally:
+            # 9. Garante a desinscrição dos hooks (ARCH.RULES.BATTLE.EPHEMERAL_HOOKS)
+            for event_name, callback in action_hooks.items():
+                self.unsubscribe(event_name, callback)
 
     def run_battle(self):
         while True:

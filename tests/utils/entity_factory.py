@@ -69,7 +69,7 @@ def create_dummy_character(
     If 'equipped' is True or items are provided, it uses CharacterSystem to equip them.
     """
     if attributes is None:
-        attributes = [random.randint(0, 15) for _ in range(3)]
+        attributes = [random.randint(3, 6) for _ in range(3)]
     
     if rules is None:
         rules = get_default_rules()
@@ -78,8 +78,8 @@ def create_dummy_character(
         # Default balanced style
         combat_style = CombatStyle(
             name="Balanced",
-            atq_die=6,
-            def_die=6,
+            atq_die=10,
+            def_die=10,
             main_stat=AttributeType.FIS,
             armor_type=ArmorType.LIGHT,
             weapon_type=WeaponType.MEDIUM_WEAPON

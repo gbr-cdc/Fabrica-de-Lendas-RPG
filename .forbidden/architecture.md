@@ -168,6 +168,8 @@ Manages the `timeline` (Min-Heap), the `listeners` registry (Event Bus), and the
 - delay_character() [ARCH.DOC.battle.BattleManager.METHOD:BattleManager.delay_character]: Pushes a character next turn further into the future on the timeline (e.g., due to Stun). [ARCH.RULES.BATTLE.TIMELINE]
 - resolve_deaths() [ARCH.DOC.battle.BattleManager.METHOD:BattleManager.resolve_deaths]: Identifies characters at 0 HP, removes them from active play, moves them to the `graveyard`, and registers `DEATH` tags.
 - get_graveyard() [ARCH.DOC.battle.BattleManager.METHOD:BattleManager.get_graveyard]: Returns a list of all characters currently in the graveyard.
+- run_action() [ARCH.DOC.battle.BattleManager.METHOD:BattleManager.run_action]: Executes a single action outside the main run_battle loop. Emits TURN_START/END, handles ephemeral hooks, resolves deaths, and schedules the next turn. [ARCH.TEST_QUALITY.IBATTLECONTEXT]
+- set_tick() [ARCH.DOC.battle.BattleManager.METHOD:BattleManager.set_tick]: Modifies a character position in the timeline. Manages timeline_slots uniqueness and re-heapifies the timeline. [ARCH.RULES.BATTLE.TIMELINE]
 
 #### Battle Actions [ARCH.DOC.battle.BattleActions]
 Implementations of the Command Pattern for combat maneuvers. Certain actions (like `AttackAction`) use hooks to allow their resolution logic to be modified by external reactive components. [ARCH.RULES.CORE.COMMAND]
@@ -313,7 +315,7 @@ Class responsible for parsing battle history logs and presenting them.
 - **Decoupling [ARCH.TEST_QUALITY.DECOUPLING]:** Ensure tests do not break upon internal refactors if the public behavior remains unchanged.
 - **Invariants [ARCH.TEST_QUALITY.INVARIANTS]:** Assert that attribute modifiers `[ARCH.RULES.CORE.MODIFIER]` are properly used and Character atributes are not corrupted by bad modifications.
 - **Lifecycle Auditing** [ARCH.TEST_QUALITY.LIFECYCLE]: Tests involving the EventBus MUST verify that all ephemeral hooks ([ARCH.RULES.BATTLE.EPHEMERAL_HOOKS]) used by self modifying actions are successfully unsubscribed after the action cycle. Assert that the EventBus subscriber count returns to its baseline.
-- **Battle Context [ARCH.TEST_QUALITY.IBATTLECONTEXT]:** Use `tests.utils.test_context.BattleTestContext` when a concrete implementation of `IBattleContext` is required for behavioral tests, avoiding excessive mocking of the battle state.
+- **Battle Context [ARCH.TEST_QUALITY.IBATTLECONTEXT]:** Use `battle.BattleManager.BattleManager` when a concrete implementation of `IBattleContext` is required for behavioral tests, avoid mocking of the battle state.
 - **Structured History [ARCH.TEST_QUALITY.STRUCTURED_HISTORY]:** Tests verifying action outcomes MUST assert against structured event tags (`TAG|PARAM1|PARAM2...`) rather than narrative strings or partial substrings of `MSG` tags. This ensures tests remain resilient to localization changes and narrative polish. `[ARCH.RULES.CORE.HISTORY]`
 - **AttackAction Data Loading [ARCH.TEST_QUALITY.ATTACK_ACTION_DATA]:** Abilities implemented through `AttackActions` MUST be tested by loading their `AttackActionTemplate` through `DataManager` from `data/AttackActions.json`. This ensures tests reflect actual game data definitions and prevents discrepancies between hardcoded mocks and production content.
 

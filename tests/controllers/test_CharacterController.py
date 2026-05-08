@@ -1,13 +1,18 @@
+from unittest.mock import MagicMock
+from controllers import CharacterController
+from _pytest import pytester_assertions
+from _pytest import pytester_assertions
 import pytest
 from controllers.CharacterController import PvP1v1Controller
 from tests.utils.entity_factory import create_dummy_character
-from tests.utils.test_context import BattleTestContext
+from tests.utils.test_utils import create_test_battle_manager
 from battle.BattleActions import AttackAction
 
 def test_pvp1v1_controller_no_target():
     ctrl = PvP1v1Controller()
     actor = create_dummy_character(char_id="hero")
-    context = BattleTestContext(characters=[actor])
+    context = create_test_battle_manager()
+    context.add_character(actor, ctrl)
     
     with pytest.raises(RuntimeError) as excinfo:
         ctrl.choose_action(actor, context)
@@ -18,7 +23,9 @@ def test_pvp1v1_controller_chooses_basic_attack_when_no_focus():
     actor = create_dummy_character(char_id="hero")
     actor.floating_focus = 0
     target = create_dummy_character(char_id="enemy")
-    context = BattleTestContext(characters=[actor, target])
+    context = create_test_battle_manager()
+    context.add_character(actor, ctrl)
+    context.add_character(target, MagicMock())
     
     action = ctrl.choose_action(actor, context)
     
@@ -31,7 +38,9 @@ def test_pvp1v1_controller_chooses_skill_when_has_focus():
     actor = create_dummy_character(char_id="hero")
     actor.floating_focus = 10
     target = create_dummy_character(char_id="enemy")
-    context = BattleTestContext(characters=[actor, target])
+    context = create_test_battle_manager()
+    context.add_character(actor, ctrl)
+    context.add_character(target, MagicMock())
     
     action = ctrl.choose_action(actor, context)
     
@@ -45,7 +54,9 @@ def test_pvp1v1_controller_with_action_load_chooses_basic_attack():
     ctrl = PvP1v1Controller()
     actor = create_dummy_character(char_id="hero")
     target = create_dummy_character(char_id="enemy")
-    context = BattleTestContext(characters=[actor, target])
+    context = create_test_battle_manager()
+    context.add_character(actor, ctrl)
+    context.add_character(target, MagicMock())
     action_load = object() # Dummy non-None action_load
     
     action = ctrl.choose_action(actor, context, action_load)
@@ -57,7 +68,8 @@ def test_pvp1v1_controller_with_action_load_chooses_basic_attack():
 def test_pvp1v1_controller_reaction_always_true():
     ctrl = PvP1v1Controller()
     actor = create_dummy_character()
-    context = BattleTestContext()
+    context = create_test_battle_manager()
+    context.add_character(actor, ctrl)
     action_load = object()
     
     assert ctrl.choose_reaction(actor, "any_id", action_load, context) is True

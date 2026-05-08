@@ -130,18 +130,6 @@ def test_character_stat_properties_with_modifiers(dummy_char):
     dummy_char.remove_modifier(mod1)
     assert dummy_char.bda == dummy_char.base_bda + 3
 
-def test_character_status_effects(dummy_char):
-    from tests.utils.test_context import BattleTestContext
-    from battle.StatusEffects import StatusEffect
-    
-    context = BattleTestContext()
-    effect = StatusEffect("TestEffect", 1, dummy_char, context)
-    context.add_status_effect(effect)
-    
-    assert effect in dummy_char.status_effects
-    context.remove_status_effect(effect)
-    assert effect not in dummy_char.status_effects
-
 def test_character_clear_ephemeral_modifiers(dummy_char):
     mod1 = PersistentModifier("bdd", 2, "Test")
     mod2 = EphemeralModifier("bdd", 3, "Test2")

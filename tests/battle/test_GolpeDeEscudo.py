@@ -1,100 +1,71 @@
 import pytest
 from unittest.mock import MagicMock
-from battle.BattleActions import AttackAction, EFFECT_HOOK_BUILDERS
+from battle.BattleActions import AttackAction
 from core.Events import AttackLoad
-from core.Structs import AttackActionTemplate, AttackEffects
-from core.Enums import BattleActionType, AttackType, RollState
-from core.DiceManager import DiceManager
 from tests.utils.entity_factory import create_dummy_character
-from core.Modifiers import EphemeralModifier
-from battle.StatusEffects import Atordoado
-from core.DataManager import DataManager
+from tests.utils.test_utils import create_test_battle_manager
 
 def test_golpe_de_escudo_mechanics():
-    dice = DiceManager(seed=42)
-    
-    # Actor: FIS 10, HAB 10, MEN 10 -> Rank 2
-    actor = create_dummy_character(char_id="actor", attributes=[10, 10, 10])
-    actor.base_atk_die = 6
-    actor.base_def_die = 12 # Higher def die for the shield strike
-    actor.floating_focus = 10
-    
-    target = create_dummy_character(char_id="target", attributes=[10, 10, 10])
-    target.current_hp = 100
-    
-    context = MagicMock()
-    context.dice_service = dice
-    def mock_add_status_effect(effect):
-        effect.apply(context)
-    context.add_status_effect.side_effect = mock_add_status_effect
-    
-    # Load template for Golpe de Escudo from data
-    dm = DataManager()
-    dm.load_action_templates('data/AttackActions.json')
+    manager = create_test_battle_manager()
+    dm = manager.data_service
     template = dm.get_action_template("GolpeEscudo")
     
-    action = AttackAction(template, actor, [target], context)
-    hooks = action.get_hooks()
+    # 1. Test case: GdA > 3 triggers Atordoado
+    style = dm.get_combat_style('Defensor')
+    actor = create_dummy_character(char_id="actor", combat_style=style, attributes=[5,5,5])
+    actor.floating_focus = template.focus_cost
+    target = create_dummy_character(char_id="target", attributes=[5,5,5])
+    target_hp = target.current_hp
     
-    # Setup mock emit to trigger hooks
-    def mock_emit(event, load):
-        if event in hooks:
-            hooks[event](load)
-            
-    context.emit.side_effect = mock_emit
+    manager.add_character(actor, MagicMock())
+    manager.add_character(target, MagicMock())
     
-    # --- Test Case 1: Hit with GdA > 3 ---
-    # Atk Roll: 10 (on d12) + Rank 2 + BDA 0 = 12
-    # Def Roll: 2 (on d6) + Rank 2 + BDD 0 = 4
-    # GdA = 8
-    dice.schedule_result(10) # Atk roll
-    dice.schedule_result(2)  # Def roll
+    manager.dice_service.schedule_result(10) # actor roll
+    manager.dice_service.schedule_result(2)  # target roll
     
-    action.execute()
+    actor = manager.get_next_actor()
+    action = AttackAction(template, actor, [target], manager)
+    load = manager.run_action(action)
     
-    # Verify Atordoado applied (GdA 8 > 3)
-    assert any(isinstance(s, Atordoado) for s in target.status_effects)
+    assert load.success is True
+    assert any(effect.__class__.__name__ == "Atordoado" for effect, hooks in manager.active_status_effects[target.char_id])
+    assert any("STATUS|" in h and "Atordoado" in h for h in load.history)
+    assert target.current_hp == (target_hp - 5)
+    assert actor.floating_focus == 0
     
-    # Verify GdA was zeroed for damage calculation
-    # Damage = PDA 10 + (MDA 1 * GdA 0) = 10
-    assert target.current_hp == 90 # 100 - 10
+    # 2. Test case: GdA <= 3 does NOT trigger Atordoado
+    manager = create_test_battle_manager() # Clean context
     
-    # Verify die swap happened (ROLL|ATK|10|12|actor)
-    # The history tags are in the action_load. Wait, I should capture it.
+    actor = create_dummy_character(char_id="actor", combat_style=style, attributes=[5,5,5])
+    actor.floating_focus = template.focus_cost
+    target = create_dummy_character(char_id="target", attributes=[5,5,5])
+    target_hp = target.current_hp
     
-    # Cleanup target for next test
-    target.status_effects.clear()
-    target.modifiers.clear()
-    target.current_hp = 100
+    manager.add_character(actor, MagicMock())
+    manager.add_character(target, MagicMock())
     
-    # --- Test Case 2: Hit with GdA <= 3 ---
-    # Atk Roll: 4 (on d12) + Rank 2 = 6
-    # Def Roll: 4 (on d6) + Rank 2 = 6
-    # GdA = 0 -> Hit is only if GdA > target.grd - actor.pre (usually 0)
-    # Let's make it hit but GdA <= 3
-    # Atk Roll: 7 + 2 = 9
-    # Def Roll: 4 + 2 = 6
-    # GdA = 3
-    dice.schedule_result(7) # Atk roll
-    dice.schedule_result(4) # Def roll
+    manager.dice_service.schedule_result(5)
+    manager.dice_service.schedule_result(4)
     
-    action.execute()
-    
-    # Verify Atordoado NOT applied (GdA 3 <= 3)
-    assert not any(isinstance(s, Atordoado) for s in target.status_effects)
-    assert target.current_hp == 90 # Damage still 10
+    actor = manager.get_next_actor()
+    action = AttackAction(template, actor, [target], manager)
+    load = manager.run_action(action)
+
+    assert load.success is True
+    assert not any(effect.__class__.__name__ == "Atordoado" for effect, hooks in manager.active_status_effects[target.char_id])
+    assert not any("STATUS|" in h and "Atordoado" in h for h in load.history)
+    assert target.current_hp == (target_hp - 5)
+    assert actor.floating_focus == 0
 
 def test_swap_atk_def_die_cleanup():
     actor = create_dummy_character()
     actor.base_atk_die = 6
     actor.base_def_die = 12
     
-    dm = DataManager()
-    dm.load_action_templates('data/AttackActions.json')
-    template = dm.get_action_template("GolpeEscudo")
+    manager = create_test_battle_manager()
+    template = manager.get_template("GolpeEscudo")
     
-    context = MagicMock()
-    action = AttackAction(template, actor, [create_dummy_character()], context)
+    action = AttackAction(template, actor, [create_dummy_character()], manager)
     hooks = action.get_hooks()
     
     # Before

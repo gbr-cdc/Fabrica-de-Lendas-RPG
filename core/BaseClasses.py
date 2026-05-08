@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from core.Enums import BattleActionType, BattleState
     from core.Structs import AttackActionTemplate, BattleResult
     from controllers.CharacterController import CharacterController
-    from battle.StatusEffects import StatusEffect
+    from core.Modifiers import EphemeralModifier
 
 
 # --- CLASSES BASE ---
@@ -48,6 +48,7 @@ class IBattleContext(Protocol):
     def emit(self, event_name: str, payload: 'ActionLoad') -> None: ...
     def get_template(self, template_id: str) -> 'AttackActionTemplate': ...
     def delay_character(self, character: 'Character', extra_ticks: int) -> None: ...
+    def set_tick(self, character: 'Character', tick: int) -> None: ...
     def subscribe(self, event_name: str, callback: Callable) -> None: ...
     def unsubscribe(self, event_name: str, callback: Callable) -> None: ...
     def get_characters(self) -> List[Character]: ...
@@ -103,3 +104,46 @@ class BattlePassive:
     def get_hooks(self) -> Dict[str, Callable]:
         """Deve ser implementado pelas classes filhas para criar e inscrever os hooks."""
         raise NotImplementedError
+
+    def apply(self):
+        """Chamado quando a passiva entra em jogo (ex: início da batalha)."""
+        pass
+
+    def remove(self):
+        """Chamado quando a passiva sai de jogo."""
+        pass
+
+class StatusEffect(BattlePassive):
+    """ 
+    Representa um efeito de status aplicado a um personagem, com duração em turnos.
+    Pode ser usado para coisas como Atordoado, Envenenado, etc. 
+    """
+    def __init__(self, name: str, duration: int, target: 'Character', context: 'IBattleContext'):
+        super().__init__(name=name, owner=target, context=context)
+        self.name = name
+        self.duration = duration
+        self.character = target
+        self.context = context
+        self.modifiers: list['EphemeralModifier'] = []
+    
+    def apply(self):
+        """Aplica o efeito. Deve ser sobrescrito por subclasses."""
+        raise NotImplementedError("StatusEffect deve implementar apply()")
+    
+    def remove(self):
+        """Remove o efeito e limpa seus modificadores."""
+        for mod in list(self.modifiers):
+            self._remove_modifier(mod)
+        self.modifiers.clear()
+        self.context.remove_status_effect(self)
+
+    def _add_modifier(self, modifier: 'EphemeralModifier'):
+        """Adiciona um modificador tanto ao efeito quanto ao personagem dono."""
+        self.modifiers.append(modifier)
+        self.owner.add_modifier(modifier)
+
+    def _remove_modifier(self, modifier: 'EphemeralModifier'):
+        """Remove um modificador tanto do efeito quanto do personagem dono."""
+        if modifier in self.modifiers:
+            self.modifiers.remove(modifier)
+        self.owner.remove_modifier(modifier)

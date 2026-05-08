@@ -2,10 +2,12 @@ import pytest
 from battle.BattlePassives import ForçaBruta, Combo, GracaDoDuelista, MãosPesadas
 from core.Events import AttackLoad
 from tests.utils.entity_factory import create_dummy_character, create_dummy_weapon
-from tests.utils.test_context import BattleTestContext
+from tests.utils.test_utils import create_test_battle_manager
 from core.DiceManager import DiceManager
-from core.Enums import WeaponType, BattleActionType
+from core.Enums import WeaponType, BattleActionType, AttackType, BattleActionType
 from unittest.mock import MagicMock, patch
+from battle.BattleActions import AttackAction
+from core.Structs import AttackActionTemplate
 
 def test_forca_bruta():
     char = create_dummy_character()
@@ -21,27 +23,24 @@ def test_forca_bruta():
     assert load.gda == 8
 
 def test_maos_pesadas():
-    char = create_dummy_character()
-    weapon = create_dummy_weapon(weapon_type=WeaponType.GREAT_WEAPON)
-    char.weapon = weapon
-    
-    context = MagicMock()
-    def mock_add_status_effect(effect):
-        effect.apply(context)
-    context.add_status_effect.side_effect = mock_add_status_effect
-    
-    passive = MãosPesadas(char, context)
-    hooks = passive.get_hooks()
-    
+    char = create_dummy_character(equipped=True)
     target = create_dummy_character()
-    load = AttackLoad(character=char, target=target, battle_context=context, 
-                      attack_type=MagicMock(), attack_state=MagicMock(), defense_state=MagicMock(), 
-                      gda=4, damage=0)
-    load.hit = True
+    char.passive_abilities.append("MãosPesadas")
+    manager = create_test_battle_manager()
+    manager.add_character(char, MagicMock())
+    manager.add_character(target, MagicMock())
     
-    hooks["on_gda_modify"](load)
+    manager.dice_service.schedule_result(10)
+    manager.dice_service.schedule_result(1)
+    
+    template = manager.get_template("BasicAttack")
+    
+    actor = manager.get_next_actor()
+    action = AttackAction(template, actor, [target], manager)
+    load = manager.run_action(action)
+    
     # MãosPesadas checks if gda > 3 to apply Atordoado
-    assert any(effect.__class__.__name__ == "Atordoado" for effect in target.status_effects)
+    assert any(effect.__class__.__name__ == "Atordoado" for effect, hooks in manager.active_status_effects[target.char_id])
     assert any("STATUS|" in h and "Atordoado" in h for h in load.history)
 
 def test_graca_do_duelista_acerto():

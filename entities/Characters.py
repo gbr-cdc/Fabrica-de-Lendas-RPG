@@ -7,7 +7,7 @@ from entities.Items import Armor, Weapon
 
 if TYPE_CHECKING:
     from core.Modifiers import StatModifier
-    from battle.StatusEffects import StatusEffect
+    from core.BaseClasses import StatusEffect
 
 class Character:
     """

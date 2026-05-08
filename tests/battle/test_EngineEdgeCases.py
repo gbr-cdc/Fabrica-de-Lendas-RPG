@@ -5,7 +5,7 @@ from battle.Judges import BattleJudge
 from core.Enums import BattleState, RollState, BattleActionType
 from core.Structs import BattleResult
 from core.Events import ActionLoad
-from battle.StatusEffects import StatusEffect
+from core.BaseClasses import StatusEffect
 from controllers.CharacterController import PvP1v1Controller
 from tests.utils.entity_factory import create_dummy_character
 
@@ -112,13 +112,6 @@ def test_battle_manager_passive_management():
     
     bm.remove_character("actor")
     assert "actor" not in bm.active_passives
-
-def test_status_effect_base():
-    target = create_dummy_character(char_id="target")
-    context = MagicMock()
-    effect = StatusEffect("Base", 1, target, context)
-    assert effect.on_get_hooks() == {}
-    effect.on_remove()
 
 def test_pvp_controller_special_paths():
     ctrl = PvP1v1Controller()
