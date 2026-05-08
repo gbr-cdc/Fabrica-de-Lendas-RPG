@@ -136,9 +136,10 @@ def test_character_status_effects(dummy_char):
     
     context = BattleTestContext()
     effect = StatusEffect("TestEffect", 1, dummy_char, context)
+    context.add_status_effect(effect)
     
     assert effect in dummy_char.status_effects
-    effect.remove()
+    context.remove_status_effect(effect)
     assert effect not in dummy_char.status_effects
 
 def test_character_clear_ephemeral_modifiers(dummy_char):

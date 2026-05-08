@@ -14,6 +14,7 @@ class BattleTestContext(IBattleContext):
         self.emitted_events = []
         self.subscriptions = {}
         self.controllers = {}
+        self.active_status_effects = {}
 
     @property
     def subscriber_count(self) -> int:
@@ -67,6 +68,26 @@ class BattleTestContext(IBattleContext):
 
     def get_active_passive(self, char_id: str, name: str):
         return None
+
+    def add_status_effect(self, effect):
+        if effect.character.char_id not in self.active_status_effects:
+            self.active_status_effects[effect.character.char_id] = []
+        hooks = effect.get_hooks()
+        self.active_status_effects[effect.character.char_id].append((effect, hooks))
+        for event_name, callback in hooks.items():
+            self.subscribe(event_name, callback)
+        effect.apply(self)
+
+    def remove_status_effect(self, effect):
+        char_id = effect.character.char_id
+        if char_id in self.active_status_effects:
+            for i, (active_effect, hooks) in enumerate(self.active_status_effects[char_id]):
+                if active_effect == effect:
+                    for event_name, callback in hooks.items():
+                        self.unsubscribe(event_name, callback)
+                    self.active_status_effects[char_id].pop(i)
+                    break
+        effect.remove()
 
     def add_template(self, template: AttackActionTemplate):
         self._templates[template.id] = template

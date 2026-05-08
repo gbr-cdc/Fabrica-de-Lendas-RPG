@@ -24,6 +24,9 @@ def test_golpe_de_escudo_mechanics():
     
     context = MagicMock()
     context.dice_service = dice
+    def mock_add_status_effect(effect):
+        effect.apply(context)
+    context.add_status_effect.side_effect = mock_add_status_effect
     
     # Load template for Golpe de Escudo from data
     dm = DataManager()

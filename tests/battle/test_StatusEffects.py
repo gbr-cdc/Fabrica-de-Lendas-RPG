@@ -15,6 +15,7 @@ def test_atordoado_apply():
     
     # Applying Atordoado should add an EphemeralModifier to BDD with -1
     effect = Atordoado(duration=1, target=target, context=context)
+    context.add_status_effect(effect)
     
     assert any(m.stat_name == "bdd" and m.value == -1 for m in target.modifiers)
     assert effect in target.status_effects
@@ -22,7 +23,6 @@ def test_atordoado_apply():
     # Should delay character by half action cost
     context.delay_character.assert_called_with(target, target.action_cost_base * 0.5)
 
-@pytest.mark.xfail(reason="Engine leak: BattleManager currently lacks a mechanism to unsubscribe StatusEffects when they expire.")
 def test_atordoado_hook_removal():
     target = create_dummy_character(char_id="target_1")
     context = BattleTestContext()
@@ -30,9 +30,7 @@ def test_atordoado_hook_removal():
     baseline_subs = context.subscriber_count
     
     effect = Atordoado(duration=1, target=target, context=context)
-    hooks = effect.get_hooks()
-    for ev, cb in hooks.items():
-        context.subscribe(ev, cb)
+    context.add_status_effect(effect)
         
     assert context.subscriber_count > baseline_subs
     

@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from entities.Characters import Character
     from controllers.CharacterController import CharacterController
     from core.BaseClasses import BattlePassive
+    from battle.StatusEffects import StatusEffect
 
 class BattleManager:
     """
@@ -33,7 +34,8 @@ class BattleManager:
         self.characters: Dict[str, Character] = {}
         self.controllers: Dict[str, CharacterController] = {}
         self.graveyard: Dict[str, Character] = {}
-        self.active_passives = defaultdict(list)
+        self.active_passives: Dict[str, List[tuple[BattlePassive, Dict[str, Callable]]]] = defaultdict(list)
+        self.active_status_effects: Dict[str, List[tuple[StatusEffect, Dict[str, Callable]]]] = defaultdict(list)
 
         self.timeline_slots = set() # (tick, hab, roll) registry to ensure uniqueness
 
@@ -98,6 +100,11 @@ class BattleManager:
             for event_name, callback in hooks.items():
                 self.unsubscribe(event_name, callback)
         self.active_passives.pop(char_id)
+        
+        if char_id in self.active_status_effects:
+            for effect, hooks in list(self.active_status_effects[char_id]):
+                self.remove_status_effect(effect)
+            self.active_status_effects.pop(char_id, None)
     
     def get_characters(self) -> List[Character]:
         characters = []
@@ -117,6 +124,24 @@ class BattleManager:
                 if passive_instance.name == name:
                     return passive_instance
         return None
+
+    def add_status_effect(self, effect: StatusEffect):
+        hooks = effect.get_hooks()
+        self.active_status_effects[effect.character.char_id].append((effect, hooks))
+        for event_name, callback in hooks.items():
+            self.subscribe(event_name, callback)
+        effect.apply(self)
+
+    def remove_status_effect(self, effect: StatusEffect):
+        char_id = effect.character.char_id
+        if char_id in self.active_status_effects:
+            for i, (active_effect, hooks) in enumerate(self.active_status_effects[char_id]):
+                if active_effect == effect:
+                    for event_name, callback in hooks.items():
+                        self.unsubscribe(event_name, callback)
+                    self.active_status_effects[char_id].pop(i)
+                    break
+        effect.remove()
 
     def subscribe(self, event_name: str, callback: Callable):
         """

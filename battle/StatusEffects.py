@@ -20,7 +20,6 @@ class StatusEffect(BattlePassive):
         self.character = target
         self.context = context
         self.modifiers: list['EphemeralModifier'] = []
-        self.apply(context)
 
     def get_hooks(self) -> Dict[str, 'Callable']:
         return self.on_get_hooks()
@@ -63,6 +62,6 @@ class Atordoado(StatusEffect):
             if action_load.character.char_id == self.character.char_id:
                 # Efeito expira e manda a ordem de remoção
                 action_load.add_event("STATUS", self.character.char_id, self.name, 0, "REMOVED")
-                self.remove()
+                self.context.remove_status_effect(self)
         
         return {'on_turn_start': check_stun_end}

@@ -25,11 +25,16 @@ def test_maos_pesadas():
     weapon = create_dummy_weapon(weapon_type=WeaponType.GREAT_WEAPON)
     char.weapon = weapon
     
-    passive = MãosPesadas(char, MagicMock())
+    context = MagicMock()
+    def mock_add_status_effect(effect):
+        effect.apply(context)
+    context.add_status_effect.side_effect = mock_add_status_effect
+    
+    passive = MãosPesadas(char, context)
     hooks = passive.get_hooks()
     
     target = create_dummy_character()
-    load = AttackLoad(character=char, target=target, battle_context=MagicMock(), 
+    load = AttackLoad(character=char, target=target, battle_context=context, 
                       attack_type=MagicMock(), attack_state=MagicMock(), defense_state=MagicMock(), 
                       gda=4, damage=0)
     load.hit = True

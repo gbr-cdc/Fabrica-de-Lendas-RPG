@@ -49,7 +49,8 @@ def _build_apply_status_on_hit_threshold(effect, action: 'AttackAction'):
             if attack_load.gda > threshold:
                 if status_name == "Atordoado":
                     from battle.StatusEffects import Atordoado
-                    Atordoado(duration=duration, target=attack_load.target, context=action.context)
+                    effect = Atordoado(duration=duration, target=attack_load.target, context=action.context)
+                    action.context.add_status_effect(effect)
                     attack_load.add_event("STATUS", attack_load.target.char_id, status_name, duration, "APPLIED")
     return {'on_hit_check': apply_status_hook}
 

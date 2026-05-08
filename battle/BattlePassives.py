@@ -34,7 +34,8 @@ class MãosPesadas(BattlePassive):
             if attack_load.character.char_id == self.owner.char_id:
                 if attack_load.hit:
                     if attack_load.gda > 3:
-                        Atordoado(duration=0, target=attack_load.target, context=self.context)
+                        effect = Atordoado(duration=0, target=attack_load.target, context=self.context)
+                        self.context.add_status_effect(effect)
                         attack_load.add_event("STATUS", attack_load.target.char_id, "Atordoado", 0, "APPLIED")
         return {'on_gda_modify': effect_hook}
 
@@ -195,7 +196,8 @@ class Combo(BattlePassive):
 
             elif self.stage > 1:
                 if attack_load.hit:
-                    Atordoado(0, attack_load.target, attack_load.battle_context)
+                    effect = Atordoado(0, attack_load.target, attack_load.battle_context)
+                    attack_load.battle_context.add_status_effect(effect)
                     attack_load.add_event("STATUS", attack_load.target.char_id, "Atordoado", 0, "APPLIED")
                     attack_load.add_event("COMBO", self.owner.char_id, self.stage, "FINAL")
         
