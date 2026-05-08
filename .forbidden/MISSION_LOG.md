@@ -2,6 +2,27 @@
 
 ## ACTIVE MISSIONS [MISSION.ACTIVE]
 
+## MISSION: Implement Golpe de Escudo [MISSION.ACTIVE.GOLPE_ESCUDO]
+**Summary**: Implement "Golpe de Escudo" ability using the new `AttackAction` hook registry.
+**Rule References**: [ARCH.RULES.BATTLE.EPHEMERAL_HOOKS], [ARCH.RULES.BATTLE.PAYLOAD]
+**Definition of Done**: "Golpe de Escudo" correctly uses `def_die`, sets GdA to 0 for damage, and applies `Atordoado` if GdA > 3.
+**Plan**: [defensor_abilities.md](file:///home/alice/Repositorios/RPG/docs/plans/defensor_abilities.md)
+**Steps**:
+- [BLUE] Implement `swap_atk_def_die`, `set_gda_zero_on_dmg`, and `apply_status_on_hit_threshold` hook builders in the registry. | Files: battle/BattleActions.py
+- [RED] Create a test case for "Golpe de Escudo" verifying die swap, GdA modification, and status application. | Files: tests/battle/test_BattleActions.py
+- [BLUE] Add "Golpe de Escudo" to the `registry` and ensure it can be instantiated with its specific effects. | Files: battle/BattleActions.py
+
+## MISSION: Implement Bloquear [MISSION.ACTIVE.BLOQUEAR]
+**Summary**: Implement "Bloquear" passive for the Defensor style, including a defensive reaction and a counter-bonus mechanism.
+**Rule References**: [ARCH.RULES.CORE.OBSERVER], [ARCH.RULES.BATTLE.PAYLOAD]
+**Definition of Done**: "Bloquear" correctly consumes Focus, modifies GdA, and applies a +1 BDA bonus against attackers when GdA < -3.
+**Plan**: [defensor_abilities.md](file:///home/alice/Repositorios/RPG/docs/plans/defensor_abilities.md)
+**Steps**:
+- [RED] Create test verifying "Bloquear" reaction triggering, focus cost, and GdA modification. | Files: tests/battle/test_BattlePassives.py
+- [GREEN] Implement `Bloquear` class in `BattlePassives.py` with `on_defensive_reaction` hook. | Files: battle/BattlePassives.py
+- [RED] Create test verifying the +1 BDA counter-bonus application against the specific attacker after a successful block (GdA < -3). | Files: tests/battle/test_BattlePassives.py
+- [GREEN] Implement counter-bonus tracking and `on_roll_modify` hook in `Bloquear`. | Files: battle/BattlePassives.py
+
 ## ARCHIVED MISSIONS [MISSION.ARCHIVE]
 
 ### 2026-04-23 00:18: Area Attacks Implementation [PART 2] [MISSION.ARCHIVE.AREA_ATTACKS_IMPLEMENTATION_PART_2]

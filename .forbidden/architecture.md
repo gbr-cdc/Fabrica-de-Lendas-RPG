@@ -172,8 +172,10 @@ Manages the `timeline` (Min-Heap), the `listeners` registry (Event Bus), and the
 #### Battle Actions [ARCH.DOC.battle.BattleActions]
 Implementations of the Command Pattern for combat maneuvers. Certain actions (like `AttackAction`) use hooks to allow their resolution logic to be modified by external reactive components. [ARCH.RULES.CORE.COMMAND]
 
+- EFFECT_HOOK_BUILDERS [ARCH.DOC.battle.BattleActions.GLOBAL:EFFECT_HOOK_BUILDERS]: Extensible registry of builders for action-specific effects. Maps effect IDs to functions that return hook dictionaries.'
+
 ##### AttackAction [ARCH.DOC.battle.BattleActions.CLASS:AttackAction]
-Generic data-driven offensive resolution. Implements a multi-phase flow (Roll -> Hit Check -> GdA -> Damage -> Application). It triggers `emit()` at each phase, allowing hook functions to intercept and modify the `AttackLoad` payload (e.g., modifying damage or adding status triggers). It uses [ARCH.RULES.BATTLE.EPHEMERAL_HOOKS] to manage these temporary resolution modifiers. Registers structured tags for every phase. Supports `AttackType.AREA` with a Master Roll. [ARCH.RULES.BATTLE.TARGETING], [ARCH.RULES.BATTLE.AREA_ATTACK]
+Generic data-driven offensive resolution. Implements a multi-phase flow (Roll -> Hit Check -> GdA -> Damage -> Application). It triggers `emit()` at each phase, allowing hook functions to intercept and modify the `AttackLoad` payload (e.g., modifying damage or adding status triggers). It uses `EFFECT_HOOK_BUILDERS` to resolve dynamic hooks from template effects, following [ARCH.RULES.BATTLE.EPHEMERAL_HOOKS]. Registers structured tags for every phase. Supports `AttackType.AREA` with a Master Roll. [ARCH.RULES.BATTLE.TARGETING], [ARCH.RULES.BATTLE.AREA_ATTACK]
 
 ##### GenerateManaAction [ARCH.DOC.battle.BattleActions.CLASS:GenerateManaAction]
 A Move Action that manifest mana from the daily pool (`MANA_T`) into the floating pool (`MANA_F`).
