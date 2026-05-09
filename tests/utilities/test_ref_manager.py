@@ -109,6 +109,20 @@ def test_resolve_tag_multi():
     assert "## Header Section [TESTE.HEADER]" in result
     assert "## Multi Dependency [TESTE.MULTI]" in result
 
+def test_resolve_tag_restriction():
+    # Setup: add a section with a dependency NOT on the second line
+    with open(TEST_FILE, 'a', encoding='utf-8') as f:
+        f.write("\n\n## Restricted Section [TESTE.RESTRICTED]\n")
+        f.write("Some content first.\n")
+        f.write("[DEPENDS: TESTE.BASIC]\n")
+        f.write("More content.\n")
+    
+    result = ref_manager.resolve_tag("[TESTE.RESTRICTED]")
+    # Should NOT contain TESTE.BASIC content
+    assert "## Basic Section [TESTE.BASIC]" not in result
+    assert "Some content first." in result
+    assert "[DEPENDS: TESTE.BASIC]" in result
+
 def test_resolve_tag_session():
     # [TESTE.SESSION_PARENT] contains [TESTE.INNER_1] and [TESTE.INNER_2]
     resolved = set()

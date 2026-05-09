@@ -12,7 +12,7 @@ class ActionLoad:
     """Objeto base para trafegar dados no Event Bus e retornar resultados para a View."""
     character: 'Character'
     history: List[str] = field(default_factory=list)
-    success: bool = True  # Por padrão, assumimos que a ação vai dar certo
+    success: bool = True
 
     def add_event(self, tag: str, *params: any):
         """Standardizes event insertion into history."""

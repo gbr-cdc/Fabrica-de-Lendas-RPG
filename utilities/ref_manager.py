@@ -314,7 +314,13 @@ def resolve_tag(tag, resolved_tags=None, parent_file=None):
                             resolved_tags.add(f"{ipath}:{itag}")
 
     # Look for dependency lines: [DEPENDS: tag1, tag2]
-    dep_match = re.search(r'\[DEPENDS:\s*([^\]]+)\]', content)
+    # Restriction: Only check the line immediately following the header
+    dep_match = None
+    if content.startswith('#'):
+        lines_in_content = content.splitlines()
+        if len(lines_in_content) > 1:
+            second_line = lines_in_content[1].strip()
+            dep_match = re.search(r'\[DEPENDS:\s*([^\]]+)\]', second_line)
 
     content = content.strip()
     if dep_match:
