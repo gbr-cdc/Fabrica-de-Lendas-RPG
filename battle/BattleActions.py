@@ -7,11 +7,26 @@ from core.Enums import RollState, BattleActionType, AttackType
 from core.CharacterSystem import CharacterSystem
 from core.Modifiers import EphemeralModifier
 
+"""
+This module defines the various battle actions available to characters during combat.
+It follows the Command Pattern [ARCH.RULES.CORE.COMMAND], where each action is an object
+encapsulating the logic needed to validate and execute a specific game behavior.
+Actions interact with the battle engine via the IBattleContext and use the EventBus
+to allow for reactive modifications [ARCH.RULES.CORE.OBSERVER].
+"""
+
+
 if TYPE_CHECKING:
     from entities.Characters import Character
     from core.Events import AttackLoad
 
+# --- Hook Builders [ARCH.RULES.BATTLE.ATTACK_DATA] ---
+# These functions create ephemeral hooks that modify the AttackAction resolution flow.
+# They are mapped in EFFECT_HOOK_BUILDERS and triggered by AttackAction.get_hooks().
+
 def _build_add_gda(effect, action: 'AttackAction'):
+    """Increases the Hit Grade (GdA) by a fixed amount during damage calculation."""
+
     amount = effect.parameters.get("amount", 0)
     def add_gda_hook(attack_load: 'AttackLoad'):
         if attack_load.character.char_id == action.actor.char_id:
@@ -20,6 +35,11 @@ def _build_add_gda(effect, action: 'AttackAction'):
     return {'on_damage_calculation': add_gda_hook}
 
 def _build_swap_atk_def_die(effect, action: 'AttackAction'):
+    """
+    Temporarily swaps the character's attack die with their defense die.
+    Registers an EphemeralModifier [ARCH.RULES.CORE.MODIFIER] and cleans it up at the end of the attack.
+    """
+
     def swap_die_hook(attack_load: 'AttackLoad'):
         if attack_load.character.char_id == action.actor.char_id:
             diff = action.actor.def_die - action.actor.atk_die
@@ -33,6 +53,8 @@ def _build_swap_atk_def_die(effect, action: 'AttackAction'):
     return {'on_roll_modify': swap_die_hook, 'on_attack_end': cleanup_hook}
 
 def _build_set_gda_zero_on_dmg(effect, action: 'AttackAction'):
+    """Forces GdA to 0 during damage calculation, usually for non-damaging utility hits."""
+
     def set_gda_zero_hook(attack_load: 'AttackLoad'):
         if attack_load.character.char_id == action.actor.char_id:
             attack_load.gda = 0
@@ -40,6 +62,11 @@ def _build_set_gda_zero_on_dmg(effect, action: 'AttackAction'):
     return {'on_damage_calculation': set_gda_zero_hook}
 
 def _build_apply_status_on_hit_threshold(effect, action: 'AttackAction'):
+    """
+    Applies a status effect to the target if the hit is successful and GdA exceeds a threshold.
+    Validates hit success and GdA before adding the status to the battle context.
+    """
+
     status_name = effect.parameters.get("status")
     threshold = effect.parameters.get("threshold", 0)
     duration = effect.parameters.get("duration", 1)
@@ -54,7 +81,9 @@ def _build_apply_status_on_hit_threshold(effect, action: 'AttackAction'):
                     attack_load.add_event("STATUS", attack_load.target.char_id, status_name, duration, "APPLIED")
     return {'on_hit_check': apply_status_hook}
 
+# Registry mapping template effect IDs to their corresponding hook builder functions.
 EFFECT_HOOK_BUILDERS: Dict[str, Callable] = {
+
     "add_gda": _build_add_gda,
     "swap_atk_def_die": _build_swap_atk_def_die,
     "set_gda_zero_on_dmg": _build_set_gda_zero_on_dmg,
@@ -63,14 +92,23 @@ EFFECT_HOOK_BUILDERS: Dict[str, Callable] = {
 
 class AttackAction(BattleAction):
     """
-    Uma ação genérica guiada por dados. Lê seus efeitos do AttackActionTemplate.
+    A generic, data-driven attack action [ARCH.RULES.CORE.DATA].
+    Logic is driven by an AttackActionTemplate, which defines focus costs, attack types,
+    and special effects that are injected into the attack resolution via hooks.
+    Supports Area of Effect (AoE) logic [ARCH.RULES.BATTLE.AREA_ATTACK].
     """
     def __init__(self, template: 'AttackActionTemplate', actor: 'Character', targets: List['Character'], context: 'IBattleContext', attack_type: 'AttackType' = None):
+
         super().__init__(name=template.nome, actor=actor, targets=targets, context=context, action_type=template.action_type)
         self.template = template
         self.attack_type = attack_type if attack_type is not None else template.attack_type
 
     def can_execute(self) -> tuple[bool, str]:
+        """
+        Validates if the action can be performed.
+        Checks for target existence/vitality and focus resource availability.
+        """
+
         if not self.targets:
             return False, "Nenhum alvo selecionado!"
         
@@ -82,6 +120,11 @@ class AttackAction(BattleAction):
         return True, ""
 
     def get_hooks(self) -> Dict[str, Callable]:
+        """
+        Retrieves ephemeral hooks defined in the action template [ARCH.RULES.BATTLE.ATTACK_DATA].
+        These hooks will be registered for the duration of this specific action execution.
+        """
+
         hooks = {}
         for effect in self.template.effects:
             builder = EFFECT_HOOK_BUILDERS.get(effect.id)
@@ -90,19 +133,26 @@ class AttackAction(BattleAction):
         return hooks
 
     def execute(self) -> ActionLoad:
-        CharacterSystem.spend_focus(self.actor, self.template.focus_cost)
+        """
+        Resolves the attack according to the Combat Flow [GDD.COMBAT.FLOW].
+        Handles Master Rolls for Area attacks and individual resolution for each target.
+        """
+        # --- Resource Consumption ---
 
         action_load = ActionLoad(character=self.actor)
         action_load.add_event("EXEC", self.template.nome, self.actor.char_id)
         if self.template.focus_cost > 0:
+            CharacterSystem.spend_focus(self.actor, self.template.focus_cost)
             action_load.add_event("FOCUS", self.actor.char_id, -self.template.focus_cost, self.actor.floating_focus)
 
         master_attack_load = None
         master_roll_result = None
         mod_atk_roll = 0
 
+        # --- Phase 1: Attack Roll ---
         if self.attack_type == AttackType.AREA:
-            # Master Roll Phase
+            # AoE Logic [ARCH.RULES.BATTLE.AREA_ATTACK]: One roll for all targets.
+            # Only target-agnostic passives influence this roll.
             master_attack_load = AttackLoad(
                 character=self.actor,
                 target=None,
@@ -120,7 +170,9 @@ class AttackAction(BattleAction):
             mod_atk_roll = master_roll_result.final_roll + self.actor.rank + self.actor.bda
             action_load.history.extend(master_attack_load.history)
 
+        # --- Phase 2: Target Resolution ---
         for target in self.targets:
+
             if not CharacterSystem.is_alive(target):
                 continue
 
@@ -136,20 +188,26 @@ class AttackAction(BattleAction):
             )
 
             if self.attack_type == AttackType.AREA:
-                # Inherit state from master roll but for this specific target
+                # Area Resolution: Use the Master Roll result for every target.
                 attack_load.attack_state = master_attack_load.attack_state
                 current_mod_atk = mod_atk_roll
             else:
+                # Single Target Resolution: Roll for this specific attack instance.
                 self.context.emit('on_roll_modify', attack_load)
                 roll_result = self.context.dice_service.roll_dice(self.actor.atk_die, attack_load.attack_state)
                 current_mod_atk = roll_result.final_roll + self.actor.rank + self.actor.bda
                 attack_load.add_event("ROLL", "ATK", roll_result.final_roll, self.actor.atk_die, self.actor.char_id)
             
+            # --- Phase 3: Defense Roll ---
+
+            
             roll_result = self.context.dice_service.roll_dice(target.def_die, attack_load.defense_state)
             mod_def_roll = roll_result.final_roll + target.rank + target.bdd
             attack_load.add_event("ROLL", "DEF", roll_result.final_roll, target.def_die, target.char_id)
             
+            # --- Phase 4: Hit Calculation [GDD.COMBAT.FLOW.HIT] ---
             attack_load.gda = current_mod_atk - mod_def_roll
+
             
             self.context.emit('on_defense_reaction', attack_load)
             
@@ -172,8 +230,10 @@ class AttackAction(BattleAction):
                 attack_load.add_event("DMG", target.char_id, attack_load.damage, self.attack_type.value)
                 attack_load.add_event("HP", target.char_id, -attack_load.damage, target.current_hp)
             else:
+                # Attack missed: GdA + Pre - Grd <= 0
                 attack_load.add_event("MISS", target.char_id)
                 self.context.emit('on_hit_check', attack_load)
+
 
             self.context.emit('on_attack_end', attack_load)
             action_load.history.extend(attack_load.history)
@@ -186,7 +246,12 @@ class AttackAction(BattleAction):
         return action_load
 
 class GenerateManaAction(BattleAction):
+    """
+    Standard Move Action to convert daily Mana into Floating MP.
+    Limited by the character's manifest limit (MEN * rules.limite_mana).
+    """
     def __init__(self, actor: 'Character', targets: List['Character'], context: 'IBattleContext', action_type: 'BattleActionType' = BattleActionType.MOVE_ACTION):
+
         super().__init__(name="Gerar Mana", actor=actor, targets=targets, context=context, action_type=action_type)
 
     def can_execute(self) -> tuple[bool, str]:
@@ -212,7 +277,13 @@ class GenerateManaAction(BattleAction):
         return load
 
 class GenerateFocusAction(BattleAction):
+    """
+    Standard Move Action to generate Focus for the character.
+    Limited by the character's focus limit (MEN * rules.limite_foco).
+    Used to pay for Skills/Attacks.
+    """
     def __init__(self, actor: 'Character', targets: List['Character'], context: 'IBattleContext', action_type: 'BattleActionType' = BattleActionType.MOVE_ACTION):
+
         super().__init__(name="Gerar Foco", actor=actor, targets=targets, context=context, action_type=action_type)
 
     def can_execute(self) -> tuple[bool, str]:
@@ -233,7 +304,12 @@ class GenerateFocusAction(BattleAction):
         return load
 
 class TogglePosturaDefensiva(BattleAction):
+    """
+    A Free Action that toggles the state of the 'Postura Defensiva' passive.
+    It retrieves the active passive from the context and calls its toggle method.
+    """
     def __init__(self, actor: 'Character', targets: List['Character'], context: 'IBattleContext'):
+
         super().__init__(name="Alternar Postura Defensiva", actor=actor, targets=targets, context=context, action_type=BattleActionType.FREE_ACTION)
 
     def execute(self) -> ActionLoad:
