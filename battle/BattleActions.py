@@ -93,7 +93,7 @@ class AttackAction(BattleAction):
         CharacterSystem.spend_focus(self.actor, self.template.focus_cost)
 
         action_load = ActionLoad(character=self.actor)
-        action_load.add_event("EXEC", self.template.id, self.actor.char_id)
+        action_load.add_event("EXEC", self.template.nome, self.actor.char_id)
         if self.template.focus_cost > 0:
             action_load.add_event("FOCUS", self.actor.char_id, -self.template.focus_cost, self.actor.floating_focus)
 

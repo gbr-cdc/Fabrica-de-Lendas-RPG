@@ -82,7 +82,7 @@ def test_attack_action_execution_flow():
     atk_die = actor.atk_die
     def_die = target.def_die
     history_str = "|".join(action_load.history)
-    assert "EXEC|SkillN1|actor" in history_str
+    assert "EXEC|Habilidade Nível 1|actor" in history_str
     assert f"ROLL|ATK|10|{atk_die}|actor" in history_str
     assert f"ROLL|DEF|5|{def_die}|target" in history_str 
     assert "HIT|target" in history_str
@@ -189,7 +189,7 @@ def test_attack_action_uses_registry():
     try:
         actor = create_dummy_character()
         template = AttackActionTemplate(
-            id="T", nome="T", action_type=BattleActionType.STANDARD_ACTION, 
+            nome="T", action_type=BattleActionType.STANDARD_ACTION, 
             attack_type=AttackType.BASIC_ATTACK, focus_cost=0, 
             effects=[AttackEffects("dummy_effect", {})]
         )

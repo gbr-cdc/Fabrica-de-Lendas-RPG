@@ -12,8 +12,8 @@ class GameRules:
     hp_table: Dict[str, int]
     mp_table: Dict[str, int]
     action_cost_table: Dict[str, int]
-    limite_foco: int  # Limite máximo de foco = limite_foco * MEN
-    limite_mana: int  # Limite máximo de mana = limite_mana * MEN
+    limite_foco: int
+    limite_mana: int
 
 @dataclass
 class RollResult:
@@ -48,7 +48,6 @@ class AttackEffects:
 
 @dataclass
 class AttackActionTemplate:
-    id: str
     nome: str
     action_type: type['BattleActionType']
     attack_type: type['AttackType']

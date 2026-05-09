@@ -30,7 +30,7 @@ def test_pvp1v1_controller_chooses_basic_attack_when_no_focus():
     action = ctrl.choose_action(actor, context)
     
     assert isinstance(action, AttackAction)
-    assert action.template.id == "BasicAttack"
+    assert action.template.nome == "Ataque Básico"
     assert action.targets == [target]
 
 def test_pvp1v1_controller_chooses_skill_when_has_focus():
@@ -45,7 +45,7 @@ def test_pvp1v1_controller_chooses_skill_when_has_focus():
     action = ctrl.choose_action(actor, context)
     
     assert isinstance(action, AttackAction)
-    assert action.template.id == "SkillN1"
+    assert action.template.nome == "Habilidade Nível 1"
     assert action.targets == [target]
 
 def test_pvp1v1_controller_with_action_load_chooses_basic_attack():
@@ -62,7 +62,7 @@ def test_pvp1v1_controller_with_action_load_chooses_basic_attack():
     action = ctrl.choose_action(actor, context, action_load)
     
     assert isinstance(action, AttackAction)
-    assert action.template.id == "BasicAttack"
+    assert action.template.nome == "Ataque Básico"
     assert action.targets == [target]
 
 def test_pvp1v1_controller_reaction_always_true():

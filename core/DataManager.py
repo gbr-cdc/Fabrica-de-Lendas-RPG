@@ -144,7 +144,6 @@ class DataManager:
             effects = [AttackEffects(id=e["id"], parameters=e.get("parameters", {})) for e in effects_data]
 
             templates[action_id] = AttackActionTemplate(
-                id=action_id,
                 nome=template_data["nome"],
                 action_type=action_type,
                 attack_type=attack_type,

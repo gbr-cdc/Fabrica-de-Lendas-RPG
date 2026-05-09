@@ -27,8 +27,8 @@ class AttributeType(Enum):
 
 class StatusEffectType(Enum):
     ATORDOADO = "Atordoado"
-    ENVENENADO = "Envenenado"
-    QUEIMADO = "Queimado"
+    DESEQUILIBRADO = "Desequilibrado"
+    DERRUBADO = "Derrubado"
 
 class AttackType(Enum):
     BASIC_ATTACK = "basic_attack"
