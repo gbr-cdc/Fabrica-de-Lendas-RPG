@@ -118,8 +118,7 @@ def test_combo_passive_logic():
     action_mock = MagicMock()
     action_mock.execute_if_possible.return_value = MagicMock(success=True, history=["EXEC|BasicAttack|owner"])
     
-    from battle.BattlePassives import action_registry
-    with patch.dict(action_registry, {"AttackAction": MagicMock(return_value=action_mock)}):
+    with patch("battle.BattlePassives.AttackAction", return_value=action_mock):
         hook(hit_load)
         
     assert any("COMBO|owner|1" in h for h in hit_load.history)

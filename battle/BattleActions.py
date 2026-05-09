@@ -243,11 +243,3 @@ class TogglePosturaDefensiva(BattleAction):
             msg = passive.toggle()
             return ActionLoad(character=self.actor, history=[msg])
         return ActionLoad(character=self.actor, history=["Falha ao alternar postura: passiva não encontrada."], success=False)
-
-registry = {
-    "AttackAction": AttackAction,
-    "GolpeDeEscudo": AttackAction,
-    "GenerateMana": GenerateManaAction,
-    "GenerateFocus": GenerateFocusAction,
-    "TogglePosturaDefensiva": TogglePosturaDefensiva,
-}

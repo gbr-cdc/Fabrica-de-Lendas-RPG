@@ -8,7 +8,7 @@ from core.CharacterSystem import CharacterSystem
 if TYPE_CHECKING:
     from entities.Characters import Character
 from battle.StatusEffects import Atordoado
-from battle.BattleActions import AttackAction, registry as action_registry
+from battle.BattleActions import AttackAction
 
 class ForçaBruta(BattlePassive):
     def __init__(self, owner: 'Character', context: 'IBattleContext'):
@@ -169,7 +169,7 @@ class Combo(BattlePassive):
                 if attack_load.hit:
                     self.hit = True
 
-                response = action_registry["AttackAction"](basic_attack_template, attack_load.character, [attack_load.target], self.context, attack_type=AttackType.EXTRA_ATTACK).execute_if_possible()
+                response = AttackAction(basic_attack_template, attack_load.character, [attack_load.target], self.context, attack_type=AttackType.EXTRA_ATTACK).execute_if_possible()
 
                 self.stage = 0
                 self.hit = False
@@ -185,7 +185,7 @@ class Combo(BattlePassive):
                     return
                 
                 self.stage += 1
-                response = action_registry["AttackAction"](basic_attack_template, attack_load.character, [attack_load.target], self.context, attack_type=AttackType.EXTRA_ATTACK).execute_if_possible()
+                response = AttackAction(basic_attack_template, attack_load.character, [attack_load.target], self.context, attack_type=AttackType.EXTRA_ATTACK).execute_if_possible()
                 
                 if response.success:
                     attack_load.add_event("COMBO", self.owner.char_id, 2)
