@@ -3,7 +3,6 @@ trigger: always_on
 ---
 
 # Agent Context Configuration [AGENT.GLOBAL]
-
 This document defines the operational rules and skills for AI agents. Adherence to these rules is MANDATORY.
 
 ## Behavioral Constraints [AGENT.BEHAVIOR]
@@ -20,7 +19,12 @@ Agents must use `python3 utilities/ref_manager.py` for all documentation operati
 - **Tag content:** 
     - Line Tag: A tag placed inside a standard line of text (e.g., Timeout rule [TAG_TIME]: Set timeout to 30s). It references and modifies ONLY that specific single line.
     - Section Tag: A tag placed inside a Markdown header (e.g., ### Database Rules [TAG_DB]). It references the header and all content below it, stopping immediately before the next header of equal or higher level.
-- **Fetch a tag:** Get referenced content with the tag. Use: `python3 utilities/ref_manager.py [TAG]`
+- **Fetch a tag:** Get referenced content with the tag. Use: `python3 utilities/ref_manager.py [TAG] [--depth N]`
+    - **Dependency Resolution:** `ref_manager` automatically resolves tags listed in `[DEPENDS: ...]` lines found within the extracted sections.
+    - **Depth Control:** Use `--depth` (or `-D`) to control the recursion level.
+        - `--depth 0`: Returns only the requested tag(s) without resolving any dependencies.
+        - `--depth 1` (Default): Returns the requested tag(s) and their immediate dependencies.
+        - `--depth N`: Recursively resolves dependencies up to N levels deep.
 - **Create a tag:** Add new content to the documentation. Use: `python3 utilities/ref_manager.py --create [FULL_NEW_TAG] 'Content'`
     - **Uniqueness:** The `[FULL_NEW_TAG]` MUST NOT already exist in the target file.
     - **Target Tag:** You MUST pass the full tag you are creating as the argument. NEVER pass a parent tag to `--create` (e.g., do not use `ref_manager --create [A.B]` to create `[A.B.C]`).
@@ -38,25 +42,20 @@ Agents must use `python3 utilities/ref_manager.py` for all documentation operati
     - Section Tag Preservation: When updating a section, your "New Content" MUST start with the original Markdown header containing the tag (e.g., ## Section Name [TAG]). Do not strip the header away.
 - **Delete a tag:** Remove a section or line. Use: `python3 utilities/ref_manager.py --delete [TAG]`
 
-### Efficiency Rules [AGENT.REF_MANAGER.EFFICIENCY]
-To minimize redundant operations and maximize context utility:
-- **Avoid Redundant Fetches:** Do not fetch a tag if you already have its content in your current context.
-- **Batch Requests:** Optimize `ref_manager` usage by determining all necessary tags beforehand. Execute a single call with multiple tags: `python3 utilities/ref_manager.py [TAG1] [TAG2] [TAG3]...`
-
 ### Reference Conventions [AGENT.REF_MANAGER.CONVENTIONS]
 Considering filepath = module_name/FileName.py
 - **Module Documentation:** To access documentation for a specific module, use the pattern: `[ARCH.DOC.module_name]`
     - Example: `[ARCH.DOC.core]`
 - **File Documentation:** To access documentation for a specific file, use the pattern: `[ARCH.DOC.module_name.FileName]`
     - Example: `[ARCH.DOC.core.BaseClasses]`
-- **Class Documentation:** To access documentation for a class, use: `[ARCH.DOC.module_name.FileName.CLASS:ClassName]`
-    - Example: `[ARCH.DOC.core.BaseClasses.CLASS:GameAction]`
-- **Function Documentation:** To access documentation for a standalone function, use: `[ARCH.DOC.module_name.FileName.FUNCTION:function_name]`
-    - Example: `[ARCH.DOC.core.CharacterSystem.FUNCTION:take_damage]`
-- **Method Documentation:** To access documentation for a class method, use: `[ARCH.DOC.module_name.FileName.METHOD:Class.method]`
-    - Example: `[ARCH.DOC.battle.BattleManager.METHOD:BattleManager.emit]`
-## File Access Rules [AGENT.ACCESS_RULES]
+- **Class Documentation:** To access documentation for a class, use: `[ARCH.DOC.module_name.FileName.ClassName]`
+    - Example: `[ARCH.DOC.core.BaseClasses.GameAction]`
+- **Function Documentation:** To access documentation for a standalone function, use: `[ARCH.DOC.module_name.FileName.function_name]`
+    - Example: `[ARCH.DOC.core.CharacterSystem.take_damage]`
+- **Method Documentation:** To access documentation for a class method, use: `[ARCH.DOC.module_name.FileName.ClassName.method_name]`
+    - Example: `[ARCH.DOC.battle.BattleManager.BattleManager.emit]`
 
+## File Access Rules [AGENT.ACCESS_RULES]
 Files listed in [AGENT.ACCESS_RULES.FORBIDDEN_FILES] are NOT regular files. They are managed knowledge resources.
 
 **Direct access is INVALID:**
@@ -64,7 +63,6 @@ Files listed in [AGENT.ACCESS_RULES.FORBIDDEN_FILES] are NOT regular files. They
 - Any direct access will result in corrupted or misleading context, leading to session termination and loss of work.
 
 ### Mandatory Access Protocol [AGENT.ACCESS_RULES.PROTOCOL]
-
 Before accessing ANY file, the agent MUST:
 
 1. Determine if the file belongs to [AGENT.ACCESS_RULES.FORBIDDEN_FILES]
