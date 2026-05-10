@@ -139,8 +139,7 @@ def test_attack_action_execute_miss():
     manager.dice_service.schedule_result(1) # atk
     manager.dice_service.schedule_result(20) # def
     
-    template = manager.get_template("BasicAttack")
-    action = AttackAction(template, actor, [target], manager)
+    action = AttackAction(None, actor, [target], manager)
     
     action_load = manager.run_action(action)
     
@@ -220,8 +219,7 @@ def test_attack_action_multi_target():
     manager.dice_service.schedule_result(10)
     manager.dice_service.schedule_result(5)
     
-    template = manager.get_template("BasicAttack")
-    action = AttackAction(template, actor, [t1, t2], manager)
+    action = AttackAction(None, actor, [t1, t2], manager)
     
     result = manager.run_action(action)
     
@@ -246,8 +244,7 @@ def test_attack_action_one_dead():
     manager.dice_service.schedule_result(10)
     manager.dice_service.schedule_result(5)
     
-    template = manager.get_template("BasicAttack")
-    action = AttackAction(template, actor, [t_dead, t_alive], manager)
+    action = AttackAction(None, actor, [t_dead, t_alive], manager)
     
     result = manager.run_action(action)
     

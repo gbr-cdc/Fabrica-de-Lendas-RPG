@@ -1,11 +1,4 @@
 {
-    "BasicAttack": {
-        "nome": "Ataque Básico",
-        "action_type": "standard_action",
-        "attack_type": "basic_attack",
-        "focus_cost": 0,
-        "effects": []
-    },
     "SkillN1": {
         "nome": "Habilidade Nível 1",
         "action_type": "standard_action",

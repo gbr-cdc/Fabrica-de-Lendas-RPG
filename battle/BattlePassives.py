@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import Callable, Dict, TYPE_CHECKING
 from core.Enums import RollState, AttackType
 from core.Events import AttackLoad, HistoryEmitter
-from core.BaseClasses import IBattleContext, BattlePassive, ActionLoad
+from core.BaseClasses import IPassiveContext, BattlePassive, ActionLoad
 from core.CharacterSystem import CharacterSystem
 
 if TYPE_CHECKING:
@@ -11,7 +11,7 @@ from battle.StatusEffects import Atordoado
 from battle.BattleActions import AttackAction
 
 class ForçaBruta(BattlePassive):
-    def __init__(self, owner: 'Character', context: 'IBattleContext'):
+    def __init__(self, owner: 'Character', context: 'IPassiveContext'):
         super().__init__(name="Força Bruta", owner=owner, context=context)
 
     def get_hooks(self) -> Dict[str, Callable]:
@@ -24,7 +24,7 @@ class ForçaBruta(BattlePassive):
         return {'on_gda_modify': multiply_hook}
 
 class MãosPesadas(BattlePassive):
-    def __init__(self, owner: 'Character', context: 'IBattleContext'):
+    def __init__(self, owner: 'Character', context: 'IPassiveContext'):
         super().__init__(name="Mãos Pesadas", owner=owner, context=context)
 
     def get_hooks(self) -> Dict[str, Callable]:
@@ -40,7 +40,7 @@ class MãosPesadas(BattlePassive):
         return {'on_gda_modify': effect_hook}
 
 class PosturaDefensiva(BattlePassive):
-    def __init__(self, owner: 'Character', context: 'IBattleContext'):
+    def __init__(self, owner: 'Character', context: 'IPassiveContext'):
         super().__init__(name="Postura Defensiva", owner=owner, context=context)
         self.is_active = False
         self._dice_modifiers = []
@@ -117,7 +117,7 @@ class PosturaDefensiva(BattlePassive):
         }
 
 class GracaDoDuelista(BattlePassive):
-    def __init__(self, owner: 'Character', context: 'IBattleContext'):
+    def __init__(self, owner: 'Character', context: 'IPassiveContext'):
         super().__init__(name="Graça do Duelista", owner=owner, context=context)
 
     def get_hooks(self) -> Dict[str, Callable]:
@@ -150,7 +150,7 @@ class GracaDoDuelista(BattlePassive):
         }
 
 class Combo(BattlePassive):
-    def __init__(self, owner: 'Character', context: 'IBattleContext'):
+    def __init__(self, owner: 'Character', context: 'IPassiveContext'):
         super().__init__(name="Combo", owner=owner, context=context)
         self.stage = 0
         self.hit = False
@@ -162,14 +162,12 @@ class Combo(BattlePassive):
             if attack_load.character.char_id != self.owner.char_id:
                 return
 
-            basic_attack_template = self.context.get_template("BasicAttack")
-            
             if self.stage == 0:
                 self.stage += 1
                 if attack_load.hit:
                     self.hit = True
 
-                response = AttackAction(basic_attack_template, attack_load.character, [attack_load.target], self.context, attack_type=AttackType.EXTRA_ATTACK).execute_if_possible()
+                response = AttackAction(None, attack_load.character, [attack_load.target], self.context, attack_type=AttackType.EXTRA_ATTACK).execute_if_possible()
 
                 self.stage = 0
                 self.hit = False
@@ -185,7 +183,7 @@ class Combo(BattlePassive):
                     return
                 
                 self.stage += 1
-                response = AttackAction(basic_attack_template, attack_load.character, [attack_load.target], self.context, attack_type=AttackType.EXTRA_ATTACK).execute_if_possible()
+                response = AttackAction(None, attack_load.character, [attack_load.target], self.context, attack_type=AttackType.EXTRA_ATTACK).execute_if_possible()
                 
                 if response.success:
                     attack_load.add_event("COMBO", self.owner.char_id, 2)
@@ -196,8 +194,8 @@ class Combo(BattlePassive):
 
             elif self.stage > 1:
                 if attack_load.hit:
-                    effect = Atordoado(0, attack_load.target, attack_load.battle_context)
-                    attack_load.battle_context.add_status_effect(effect)
+                    effect = Atordoado(0, attack_load.target, self.context)
+                    self.context.add_status_effect(effect)
                     attack_load.add_event("STATUS", attack_load.target.char_id, "Atordoado", 0, "APPLIED")
                     attack_load.add_event("COMBO", self.owner.char_id, self.stage, "FINAL")
         

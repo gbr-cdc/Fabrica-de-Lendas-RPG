@@ -1,5 +1,5 @@
 from typing import TYPE_CHECKING
-from core.BaseClasses import IBattleContext, IBattleJudge
+from core.BaseClasses import IJudgeContext, IBattleJudge
 from core.Enums import BattleState
 from core.CharacterSystem import CharacterSystem
 
@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from core.Structs import BattleResult
 
 class BattleJudge(IBattleJudge):
-    def rule(self, context: 'IBattleContext', result: 'BattleResult') -> 'BattleState':
+    def rule(self, context: 'IJudgeContext', result: 'BattleResult') -> 'BattleState':
         characters = context.get_characters()
         
         team_1_alive = any(CharacterSystem.is_alive(c) for c in characters if c.team == 1)

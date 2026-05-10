@@ -16,7 +16,6 @@
       "type": "heavy"
     },
     "Abilities": [
-      "BasicAttack",
       "SkillNivelUm",
       "GenerateFocusAction"
     ],
@@ -40,7 +39,6 @@
       "type": "heavy"
     },
     "Abilities": [
-      "BasicAttack",
       "SkillNivelUm",
       "GenerateFocusAction"
     ],
@@ -64,7 +62,6 @@
       "type": "light"
     },
     "Abilities": [
-      "BasicAttack",
       "SkillNivelUm",
       "GenerateFocusAction"
     ],

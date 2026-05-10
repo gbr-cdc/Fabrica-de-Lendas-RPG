@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import Dict, Callable, TYPE_CHECKING, List
-from core.BaseClasses import BattleAction, IBattleContext
+from core.BaseClasses import BattleAction, IActionContext
 from core.Events import ActionLoad, AttackLoad, HistoryEmitter
 from core.Structs import AttackActionTemplate
 from core.Enums import RollState, BattleActionType, AttackType
@@ -97,8 +97,9 @@ class AttackAction(BattleAction):
     and special effects that are injected into the attack resolution via hooks.
     Supports Area of Effect (AoE) logic [ARCH.RULES.BATTLE.AREA_ATTACK].
     """
-    def __init__(self, template: 'AttackActionTemplate', actor: 'Character', targets: List['Character'], context: 'IBattleContext', attack_type: 'AttackType' = None):
-
+    def __init__(self, template: 'AttackActionTemplate' | None, actor: 'Character', targets: List['Character'], context: 'IActionContext', attack_type: 'AttackType' = None):
+        if template is None:
+            template = AttackActionTemplate(nome="Ataque Básico", action_type=BattleActionType.STANDARD_ACTION, attack_type=AttackType.BASIC_ATTACK, focus_cost=0, effects=[])
         super().__init__(name=template.nome, actor=actor, targets=targets, context=context, action_type=template.action_type)
         self.template = template
         self.attack_type = attack_type if attack_type is not None else template.attack_type
@@ -156,7 +157,6 @@ class AttackAction(BattleAction):
             master_attack_load = AttackLoad(
                 character=self.actor,
                 target=None,
-                battle_context=self.context,
                 attack_type=self.attack_type,
                 attack_state=RollState.NEUTRAL,
                 defense_state=RollState.NEUTRAL,
@@ -179,7 +179,6 @@ class AttackAction(BattleAction):
             attack_load = AttackLoad(
                 character=self.actor,
                 target=target,
-                battle_context=self.context,
                 attack_type=self.attack_type,
                 attack_state=RollState.NEUTRAL,
                 defense_state=RollState.NEUTRAL,
@@ -250,7 +249,7 @@ class GenerateManaAction(BattleAction):
     Standard Move Action to convert daily Mana into Floating MP.
     Limited by the character's manifest limit (MEN * rules.limite_mana).
     """
-    def __init__(self, actor: 'Character', targets: List['Character'], context: 'IBattleContext', action_type: 'BattleActionType' = BattleActionType.MOVE_ACTION):
+    def __init__(self, actor: 'Character', targets: List['Character'], context: 'IActionContext', action_type: 'BattleActionType' = BattleActionType.MOVE_ACTION):
 
         super().__init__(name="Gerar Mana", actor=actor, targets=targets, context=context, action_type=action_type)
 
@@ -282,7 +281,7 @@ class GenerateFocusAction(BattleAction):
     Limited by the character's focus limit (MEN * rules.limite_foco).
     Used to pay for Skills/Attacks.
     """
-    def __init__(self, actor: 'Character', targets: List['Character'], context: 'IBattleContext', action_type: 'BattleActionType' = BattleActionType.MOVE_ACTION):
+    def __init__(self, actor: 'Character', targets: List['Character'], context: 'IActionContext', action_type: 'BattleActionType' = BattleActionType.MOVE_ACTION):
 
         super().__init__(name="Gerar Foco", actor=actor, targets=targets, context=context, action_type=action_type)
 
@@ -308,7 +307,7 @@ class TogglePosturaDefensiva(BattleAction):
     A Free Action that toggles the state of the 'Postura Defensiva' passive.
     It retrieves the active passive from the context and calls its toggle method.
     """
-    def __init__(self, actor: 'Character', targets: List['Character'], context: 'IBattleContext'):
+    def __init__(self, actor: 'Character', targets: List['Character'], context: 'IActionContext'):
 
         super().__init__(name="Alternar Postura Defensiva", actor=actor, targets=targets, context=context, action_type=BattleActionType.FREE_ACTION)
 

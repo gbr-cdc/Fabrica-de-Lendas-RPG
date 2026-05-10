@@ -14,7 +14,7 @@ def test_forca_bruta():
     passive = ForçaBruta(char, MagicMock())
     hooks = passive.get_hooks()
     
-    load = AttackLoad(character=char, target=create_dummy_character(), battle_context=MagicMock(), 
+    load = AttackLoad(character=char, target=create_dummy_character(), 
                       attack_type=MagicMock(), attack_state=MagicMock(), defense_state=MagicMock(), 
                       gda=4, damage=0)
     
@@ -33,10 +33,8 @@ def test_maos_pesadas():
     manager.dice_service.schedule_result(10)
     manager.dice_service.schedule_result(1)
     
-    template = manager.get_template("BasicAttack")
-    
     actor = manager.get_next_actor()
-    action = AttackAction(template, actor, [target], manager)
+    action = AttackAction(None, actor, [target], manager)
     load = manager.run_action(action)
     
     # MãosPesadas checks if gda > 3 to apply Atordoado
@@ -54,7 +52,7 @@ def test_graca_do_duelista_acerto():
     passive = GracaDoDuelista(char, context)
     hooks = passive.get_hooks()
     
-    load = AttackLoad(character=char, target=create_dummy_character(), battle_context=context, 
+    load = AttackLoad(character=char, target=create_dummy_character(), 
                       attack_type=MagicMock(), attack_state=MagicMock(), defense_state=MagicMock(), 
                       gda=2, damage=0)
     
@@ -80,7 +78,7 @@ def test_graca_do_duelista_reacao():
     
     attacker = create_dummy_character(attributes=[10, 10, 10]) # Rank 2. PRE = 2.
     
-    load = AttackLoad(character=attacker, target=char, battle_context=context, 
+    load = AttackLoad(character=attacker, target=char, 
                       attack_type=MagicMock(), attack_state=MagicMock(), defense_state=MagicMock(), 
                       gda=5, damage=0)
                       
@@ -105,12 +103,12 @@ def test_combo_passive_logic():
     
     # 1. Trigger non-owner attack
     other_char = create_dummy_character(char_id="other")
-    other_load = AttackLoad(character=other_char, target=create_dummy_character(), battle_context=MagicMock(), attack_type=MagicMock(), attack_state=MagicMock(), defense_state=MagicMock())
+    other_load = AttackLoad(character=other_char, target=create_dummy_character(), attack_type=MagicMock(), attack_state=MagicMock(), defense_state=MagicMock())
     hook(other_load)
     assert combo.stage == 0
     
     # 2. Stage 0 -> Stage 1 (hit)
-    hit_load = AttackLoad(character=owner, target=create_dummy_character(), battle_context=MagicMock(), attack_type=MagicMock(), attack_state=MagicMock(), defense_state=MagicMock())
+    hit_load = AttackLoad(character=owner, target=create_dummy_character(), attack_type=MagicMock(), attack_state=MagicMock(), defense_state=MagicMock())
     hit_load.hit = True
     hit_load.history = []
     
@@ -126,7 +124,7 @@ def test_combo_passive_logic():
     # 3. Trigger Stage 1 fail
     combo.stage = 1
     combo.hit = True
-    miss_load = AttackLoad(character=owner, target=create_dummy_character(), battle_context=MagicMock(), attack_type=MagicMock(), attack_state=MagicMock(), defense_state=MagicMock())
+    miss_load = AttackLoad(character=owner, target=create_dummy_character(), attack_type=MagicMock(), attack_state=MagicMock(), defense_state=MagicMock())
     miss_load.hit = False 
     hook(miss_load)
     assert combo.stage == 0

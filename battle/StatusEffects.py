@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Callable, Dict, TYPE_CHECKING
 from core.Events import ActionLoad, HistoryEmitter
-from core.BaseClasses import IBattleContext, BattlePassive, StatusEffect
+from core.BaseClasses import IPassiveContext, BattlePassive, StatusEffect
 from core.Modifiers import EphemeralModifier
 
 if TYPE_CHECKING:
@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from battle.BattleManager import BattleManager
 
 class Atordoado(StatusEffect):
-    def __init__(self, duration: int, target: 'Character', context: 'IBattleContext'):
+    def __init__(self, duration: int, target: 'Character', context: 'IPassiveContext'):
         super().__init__(name="Atordoado", duration=duration, target=target, context=context)
 
     def apply(self):

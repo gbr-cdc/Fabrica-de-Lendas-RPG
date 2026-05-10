@@ -44,7 +44,7 @@ def test_postura_defensiva_hit_tracking():
     baseline = sum(len(subs) for subs in manager.listeners.values())
     
     # 1. Hit target
-    load = AttackLoad(character=char, target=target, battle_context=manager, 
+    load = AttackLoad(character=char, target=target, 
                       attack_type=AttackType.BASIC_ATTACK, attack_state=RollState.NEUTRAL, defense_state=RollState.NEUTRAL, 
                       gda=5, damage=0)
     load.hit = True
@@ -54,7 +54,7 @@ def test_postura_defensiva_hit_tracking():
     assert "POSTURA|owner|OBSERVE|target" in load.history[0]
     
     # 2. Tracked target attacks owner
-    atk_load = AttackLoad(character=target, target=char, battle_context=manager, 
+    atk_load = AttackLoad(character=target, target=char, 
                           attack_type=AttackType.BASIC_ATTACK, attack_state=RollState.NEUTRAL, defense_state=RollState.NEUTRAL, 
                           gda=0, damage=0)
     manager.emit("on_roll_modify", atk_load)
@@ -83,7 +83,7 @@ def test_postura_defensiva_cleanup_success():
     baseline = sum(len(subs) for subs in manager.listeners.values())
     
     # Target attack ends
-    atk_load = AttackLoad(character=target, target=char, battle_context=manager, 
+    atk_load = AttackLoad(character=target, target=char, 
                           attack_type=AttackType.BASIC_ATTACK, attack_state=RollState.NEUTRAL, defense_state=RollState.NEUTRAL, 
                           gda=5, damage=0)
     manager.emit("on_attack_end", atk_load)
@@ -132,13 +132,13 @@ def test_postura_defensiva_multi_tracking():
     baseline = sum(len(subs) for subs in manager.listeners.values())
     
     # Hit T1
-    load1 = AttackLoad(character=char, target=t1, battle_context=manager, 
+    load1 = AttackLoad(character=char, target=t1, 
                        attack_type=AttackType.BASIC_ATTACK, attack_state=RollState.NEUTRAL, defense_state=RollState.NEUTRAL, 
                        hit=True)
     manager.emit("on_gda_modify", load1)
     
     # Hit T2
-    load2 = AttackLoad(character=char, target=t2, battle_context=manager, 
+    load2 = AttackLoad(character=char, target=t2, 
                        attack_type=AttackType.BASIC_ATTACK, attack_state=RollState.NEUTRAL, defense_state=RollState.NEUTRAL, 
                        hit=True)
     manager.emit("on_gda_modify", load2)
@@ -185,7 +185,6 @@ def test_postura_defensiva_on_roll_modify_no_target():
     load = AttackLoad(
         character=attacker,
         target=None,
-        battle_context=manager,
         attack_type=AttackType.AREA,
         attack_state=RollState.NEUTRAL,
         defense_state=RollState.NEUTRAL
