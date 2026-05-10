@@ -39,7 +39,7 @@ def find_tag_range(tag, lines):
             in_code_block = not in_code_block
             continue
             
-        if not in_code_block and search_tag in line and 'DEPENDS:' not in clean_line:
+        if not in_code_block and f"[{search_tag}]" in line and not clean_line.strip().startswith('[DEPENDS:'):
             if clean_line.startswith('#'):
                 found_idx = i
                 break
@@ -53,7 +53,7 @@ def find_tag_range(tag, lines):
                 in_code_block = not in_code_block
                 continue
                 
-            if not in_code_block and search_tag in line and 'DEPENDS:' not in clean_line:
+            if not in_code_block and f"[{search_tag}]" in line and not clean_line.strip().startswith('[DEPENDS:'):
                 found_idx = i
                 break
 
@@ -265,7 +265,7 @@ def delete_section(tag, file_path):
     
     return True, f"Successfully deleted tag [{tag}] from {file_path}."
 
-def resolve_tag(tag, resolved_tags=None, parent_file=None):
+def resolve_tag(tag, resolved_tags=None, parent_file=None, current_depth=0, max_depth=1):
     """
     Recursively resolves a tag and all its [DEPENDS: ...] references.
     The file path is automatically determined by the tag's prefix.
@@ -323,12 +323,12 @@ def resolve_tag(tag, resolved_tags=None, parent_file=None):
             dep_match = re.search(r'\[DEPENDS:\s*([^\]]+)\]', second_line)
 
     content = content.strip()
-    if dep_match:
+    if dep_match and current_depth < max_depth:
         deps = [d.strip() for d in dep_match.group(1).split(',')]
         dep_contents = []
         for dep in deps:
             # Recursively resolve each dependency
-            dep_content = resolve_tag(dep, resolved_tags, parent_file=file_path)
+            dep_content = resolve_tag(dep, resolved_tags, parent_file=file_path, current_depth=current_depth + 1, max_depth=max_depth)
             # If a dependency fails, fail fast and inform which tag triggered the failure
             if dep_content.startswith("Error:"):
                 return f"Error: Failed to resolve dependency '{dep}' for tag [{norm_tag}]. {dep_content}"
@@ -355,10 +355,12 @@ if __name__ == "__main__":
     
     if len(sys.argv) < 2:
         print("Usage:")
-        print("  Extraction: python ref_manager.py [TAG1] [TAG2] ...")
+        print("  Extraction: python ref_manager.py [TAG1] [TAG2] ... [--depth N]")
         print("  Update:     python ref_manager.py --update [TAG] \"New Content\" [--from-file path]")
         print("  Creation:   python ref_manager.py --create [TAG_TO_FIND_FILE] \"New Content\"")
         print("  Deletion:   python ref_manager.py --delete [TAG]")
+        print("  Options:")
+        print("    --depth, -D N   Set maximum dependency resolution depth (default: 1)")
         sys.exit(1)
     
     # Handle Update/Creation/Deletion Modes
@@ -420,6 +422,23 @@ if __name__ == "__main__":
             sys.exit(1)
 
     tags = sys.argv[1:]
+    max_depth = 1
+    
+    # Parse depth argument
+    if "--depth" in tags or "-D" in tags:
+        depth_flag = "--depth" if "--depth" in tags else "-D"
+        flag_idx = tags.index(depth_flag)
+        if len(tags) > flag_idx + 1:
+            try:
+                max_depth = int(tags[flag_idx + 1])
+                tags.pop(flag_idx + 1)
+                tags.pop(flag_idx)
+            except ValueError:
+                print(f"Error: Invalid depth value '{tags[flag_idx + 1]}'. Must be an integer.")
+                sys.exit(1)
+        else:
+            print("Error: Missing value for depth argument.")
+            sys.exit(1)
     
     # Validate that all arguments are tags
     for tag in tags:
@@ -429,7 +448,7 @@ if __name__ == "__main__":
 
     # Process and print each requested tag
     for i, tag in enumerate(tags):
-        result = resolve_tag(tag)
+        result = resolve_tag(tag, max_depth=max_depth)
         print(result)
         # Add a visual separator between different top-level tags
         if i < len(tags) - 1:

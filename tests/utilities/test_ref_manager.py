@@ -247,3 +247,35 @@ def test_smart_placement_new_hierarchy():
     # In test.md, [TESTE.CHILD] is the only child of [TESTE.PARENT]
     # It ends with a horizontal rule '---' and some blank lines.
     assert "### Child Section [TESTE.CHILD]\nChild content.\n\n---\n\n### New Child [TESTE.PARENT.NEW_CHILD]" in text
+
+def test_resolve_tag_depth():
+    # DEPTH_A -> DEPTH_B -> DEPTH_C
+    # Depth 0: only A
+    res0 = ref_manager.resolve_tag("[TESTE.DEPTH_A]", max_depth=0)
+    assert "## Depth A [TESTE.DEPTH_A]" in res0
+    assert "## Depth B [TESTE.DEPTH_B]" not in res0
+    
+    # Depth 1: A and B
+    res1 = ref_manager.resolve_tag("[TESTE.DEPTH_A]", max_depth=1)
+    assert "## Depth A [TESTE.DEPTH_A]" in res1
+    assert "## Depth B [TESTE.DEPTH_B]" in res1
+    assert "## Depth C [TESTE.DEPTH_C]" not in res1
+    
+    # Depth 2: A, B and C
+    res2 = ref_manager.resolve_tag("[TESTE.DEPTH_A]", max_depth=2)
+    assert "## Depth A [TESTE.DEPTH_A]" in res2
+    assert "## Depth B [TESTE.DEPTH_B]" in res2
+    assert "## Depth C [TESTE.DEPTH_C]" in res2
+
+def test_find_tag_range_with_depends_in_description():
+    # Setup: add a section where "DEPENDS:" is in the text, but not at the start of a dependency line
+    with open(TEST_FILE, 'a', encoding='utf-8') as f:
+        f.write("\n\n## Description Test [TESTE.DESC]\n")
+        f.write("This description contains the word DEPENDS: but it is not a dependency line.\n")
+    
+    with open(TEST_FILE, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+        
+    start, end, is_header = ref_manager.find_tag_range("[TESTE.DESC]", lines)
+    assert start is not None
+    assert is_header is True

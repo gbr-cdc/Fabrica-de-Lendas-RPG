@@ -4,16 +4,18 @@
 This is a basic section content.
 
 ## Header Section [TESTE.HEADER]
-Content of the header section.
-It has multiple lines.
+Header content.
 
 ## Parent Section [TESTE.PARENT]
-This section contains a child.
+Parent content.
 
 ### Child Section [TESTE.CHILD]
 Child content.
 
 ---
+
+## Unicode Section [TESTE.AÇÃO]
+Conteúdo com acentuação.
 
 ## Dependency Section [TESTE.DEP_A]
 [DEPENDS: TESTE.DEP_B]
@@ -27,23 +29,27 @@ Content B.
 [DEPENDS: TESTE.BASIC, TESTE.HEADER]
 Multi content.
 
-## Unicode Tag [TESTE.AÇÃO]
-Content with unicode tag.
-
-## Session Resolution [TESTE.SESSION_PARENT]
-This is a parent section.
+## Session Parent [TESTE.SESSION_PARENT]
 [TESTE.INNER_1]
-Inner content 1.
 [TESTE.INNER_2]
-Inner content 2.
+Session content.
 
 ## Code Block Test [TESTE.CODE_BLOCK]
-This section contains a code block.
 ```markdown
 ## This should not be a header [TESTE.INSIDE_CODE]
-Content inside code block.
 ```
 Final line of section.
+
+## Depth A [TESTE.DEPTH_A]
+[DEPENDS: TESTE.DEPTH_B]
+Level A.
+
+## Depth B [TESTE.DEPTH_B]
+[DEPENDS: TESTE.DEPTH_C]
+Level B.
+
+## Depth C [TESTE.DEPTH_C]
+Level C.
 
 ## Smart Placement Test [TESTE.SMART_1]
 Content 1.
