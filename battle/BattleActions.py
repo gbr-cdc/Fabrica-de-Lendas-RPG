@@ -190,6 +190,7 @@ class AttackAction(BattleAction):
                 # Area Resolution: Use the Master Roll result for every target.
                 attack_load.attack_state = master_attack_load.attack_state
                 current_mod_atk = mod_atk_roll
+                self.context.emit('on_roll_modify', attack_load)
             else:
                 # Single Target Resolution: Roll for this specific attack instance.
                 self.context.emit('on_roll_modify', attack_load)
@@ -223,6 +224,7 @@ class AttackAction(BattleAction):
                 self.context.emit('on_damage_calculation', attack_load)
                 final_gda = max(0, attack_load.gda)
                 attack_load.damage = attack_load.damage + self.actor.pda + (self.actor.mda * final_gda)
+                attack_load.damage = max(0, attack_load.damage)
                 
                 self.context.emit('on_damage_taken', attack_load)
                 CharacterSystem.take_damage(target, attack_load.damage)
