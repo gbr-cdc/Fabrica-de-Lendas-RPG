@@ -23,17 +23,19 @@
 2. **Propose:** Create/edit `docs/plans/"IE_task_description".md` with an execution plan.
 3. **HALT EXECUTION:** Present the plan to the user and ask for approval. **YOU MUST STOP GENERATING TEXT HERE.** Do not proceed to Step 4 under any circumstances until the user explicitly replies with approval.
 4. **Implement:** Execute the approved plan.
-5. **Test:** Verify that the implementation correctly achieves the desired outcome.
+5. **Test:** Write or update tests within the `tests/` module to cover your implementation. Do not create temporary or disposable test files outside of the `tests/` directory. Run the project test suite using `pytest`. All tests must pass at the end of execution to ensure system integrity.
 6. **Evaluate:** Check if the project documentation need to be updated.
     - **Filter:** From the list of files you modified this session. Exclude `tests/` and root files.
-    - **Document:** If tere is any modified files left after filtering, transition to the [WORKFLOWS.DOC_MODULES] workflow. Then, go to next step.
+    - **Document:** If there are any modified files left after filtering, transition to the [WORKFLOWS.DOC_MODULES] workflow. Then, go to next step.
     - **Report:** Create a report in `docs/reports` as `IE_YYYY-MM-DD_HH:MM.md` with everything done during this workflow.
-    - **Git Protocol:** Stop and ask user to commit with mensage `IE: execution description`.
+    - **Git Protocol:** Stop and ask user to commit with message `IE: execution description`.
 
 ## FLASH EXECUTION [WORKFLOWS.FLASH_EXECUTION]
-1. **Understand:** Undestand the objective of the execution and what needs to be done.
-2. **Execute:** Follow the instructions given by the user.
-3. **Verify:** Check if all objectives were achieved and if implementations done works as intended.
+Note: This workflow is designed to work across multiple rapid interactions. Follow the execution loop precisely and be concise and direct in your responses.
+- **Execution Loop:**
+    1. **Understand:** Undestand the objective of the execution and what needs to be done. STOP and ask if the objective isn't clear.
+    2. **Execute:** Follow the instructions given by the user. Do exactly what is asked; this workflow is used for simple and quick tasks. Avoid major refactoring. If the task requires significant refactoring, STOP and provide a report.
+    3. **Verify:** Check if all objectives were achieved and if implementations done works as intended.
 
 ## OPERATIONAL CHANGES [WORKFLOWS.OPERATIONAL_CHANGES]
 1. **Receive:** Fetch [WORKFLOWS.GLOBAL]
