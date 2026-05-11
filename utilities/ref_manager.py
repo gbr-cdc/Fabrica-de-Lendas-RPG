@@ -81,6 +81,10 @@ def find_tag_range(tag, lines):
                 if next_level <= level:
                     break
             end_idx = i + 1
+        # Back up to exclude trailing blank lines from the range
+        while end_idx > found_idx + 1 and lines[end_idx - 1].strip() == "":
+            end_idx -= 1
+
         return found_idx, end_idx, True
     else:
         return found_idx, found_idx + 1, False
