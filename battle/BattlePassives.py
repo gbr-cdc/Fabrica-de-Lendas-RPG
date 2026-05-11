@@ -246,11 +246,74 @@ class Bloquear(BattlePassive):
             "on_attack_end": cleanup_bonus_hook
         }
 
+class PosturaBatalha(BattlePassive):
+    def __init__(self, owner: 'Character', context: 'IPassiveContext'):
+        super().__init__(name="Postura de Batalha", owner=owner, context=context)
+        self.current_postura = None
+        self._modifiers = []
+
+    def set_mode(self, mode: str | None, action_load: 'ActionLoad'):
+        from core.Modifiers import EphemeralModifier
+        for mod in self._modifiers:
+            self.owner.remove_modifier(mod)
+        self._modifiers = []
+        
+        self.current_postura = mode
+        if mode == "OFFENSIVE":
+            m1 = EphemeralModifier(stat_name='grd', value=-1, source=self.name)
+            m2 = EphemeralModifier(stat_name='pre', value=1, source=self.name)
+            self._modifiers = [m1, m2]
+            self.owner.add_modifier(m1)
+            self.owner.add_modifier(m2)
+            action_load.add_event("POSTURA", self.owner.char_id, "OFFENSIVE")
+        elif mode == "DEFENSIVE":
+            m1 = EphemeralModifier(stat_name='pre', value=-1, source=self.name)
+            m2 = EphemeralModifier(stat_name='grd', value=1, source=self.name)
+            self._modifiers = [m1, m2]
+            self.owner.add_modifier(m1)
+            self.owner.add_modifier(m2)
+            action_load.add_event("POSTURA", self.owner.char_id, "DEFENSIVE")
+        else:
+            action_load.add_event("POSTURA", self.owner.char_id, "NONE")
+
+    def get_hooks(self) -> Dict[str, Callable]:
+        def on_gda_modify(attack_load: 'AttackLoad'):
+            if self.current_postura == "OFFENSIVE" and attack_load.character.char_id == self.owner.char_id and attack_load.hit:
+                bonus = 2
+                if attack_load.attack_roll > 7:
+                    bonus = 4
+                attack_load.gda += bonus
+                attack_load.add_event("MOD", f"{self.name}_OFF", bonus, self.owner.char_id)
+
+        def on_defense_reaction(attack_load: 'AttackLoad'):
+            from core.Enums import RollState
+            if self.current_postura == "DEFENSIVE" and attack_load.target is not None and attack_load.target.char_id == self.owner.char_id:
+                cost = 2
+                if self.owner.floating_focus >= cost:
+                    controller = self.context.get_controller(self.owner.char_id)
+                    if controller and controller.choose_reaction(self.owner, f"{self.name}_REROLL", attack_load, self.context):
+                        if CharacterSystem.spend_focus(self.owner, cost):
+                            attack_load.add_event("FOCUS", self.owner.char_id, -cost, self.owner.floating_focus)
+                            
+                            new_roll_res = self.dice_service.roll_dice(self.owner.def_die, RollState.NEUTRAL)
+                            attack_load.add_event("ROLL", "DEF_REROLL", new_roll_res.final_roll, self.owner.def_die, self.owner.char_id)
+                            
+                            diff = new_roll_res.final_roll - attack_load.defense_roll
+                            attack_load.gda -= diff
+                            attack_load.defense_roll = new_roll_res.final_roll
+                            attack_load.add_event("MOD", f"{self.name}_DEF", -diff, self.owner.char_id)
+
+        return {
+            'on_gda_modify': on_gda_modify,
+            'on_defense_reaction': on_defense_reaction
+        }
+
 registry = {
     "MãosPesadas": MãosPesadas,
     "ForçaBruta": ForçaBruta,
     "Combo": Combo,
     "GraçaDoDuelista": GracaDoDuelista,
     "PosturaDefensiva": PosturaDefensiva,
-    "Bloquear": Bloquear
+    "Bloquear": Bloquear,
+    "Postura de Batalha": PosturaBatalha
 }

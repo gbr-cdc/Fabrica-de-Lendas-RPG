@@ -213,7 +213,7 @@ Method description: Standardizes event insertion into history by formatting para
 [DEPENDS: ARCH.DOC.core.Events.ActionLoad, ARCH.RULES.CORE.OBSERVER, ARCH.DOC.core.Enums.RollState, ARCH.DOC.core.Enums.AttackType, ARCH.RULES.BATTLE.AREA_ATTACK, GDD.COMBAT.FLOW.GDA]
 Specialized payload for offensive resolution, inheriting from `ActionLoad` to add combat-specific metrics.
 
-- Constructor [ARCH.DOC.core.Events.AttackLoad.__init__]: `__init__(*, character: "Character", history: List[str] = [], success: bool = True, target: Character | None = None, attack_type: AttackType, attack_state: RollState, defense_state: RollState, gda: int = 0, damage: int = 0, hit: bool = False)`
+- Constructor [ARCH.DOC.core.Events.AttackLoad.__init__]: `__init__(*, character: "Character", history: List[str] = [], success: bool = True, target: Character | None = None, attack_type: AttackType, attack_state: RollState, defense_state: RollState, gda: int = 0, damage: int = 0, hit: bool = False, attack_roll: int = 0, defense_roll: int = 0)`
 - `target: Character | None` [ARCH.DOC.core.Events.AttackLoad.target]: The recipient of the attack.
 - `attack_type: AttackType` [ARCH.DOC.core.Events.AttackLoad.attack_type]: Categorization of the attack (Basic, Skill, etc.).
 - `attack_state: RollState` [ARCH.DOC.core.Events.AttackLoad.attack_state]: Advantage state applied to the attacker.
@@ -221,6 +221,8 @@ Specialized payload for offensive resolution, inheriting from `ActionLoad` to ad
 - `gda: int` [ARCH.DOC.core.Events.AttackLoad.gda]: Degree of Success (GdA) used for final damage resolution.
 - `damage: int` [ARCH.DOC.core.Events.AttackLoad.damage]: Bonus damage or reduction value added during calculation.
 - `hit: bool` [ARCH.DOC.core.Events.AttackLoad.hit]: Flag indicating if the attack successfully connected with the target.
+- `attack_roll: int` [ARCH.DOC.core.Events.AttackLoad.attack_roll]: Raw attack dice roll result.
+- `defense_roll: int` [ARCH.DOC.core.Events.AttackLoad.defense_roll]: Raw defense dice roll result.
 
 ##### HistoryEmitter [ARCH.DOC.core.Events.HistoryEmitter]
 [DEPENDS: ARCH.RULES.CORE.HISTORY]
@@ -318,25 +320,26 @@ Protocol defining access to the central dice rolling service.
 
 - `dice_service: "DiceManager"` [ARCH.DOC.core.BaseClasses.IDiceContext.dice_service]: Read-only property providing access to the engine"s RNG service.
 
-##### IEventContext [ARCH.DOC.core.BaseClasses.IEventContext]
+##### IEventContext [ARCH.DOC.core.BaseClasses.IEventContext] 
+[DEPENDS: ARCH.DOC.battle.BattleManager.BattleManager.listeners.registry]
 Protocol defining the capability to broadcast events to the system.
 
 - `emit(event_name: str, payload: "ActionLoad") -> None`: Dispatches a signal to all registered listeners. Payloads are modified by reference.
 
-##### IEffectContext [ARCH.DOC.core.BaseClasses.IEffectContext]
+##### IEffectContext [ARCH.DOC.core.BaseClasses.IEffectContext] 
 Protocol defining management of active passives and status effects.
 
 - `get_active_passive(char_id: str, name: str) -> "BattlePassive" | None`: Retrieves an active passive instance by name for a specific character.
 - `add_status_effect(effect: "StatusEffect") -> None`: Registers and applies a new status effect to the simulation.
 - `remove_status_effect(effect: "StatusEffect") -> None`: Removes an existing status effect and cleans up its hooks.
 
-##### ITimelineContext [ARCH.DOC.core.BaseClasses.ITimelineContext]
+##### ITimelineContext [ARCH.DOC.core.BaseClasses.ITimelineContext] 
 Protocol defining interaction with the battle schedule and clock.
 
 - `delay_character(character: "Character", extra_ticks: int) -> None`: Relative manipulation of a character"s next turn.
 - `set_tick(character: "Character", tick: int) -> None`: Absolute manipulation of a character"s scheduled turn time.
 
-##### IRegistryContext [ARCH.DOC.core.BaseClasses.IRegistryContext]
+##### IRegistryContext [ARCH.DOC.core.BaseClasses.IRegistryContext] 
 Protocol defining access to character and controller registries.
 
 - `get_characters() -> List["Character"]`: Returns a list of all active participants.
@@ -892,6 +895,20 @@ Method description: Switches the stance of the defensive passive.
 2. Calls the passive's `toggle()` method.
 3. Returns an `ActionLoad` containing the result message or an error if the passive is missing.
 
+##### MudarPosturaBatalha [ARCH.DOC.battle.BattleActions.MudarPosturaBatalha]
+[DEPENDS: ARCH.RULES.CORE.COMMAND, GDD.STYLES.MESTRE_ARMAS.POSTURAS, ARCH.DOC.battle.BattlePassives.PosturaBatalha]
+A Free Action that toggles the state of the 'Postura de Batalha' passive ability.
+
+- Constructor [ARCH.DOC.battle.BattleActions.MudarPosturaBatalha.__init__]: `__init__(actor: Character, targets: List[Character], context: IActionContext)`
+
+###### execute [ARCH.DOC.battle.BattleActions.MudarPosturaBatalha.execute]
+`execute() -> ActionLoad`
+Method description: Switches the stance of the battle passive.
+1. Retrieves the "Postura de Batalha" passive instance from `context.get_active_passive`.
+2. Evaluates the current stance and determines the next in the cycle: `None` -> `OFFENSIVE` -> `DEFENSIVE` -> `None`.
+3. Calls the passive's `set_mode()` method with the next mode and the current action load.
+4. Returns an `ActionLoad` containing the result message or an error if the passive is missing.
+
 #### BattlePassives.py [ARCH.DOC.battle.BattlePassives]
 [DEPENDS: ARCH.RULES.CORE.IOC, ARCH.RULES.CORE.OBSERVER, ARCH.DOC.core.BaseClasses.BattlePassive]
 Reactive components tied to character entities. Passives are instantiated at the start of battle and subscribe to event hooks to modify simulation outcomes, apply modifiers, or trigger secondary actions.
@@ -986,6 +1003,28 @@ Method description: Registers defensive reaction and counter-bonus hooks.
    - If final `GdA < -3`, marks the attacker for a counter-bonus.
 2. `bonus_contra_ataque_hook` (on `on_roll_modify`): If the owner attacks a marked target, applies a +1 `bda` bonus via `EphemeralModifier`.
 3. `cleanup_bonus_hook` (on `on_attack_end`): Removes `Bloquear_Counter` modifiers and clears the target marking.
+
+##### PosturaBatalha [ARCH.DOC.battle.BattlePassives.PosturaBatalha]
+[DEPENDS: ARCH.DOC.core.Modifiers.EphemeralModifier, GDD.STYLES.MESTRE_ARMAS.POSTURAS, ARCH.DOC.core.Events.AttackLoad]
+A stateful stance that grants offensive accuracy and damage bonuses, or defensive stability and reactive re-rolls, depending on the active mode.
+
+- Constructor [ARCH.DOC.battle.BattlePassives.PosturaBatalha.__init__]: `__init__(owner: Character, context: IPassiveContext)`
+- `current_postura: str | None` [ARCH.DOC.battle.BattlePassives.PosturaBatalha.current_postura]: Current state of the stance ("OFFENSIVE", "DEFENSIVE", or None).
+
+###### set_mode [ARCH.DOC.battle.BattlePassives.PosturaBatalha.set_mode]
+`set_mode(mode: str | None, action_load: ActionLoad) -> None`
+Method description: Switches the stance on/off and updates actor stats via modifiers.
+1. Removes any previously applied modifiers associated with this stance from the character.
+2. If `OFFENSIVE`: Applies `grd` (-1) and `pre` (+1) modifiers. Records `POSTURA|actor|OFFENSIVE`.
+3. If `DEFENSIVE`: Applies `pre` (-1) and `grd` (+1) modifiers. Records `POSTURA|actor|DEFENSIVE`.
+4. If `None`: Records `POSTURA|actor|NONE`.
+
+###### get_hooks [ARCH.DOC.battle.BattlePassives.PosturaBatalha.get_hooks]
+`get_hooks() -> Dict[str, Callable]`
+Method description: Implements the reactive logic of the stance.
+1. `on_gda_modify`: While `OFFENSIVE`, successful hits from the owner add +2 to `GdA`. If the attacker's `attack_roll > 7`, it adds +4 instead.
+2. `on_defense_reaction`: While `DEFENSIVE` and the owner is targeted, prompts the controller for a re-roll reaction.
+   - If approved and 2 Focus is spent: rolls `def_die` again, calculates the difference (`new_roll - old_defense_roll`), updates `GdA` and `defense_roll` inside `AttackLoad`, and registers the modification.
 
 #### Judges.py [ARCH.DOC.battle.Judges]
 [DEPENDS: ARCH.DOC.core.BaseClasses.IBattleJudge, ARCH.DOC.core.Enums.BattleState]

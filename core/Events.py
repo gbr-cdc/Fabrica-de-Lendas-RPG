@@ -28,6 +28,8 @@ class AttackLoad(ActionLoad):
     gda: int = 0
     damage: int = 0
     hit: bool = False
+    attack_roll: int = 0
+    defense_roll: int = 0
 
 class HistoryEmitter:
     """Utility to generate structured event tags."""

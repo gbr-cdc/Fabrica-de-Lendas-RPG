@@ -23,8 +23,8 @@
     "armor_type": "heavy",
     "weapon_type": "weapon_and_shield"
   },
-  "Cavaleiro": {
-    "name": "Cavaleiro",
+  "Mestre_das_Armas": {
+    "name": "Mestre das Armas",
     "atq_die": 10,
     "def_die": 10,
     "main_stat": "FIS",

@@ -165,6 +165,7 @@ class AttackAction(BattleAction):
             )
             self.context.emit('on_roll_modify', master_attack_load)
             master_roll_result = self.context.dice_service.roll_dice(self.actor.atk_die, master_attack_load.attack_state)
+            master_attack_load.attack_roll = master_roll_result.final_roll
             
             master_attack_load.add_event("ROLL", "ATK_AREA", master_roll_result.final_roll, self.actor.atk_die, self.actor.char_id)
             mod_atk_roll = master_roll_result.final_roll + self.actor.rank + self.actor.bda
@@ -189,12 +190,14 @@ class AttackAction(BattleAction):
             if self.attack_type == AttackType.AREA:
                 # Area Resolution: Use the Master Roll result for every target.
                 attack_load.attack_state = master_attack_load.attack_state
+                attack_load.attack_roll = master_roll_result.final_roll
                 current_mod_atk = mod_atk_roll
                 self.context.emit('on_roll_modify', attack_load)
             else:
                 # Single Target Resolution: Roll for this specific attack instance.
                 self.context.emit('on_roll_modify', attack_load)
                 roll_result = self.context.dice_service.roll_dice(self.actor.atk_die, attack_load.attack_state)
+                attack_load.attack_roll = roll_result.final_roll
                 current_mod_atk = roll_result.final_roll + self.actor.rank + self.actor.bda
                 attack_load.add_event("ROLL", "ATK", roll_result.final_roll, self.actor.atk_die, self.actor.char_id)
             
@@ -202,6 +205,7 @@ class AttackAction(BattleAction):
 
             
             roll_result = self.context.dice_service.roll_dice(target.def_die, attack_load.defense_state)
+            attack_load.defense_roll = roll_result.final_roll
             mod_def_roll = roll_result.final_roll + target.rank + target.bdd
             attack_load.add_event("ROLL", "DEF", roll_result.final_roll, target.def_die, target.char_id)
             
@@ -319,4 +323,30 @@ class TogglePosturaDefensiva(BattleAction):
         if passive and hasattr(passive, 'toggle'):
             msg = passive.toggle()
             return ActionLoad(character=self.actor, history=[msg])
+        return ActionLoad(character=self.actor, history=["Falha ao alternar postura: passiva não encontrada."], success=False)
+
+class MudarPosturaBatalha(BattleAction):
+    """
+    A Free Action that toggles the state of the 'Postura de Batalha' passive.
+    It retrieves the active passive from the context and calls its set_mode method.
+    """
+    def __init__(self, actor: 'Character', targets: List['Character'], context: 'IActionContext'):
+        super().__init__(name="Mudar Postura de Batalha", actor=actor, targets=targets, context=context, action_type=BattleActionType.FREE_ACTION)
+
+    def execute(self) -> ActionLoad:
+        passive = self.context.get_active_passive(self.actor.char_id, "Postura de Batalha")
+        if passive and hasattr(passive, 'set_mode'):
+            # Logic: None -> OFFENSIVE -> DEFENSIVE -> None
+            current = passive.current_postura
+            next_mode = None
+            if current is None:
+                next_mode = "OFFENSIVE"
+            elif current == "OFFENSIVE":
+                next_mode = "DEFENSIVE"
+            else:
+                next_mode = None
+                
+            action_load = ActionLoad(character=self.actor)
+            passive.set_mode(next_mode, action_load)
+            return action_load
         return ActionLoad(character=self.actor, history=["Falha ao alternar postura: passiva não encontrada."], success=False)

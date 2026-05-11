@@ -264,7 +264,7 @@ The combat style represents how the character fights, what equipment they use, a
 - **Weapon Type:** MEDIUM_WEAPON
 
 ### Abilities:
-- **Postura de Batalha [GDD.STYLES.MESTRE_ARMAS.POSTURAS]:** Choose at start of turn: **Offensive**:-1 Guard / +1 Precision and +2 GdA. Bonus doubles if attack die > 7; **Defensive**: -1 Precision / +1 Guard. Spend 2 Focus to re-roll defense (must keep new result).
+- **Postura de Batalha [GDD.STYLES.MESTRE_ARMAS.POSTURAS]:** Choose at start of turn: **Offensive**:-1 Guard / +1 Precision and +2 GdA on hit. GdA bonus doubles if attack roll > 7; **Defensive**: -1 Precision / +1 Guard. Can spend 2 Focus to re-roll defense (must keep new result).
 - **Ataque Concentrado [GDD.STYLES.MESTRE_ARMAS.CONCENTRADO]:** Spend movement action to prepare. Grants you advantage in attacks on your next action against one target. If in Defensive posture, switch to Offensive before attacking. Grants opportunity attack if target leaves range.
 - **Ataque Desarmante [GDD.STYLES.MESTRE_ARMAS.DESARMANTE]:** Spend 2 Focus. On hit, target has disadvantage on their next action. GdA treated as 0 for damage.
 - **Dança da Batalha [GDD.STYLES.MESTRE_ARMAS.VITAIS]:** Spend 2 Focus to gain +50% movement or gain advnatage in menace tests. Every time you roll a 10 to attack, this attack counts as a movement action.
