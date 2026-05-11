@@ -447,9 +447,18 @@ if __name__ == "__main__":
             sys.exit(1)
 
     # Process and print each requested tag
+    full_output = []
     for i, tag in enumerate(tags):
         result = resolve_tag(tag, max_depth=max_depth)
         print(result)
+        full_output.append(result)
         # Add a visual separator between different top-level tags
         if i < len(tags) - 1:
             print("\n" + "="*40 + "\n")
+            full_output.append("\n" + "="*40 + "\n\n")
+
+    try:
+        with open("output.txt", "w", encoding="utf-8") as f:
+            f.write("".join(full_output) + "\n")
+    except Exception as e:
+        print(f"\nWarning: Could not write to output.txt: {e}")
