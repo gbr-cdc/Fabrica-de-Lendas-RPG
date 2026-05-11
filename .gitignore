@@ -6,3 +6,6 @@ __pycache__/
 .coverage
 .coveragerc
 test_output.txt
+.vscode/
+scratch/
+output.txt

@@ -677,8 +677,21 @@ The central orchestrator of the battle engine. Manages the tick-based timeline, 
 - `timeline: List[tuple]` [ARCH.DOC.battle.BattleManager.BattleManager.timeline]: A Min-Heap of `(tick, neg_hab, neg_roll, char_id, character)` used for turn scheduling. `[ARCH.RULES.BATTLE.TIMELINE]`
 - `current_tick: int` [ARCH.DOC.battle.BattleManager.BattleManager.current_tick]: The current discrete point in time of the battle.
 - `characters: Dict[str, Character]` [ARCH.DOC.battle.BattleManager.BattleManager.characters]: Active characters indexed by their unique ID.
-- `listeners: Dict[str, List[Callable]]` [ARCH.DOC.battle.BattleManager.BattleManager.listeners]: Registry for the Event Bus, mapping signal names to subscriber hook functions. `[ARCH.RULES.CORE.OBSERVER]`
 - `battle_state: BattleState` [ARCH.DOC.battle.BattleManager.BattleManager.battle_state]: The current state of the battle (RUNNING, FINISHED, ERROR).
+- `listeners: Dict[str, List[Callable]]` [ARCH.DOC.battle.BattleManager.BattleManager.listeners]: Registry for the Event Bus, mapping signal names to subscriber hook functions. See [ARCH.DOC.battle.BattleManager.BattleManager.listeners.registry]. `[ARCH.RULES.CORE.OBSERVER]`
+
+###### listeners registry [ARCH.DOC.battle.BattleManager.BattleManager.listeners.registry]
+Supported event signals and their triggers:
+- `on_turn_start`: Turn start.
+- `on_roll_modify`: For modifications on: `Character.bda`, `Character.bdd`, `Character.atk_die`, `Character.def_die`, `AttackLoad.attack_state` and `AttackLoad.defense_state`.  
+- `on_defense_reaction`: For defensive reactions to modify `AttackLoad.gda` before hit/miss verification.
+- `on_hit_check`: After hit/miss is decided for abilities that decide it's activation base on the base `AttackLoad.gda`.
+- `on_gda_modify`: For damaging abilities to modify `AttackLoad.gda` after a hit is confirmed.
+- `on_damage_calculation`: For skills/magics to modify `AttackLoad.gda` and `AttackLoad.damage` before damage calculation.
+- `on_damage_taken`: For abilities to modify `AttackLoad.damage` by a percentage before it's applied at the target.
+- `on_attack_end`: End of an attack action.
+- `on_turn_end`: End of turn.
+- `on_character_death`: When a character dies.
 
 ###### subscribe [ARCH.DOC.battle.BattleManager.BattleManager.subscribe]
 `subscribe(event_name: str, callback: Callable) -> None`
@@ -758,7 +771,7 @@ Method description: Scans the battlefield for characters with zero or less HP, r
 Method description: Returns a list of all characters currently in the graveyard.
 
 #### BattleActions.py [ARCH.DOC.battle.BattleActions]
-[DEPENDS: ARCH.RULES.CORE.COMMAND, ARCH.RULES.CORE.OBSERVER, ARCH.RULES.BATTLE.ATTACK_DATA, ARCH.DOC.core.BaseClasses.BattleAction, ARCH.DOC.core.Events.AttackLoad]
+[DEPENDS: ARCH.RULES.CORE.COMMAND, ARCH.RULES.CORE.OBSERVER, ARCH.RULES.BATTLE.ATTACK_DATA, ARCH.DOC.core.BaseClasses.BattleAction]
 Defines the available maneuvers characters can perform during combat. Utilizes the Command Pattern to encapsulate complex game logic and allows for behavioral modification via ephemeral hooks.
 
 - `EFFECT_HOOK_BUILDERS: Dict[str, Callable]` [ARCH.DOC.battle.BattleActions.EFFECT_HOOK_BUILDERS]: Registry mapping template effect IDs to their corresponding hook builder functions.
@@ -793,7 +806,7 @@ Defines the available maneuvers characters can perform during combat. Utilizes t
 4. Records a `STATUS` event.
 
 ##### AttackAction [ARCH.DOC.battle.BattleActions.AttackAction]
-[DEPENDS: ARCH.RULES.CORE.DATA, ARCH.RULES.BATTLE.TARGETING, ARCH.RULES.BATTLE.AREA_ATTACK, ARCH.DOC.core.Structs.AttackActionTemplate, ARCH.RULES.CORE.IOC, GDD.COMBAT.FLOW]
+[DEPENDS: ARCH.RULES.CORE.DATA, ARCH.RULES.BATTLE.TARGETING, ARCH.RULES.BATTLE.AREA_ATTACK, ARCH.DOC.core.Structs.AttackActionTemplate, ARCH.RULES.CORE.IOC, GDD.COMBAT.FLOW, ARCH.DOC.core.Events.AttackLoad]
 A generic, data-driven attack action. Logic is driven by an `AttackActionTemplate`, which defines costs, types, and special effects injected via hooks. Constructor can be called with `template = None` to instantiate a "Basic Attack".
 
 - Constructor [ARCH.DOC.battle.BattleActions.AttackAction.__init__]: `__init__(template: AttackActionTemplate | None, actor: Character, targets: List[Character], context: IActionContext, attack_type: AttackType = None)`
@@ -817,9 +830,10 @@ Method description: Retrieves ephemeral hooks defined in the action template.
 Method description: Resolves the attack according to the standard Combat Flow. Handles resource consumption, Master Rolls for AoE, and individual target resolution.
 1. **Resource Consumption**: Deducts `focus_cost` from actor's `floating_focus` and records `EXEC` and `FOCUS` events.
 2. **Phase 1: Attack Roll**: 
-   - If AoE, emits `on_roll_modify` and performs one "Master Roll" using `actor.atk_die`. 
+   - If AoE, performs one "Master Roll" using `actor.atk_die` (emits `on_roll_modify` for the attacker).
    - If Single Target, the roll happens during individual resolution.
 3. **Phase 2: Target Resolution Loop**: Iterates through each living target:
+   - Emits `on_roll_modify`
    - Performs/Retrieves attack roll.
    - Performs defense roll using `target.def_die`.
    - Emits `on_defense_reaction`.
@@ -1330,7 +1344,7 @@ Method description: The translation engine that converts technical tags into nar
 - **Invariants [ARCH.TEST_QUALITY.INVARIANTS]:** Assert that attribute modifiers `[ARCH.RULES.CORE.MODIFIER]` are properly used and Character atributes are not corrupted by bad modifications.
 - **Lifecycle Auditing** [ARCH.TEST_QUALITY.LIFECYCLE]: Tests involving the EventBus MUST verify that all ephemeral hooks ([ARCH.RULES.BATTLE.EPHEMERAL_HOOKS]) used by self modifying actions are successfully unsubscribed after the action cycle. Assert that the EventBus subscriber count returns to its baseline.
 - **Battle Context [ARCH.TEST_QUALITY.IBATTLECONTEXT]:** Get a `BattleManager` with `create_test_battle_manager()` from `tests/utils/test_utils.py` when a concrete implementation of `IBattleContext` (or any of its segregated forms like `IActionContext`, `IPassiveContext`) is required for behavioral tests, avoid mocking of the battle state.
-- **Testing Actions [ARCH.TEST_QUALITY.ACTIONS]:** When testing the outcome of an BattleAction, you should: use `BattleManager.add_character()` to add all actors in the battle, use `BattleManager.set_tick()` to manipulate the timeline if necessary, use `BattleManager.get_next_actor()` to take the actor you want out of the timeline, create a `BattleAction` with that actor and call `BattleManager.run_action` with that action. The actor will be reinserted in the timeline unless you executed a free action. 
+- **Testing Actions [ARCH.TEST_QUALITY.ACTIONS]:** When testing the outcome of an BattleAction, you should: use `BattleManager.add_character()` to add all actors in the battle (use 'start_tick = 1000' to facilitate timeline manipulation), use `BattleManager.set_tick()` to manipulate the timeline if necessary, use `BattleManager.get_next_actor()` to take the actor you want out of the timeline, create a `BattleAction` with that actor and call `BattleManager.run_action` with that action. The actor will be reinserted in the timeline unless you executed a free action. 
 - **Structured History [ARCH.TEST_QUALITY.STRUCTURED_HISTORY]:** Tests verifying action outcomes MUST assert against structured event tags (`TAG|PARAM1|PARAM2...`) rather than narrative strings or partial substrings of `MSG` tags. This ensures tests remain resilient to localization changes and narrative polish. `[ARCH.RULES.CORE.HISTORY]`
 - **AttackAction Data Loading [ARCH.TEST_QUALITY.ATTACK_ACTION_DATA]:** Abilities implemented through `AttackActions` MUST be tested by loading their `AttackActionTemplate` through `DataManager` from `data/AttackActions.json`. This ensures tests reflect actual game data definitions and prevents discrepancies between hardcoded mocks and production content.
 
