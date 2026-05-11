@@ -19,12 +19,14 @@ Agents must use `python3 utilities/ref_manager.py` for all documentation operati
 - **Tag content:** 
     - Line Tag: A tag placed inside a standard line of text (e.g., Timeout rule [TAG_TIME]: Set timeout to 30s). It references and modifies ONLY that specific single line.
     - Section Tag: A tag placed inside a Markdown header (e.g., ### Database Rules [TAG_DB]). It references the header and all content below it, stopping immediately before the next header of equal or higher level.
-- **Fetch a tag:** Get referenced content with the tag. Use: `python3 utilities/ref_manager.py [TAG] [--depth N]`
+- **Fetch a tag:** Get referenced content with the tag. Use: `python3 utilities/ref_manager.py [TAG1] [TAG2] ... [--depth N]`
     - **Dependency Resolution:** `ref_manager` automatically resolves tags listed in `[DEPENDS: ...]` lines found within the extracted sections.
-    - **Depth Control:** Use `--depth` (or `-D`) to control the recursion level.
+    - **Depth Control:** Use `--depth` (or `-D`) to control the recursion level. Depth is 1 by default. Agents ONLY need to use `--depth` in the call if explicitly asked by the user.
         - `--depth 0`: Returns only the requested tag(s) without resolving any dependencies.
         - `--depth 1` (Default): Returns the requested tag(s) and their immediate dependencies.
         - `--depth N`: Recursively resolves dependencies up to N levels deep.
+    - **Output Truncation Mitigation:** All extraction results are written to `output.txt`. Agents MUST read `output.txt` in case the `ref_manager` response gets truncated by the interface.
+    - **Multiple Tags:** Because `output.txt` solves the truncation problem, agents should be incentivized to fetch multiple tags per call.
 - **Create a tag:** Add new content to the documentation. Use: `python3 utilities/ref_manager.py --create [FULL_NEW_TAG] 'Content'`
     - **Uniqueness:** The `[FULL_NEW_TAG]` MUST NOT already exist in the target file.
     - **Target Tag:** You MUST pass the full tag you are creating as the argument. NEVER pass a parent tag to `--create` (e.g., do not use `ref_manager --create [A.B]` to create `[A.B.C]`).
@@ -54,7 +56,6 @@ Considering filepath = module_name/FileName.py
     - Example: `[ARCH.DOC.core.CharacterSystem.take_damage]`
 - **Method Documentation:** To access documentation for a class method, use: `[ARCH.DOC.module_name.FileName.ClassName.method_name]`
     - Example: `[ARCH.DOC.battle.BattleManager.BattleManager.emit]`
-
 ## File Access Rules [AGENT.ACCESS_RULES]
 Files listed in [AGENT.ACCESS_RULES.FORBIDDEN_FILES] are NOT regular files. They are managed knowledge resources.
 
