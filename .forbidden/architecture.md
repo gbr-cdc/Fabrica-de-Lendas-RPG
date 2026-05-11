@@ -885,7 +885,7 @@ Reactive components tied to character entities. Passives are instantiated at the
 - `registry: Dict[str, Type[BattlePassive]]` [ARCH.DOC.battle.BattlePassives.registry]: Mapping of ability IDs to their concrete class implementations, used by `BattleManager` for character initialization.
 
 ##### ForçaBruta [ARCH.DOC.battle.BattlePassives.ForçaBruta]
-[DEPENDS: ARCH.DOC.core.Events.AttackLoad, GDD.STYLES.DESTRUIDOR.FORCA_BRUTA]
+[DEPENDS: GDD.STYLES.DESTRUIDOR.FORCA_BRUTA]
 A straightforward offensive passive that multiplies success grade.
 
 - Constructor [ARCH.DOC.battle.BattlePassives.ForçaBruta.__init__]: `__init__(owner: Character, context: IPassiveContext)`
@@ -956,6 +956,23 @@ Method description: Implements recursive attack logic.
    - Stage > 1: Applies `Atordoado` to the target on hit.
    - Merges sub-action histories into the main attack history using pipe-delimited events.
 
+##### Bloquear [ARCH.DOC.battle.BattlePassives.Bloquear]
+[DEPENDS: ARCH.DOC.core.CharacterSystem.spend_focus, GDD.STYLES.DEFENSOR.BLOQUEAR]
+Defensive passive that allows focus-based reactions and grants counter-attack bonuses.
+
+- Constructor [ARCH.DOC.battle.BattlePassives.Bloquear.__init__]: `__init__(owner: Character, context: IPassiveContext)`
+- `_counter_targets: Dict[str, bool]` [ARCH.DOC.battle.BattlePassives.Bloquear._counter_targets]: Tracks attackers eligible for counter-bonuses.
+
+###### get_hooks [ARCH.DOC.battle.BattlePassives.Bloquear.get_hooks]
+`get_hooks() -> Dict[str, Callable]`
+Method description: Registers defensive reaction and counter-bonus hooks.
+1. `reacao_bloqueio_hook` (on `on_defensive_reaction`): 
+   - If targeted, checks for 2 Focus and controller approval.
+   - Spends Focus and subtracts 1d4 from incoming `GdA`.
+   - If final `GdA < -3`, marks the attacker for a counter-bonus.
+2. `bonus_contra_ataque_hook` (on `on_roll_modify`): If the owner attacks a marked target, applies a +1 `bda` bonus via `EphemeralModifier`.
+3. `cleanup_bonus_hook` (on `on_attack_end`): Removes `Bloquear_Counter` modifiers and clears the target marking.
+
 #### Judges.py [ARCH.DOC.battle.Judges]
 [DEPENDS: ARCH.DOC.core.BaseClasses.IBattleJudge, ARCH.DOC.core.Enums.BattleState]
 Contains the logic for evaluating battle progression and determining final outcomes. Judges are invoked by the orchestrator to check for win/loss conditions based on the current state of the simulation.
@@ -1012,7 +1029,7 @@ The `entities` module contains data-only classes representing game objects. `[AR
 The primary data container for actors. Characters are designed as anemic entities that hold state (HP, MP, Focus) and a reactive stack of modifiers used for dynamic attribute calculation.
 
 ##### Character [ARCH.DOC.entities.Characters.Character]
-[DEPENDS: ARCH.DOC.core.Structs.CombatStyle, ARCH.DOC.core.Structs.GameRules, ARCH.DOC.entities.Items.Armor, ARCH.DOC.entities.Items.Weapon, ARCH.DOC.core.Modifiers.StatModifier, ARCH.DOC.battle.StatusEffects.StatusEffect, GDD.CORE.ATTR, GDD.STYLES.DEFINITION]
+[DEPENDS: ARCH.DOC.core.Structs.CombatStyle, ARCH.DOC.core.Structs.GameRules, ARCH.DOC.entities.Items.Armor, ARCH.DOC.entities.Items.Weapon, ARCH.DOC.core.Modifiers.StatModifier, ARCH.DOC.core.BaseClasses.StatusEffect, GDD.CORE.ATTR, GDD.STYLES.DEFINITION]
 Data container representing a character's traits, equipment, and current vitals.
 
 - Constructor [ARCH.DOC.entities.Characters.Character.__init__]: `__init__(char_id: str, name: str, attributes: List[int], combat_style: CombatStyle, rules: GameRules, team: int = 0)`
@@ -1327,6 +1344,7 @@ Method description: The translation engine that converts technical tags into nar
 - **Header:** ## MISSION: [Title] [PART X] [MISSION.ACTIVE.TITLE_OF_MISSION]. Add `[PART X]` only if mission have more parts.
 - **Summary**: Concise technical overview of the goal. Provide enough context to guide execution.
 - **Rule References**: Comma-separated list ARCH.RULES tags of architectural rules relevant to the mission`.
+- **Documentation References**: Comma-separated list ARCH.DOC.module_name.FileName.ClassName tags for relevant classes documentation.
 - **Definition of Done**: Precise, objective criteria that must be satisfied for mission completion.
 - **Plan**: Link to the approved `docs/plans/[mission].md`.
 - **Steps**: Atomic TDD steps, organized in pairs of **RED** (Test Objective) and **GREEN** (Implementation), or independent **BLUE** steps if not TDD.

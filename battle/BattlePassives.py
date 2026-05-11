@@ -201,10 +201,56 @@ class Combo(BattlePassive):
         
         return {'on_attack_end': checar_ataque_bonus}
 
+class Bloquear(BattlePassive):
+    def __init__(self, owner: 'Character', context: 'IPassiveContext'):
+        super().__init__(name="Bloquear", owner=owner, context=context)
+        self._counter_targets: Dict[str, bool] = {}
+
+    def get_hooks(self) -> Dict[str, Callable]:
+        from core.Modifiers import EphemeralModifier
+
+        def reacao_bloqueio_hook(attack_load: 'AttackLoad'):
+            if attack_load.target is None or attack_load.target.char_id != self.owner.char_id:
+                return
+            
+            custo = 2
+            if self.owner.floating_focus >= custo:
+                controller = self.context.get_controller(self.owner.char_id)
+                if controller.choose_reaction(self.owner, "Bloquear", attack_load, self.context):
+                    if CharacterSystem.spend_focus(self.owner, custo):
+                        attack_load.add_event("FOCUS", self.owner.char_id, -custo, self.owner.floating_focus)
+                        
+                        roll = self.dice_service.roll_dice(4, RollState.NEUTRAL)
+                        attack_load.gda -= roll.final_roll
+                        attack_load.add_event("MOD", self.name, -roll.final_roll, self.owner.char_id)
+
+                        if attack_load.gda < -3:
+                            self._counter_targets[attack_load.character.char_id] = True
+
+        def bonus_contra_ataque_hook(attack_load: 'AttackLoad'):
+            if attack_load.character.char_id == self.owner.char_id and attack_load.target is not None:
+                if self._counter_targets.get(attack_load.target.char_id):
+                    mod = EphemeralModifier(stat_name="bda", value=1, source="Bloquear_Counter")
+                    self.owner.add_modifier(mod)
+                    attack_load.add_event("MOD", "Bloquear_Counter", 1, self.owner.char_id)
+
+        def cleanup_bonus_hook(attack_load: 'AttackLoad'):
+            if attack_load.character.char_id == self.owner.char_id:
+                self.owner.remove_modifiers_by_source("Bloquear_Counter")
+                if attack_load.target is not None:
+                    self._counter_targets.pop(attack_load.target.char_id, None)
+
+        return {
+            "on_defense_reaction": reacao_bloqueio_hook,
+            "on_roll_modify": bonus_contra_ataque_hook,
+            "on_attack_end": cleanup_bonus_hook
+        }
+
 registry = {
     "MãosPesadas": MãosPesadas,
     "ForçaBruta": ForçaBruta,
     "Combo": Combo,
     "GraçaDoDuelista": GracaDoDuelista,
-    "PosturaDefensiva": PosturaDefensiva
+    "PosturaDefensiva": PosturaDefensiva,
+    "Bloquear": Bloquear
 }

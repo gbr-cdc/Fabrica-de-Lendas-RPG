@@ -2,17 +2,6 @@
 
 ## ACTIVE MISSIONS [MISSION.ACTIVE]
 
-## MISSION: Implement Bloquear [MISSION.ACTIVE.BLOQUEAR]
-**Summary**: Implement "Bloquear" passive for the Defensor style, including a defensive reaction and a counter-bonus mechanism.
-**Rule References**: [ARCH.RULES.CORE.OBSERVER], [ARCH.RULES.BATTLE.PAYLOAD]
-**Definition of Done**: "Bloquear" correctly consumes Focus, modifies GdA, and applies a +1 BDA bonus against attackers when GdA < -3.
-**Plan**: [defensor_abilities.md](file:///home/alice/Repositorios/RPG/docs/plans/defensor_abilities.md)
-**Steps**:
-- [RED] Create test verifying "Bloquear" reaction triggering, focus cost, and GdA modification. | Files: tests/battle/test_BattlePassives.py
-- [GREEN] Implement `Bloquear` class in `BattlePassives.py` with `on_defensive_reaction` hook. | Files: battle/BattlePassives.py
-- [RED] Create test verifying the +1 BDA counter-bonus application against the specific attacker after a successful block (GdA < -3). | Files: tests/battle/test_BattlePassives.py
-- [GREEN] Implement counter-bonus tracking and `on_roll_modify` hook in `Bloquear`. | Files: battle/BattlePassives.py
-
 ## ARCHIVED MISSIONS [MISSION.ARCHIVE]
 
 ### 2026-04-23 00:18: Area Attacks Implementation [PART 2] [MISSION.ARCHIVE.AREA_ATTACKS_IMPLEMENTATION_PART_2]
@@ -207,6 +196,15 @@ Refactor the `history` field in `ActionLoad` and `AttackLoad` to use structured 
 - [x] Implement `swap_atk_def_die`, `set_gda_zero_on_dmg`, and `apply_status_on_hit_threshold` hook builders in the registry. | Files: battle/BattleActions.py | State: Builders implemented and exported in EFFECT_HOOK_BUILDERS.
 - [x] Create a test case for "Golpe de Escudo" verifying die swap, GdA modification, and status application. | Files: tests/battle/test_BattleActions.py | State: Integration tests passed in tests/battle/test_GolpeDeEscudo.py.
 - [x] Add "Golpe de Escudo" to the `registry` and ensure it can be instantiated with its specific effects. | Files: battle/BattleActions.py | State: Added "GolpeDeEscudo" mapping to registry.
+
+### 2026-05-11 15:12: Implement Bloquear (COMPLETED) [MISSION.ARCHIVE.BLOQUEAR]
+**Summary**: Implement 'Bloquear' passive for the Defensor style, including a defensive reaction and a counter-bonus mechanism.
+**Plan**: [defensor_abilities.md](file:///home/alice/Repositorios/RPG/docs/plans/defensor_abilities.md)
+**Steps**:
+- [x] [RED] Create test verifying 'Bloquear' reaction triggering, focus cost, and GdA modification. | Files: tests/battle/test_BattlePassives.py
+- [x] [GREEN] Implement 'Bloquear' class in 'BattlePassives.py' with 'on_defensive_reaction' hook. | Files: battle/BattlePassives.py
+- [x] [RED] Create test verifying the +1 BDA counter-bonus application against the specific attacker after a successful block (GdA < -3). | Files: tests/battle/test_BattlePassives.py
+- [x] [GREEN] Implement counter-bonus tracking and 'on_roll_modify' hook in 'Bloquear'. | Files: battle/BattlePassives.py
 
 ## 2026-05-06 20:20: MVC Refactor for Simulator and BattleView (COMPLETE)
 - **Summary**: Refactor the pvp_simulator and views modules to strictly follow MVC. Simulator (Controller) handles data; BattleView (View) handles presentation.

@@ -42,14 +42,14 @@ Note: This workflow is designed to work across multiple rapid interactions. Foll
 2. **Identify**: Pinpoint specific workflow and steps that caused confusion or inefficiency, or new elements that need to be implemented.
 3. **Propose**: Propose the updates that should be applied to specifc [WORKFLOWS.(...)] or [AGENT.(...)] tags.
 4. **HALT EXECUTION:** Wait for user to appove updates. **YOU MUST STOP GENERATING TEXT HERE.** Do not proceed to Step 5 under any circumstances until the user explicitly replies with approval.
-4. **Update**: Applay updates using `ref_manager` tool.
-7. **Report & Sync**:
+5. **Update**: Applay updates using `ref_manager` tool.
+6. **Report & Sync**:
     - Generate a reunion report in `docs/reports/reunion_YYYY-MM-DD_HH:MM.md` summarizing: problems identified and changes made.
     - Ask USER to commit changes and suggest message: `reunion: description_of_change`.
 
 ## MISSION EXECUTION [WORKFLOWS.MISSION_EXECUTION]
 1. **Receive:** You MUST receive a [MISSION.ACTIVE.(...)] tag in the SAME prompt as the workflow trigger. Do NOT search MISSION_LOG or conversation history for it. If missing, STOP and ask: "Please provide the active mission tag to proceed."
-2. **State Check:** Fetch all tags in the mission's "Rule References". Read the mission's plan.
+2. **State Check:** Fetch all tags in the mission's "Rule References" and "Documentation References". Read the mission's plan.
 3. **Execution Loop:** Read all steps in the mission. Execute them sequentially:
     - **If `[RED]`:** Create/Update Test based on objective -> `pytest` (Must Fail).
     - **If `[GREEN]`:** Implement logic -> `pytest` (Must Pass).
