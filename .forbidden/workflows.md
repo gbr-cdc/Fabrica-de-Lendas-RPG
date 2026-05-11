@@ -51,7 +51,7 @@ Note: This workflow is designed to work across multiple rapid interactions. Foll
 1. **Receive:** You MUST receive a [MISSION.ACTIVE.(...)] tag in the SAME prompt as the workflow trigger. Do NOT search MISSION_LOG or conversation history for it. If missing, STOP and ask: "Please provide the active mission tag to proceed."
 2. **State Check:** Fetch all tags in the mission's "Rule References" and "Documentation References". Read the mission's plan.
 3. **Execution Loop:** Read all steps in the mission. Execute them sequentially:
-    - **If `[RED]`:** Create/Update Test based on objective -> `pytest` (Must Fail).
+    - **If `[RED]`:** Create/Update Test based on objective -> `pytest` (Must Fail). Testes must follow quality standards in [ARCH.TEST_QUALITY].
     - **If `[GREEN]`:** Implement logic -> `pytest` (Must Pass).
     - **If `[BLUE]`:** Implement logic -> `pytest` (Regression: Full suite must pass).
 4. **Mission Completion:** Once all steps are executed:

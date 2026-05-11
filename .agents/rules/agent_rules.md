@@ -25,7 +25,7 @@ Agents must use `python3 utilities/ref_manager.py` for all documentation operati
         - `--depth 0`: Returns only the requested tag(s) without resolving any dependencies.
         - `--depth 1` (Default): Returns the requested tag(s) and their immediate dependencies.
         - `--depth N`: Recursively resolves dependencies up to N levels deep.
-    - **Output Truncation Mitigation:** All extraction results are written to `output.txt`. Agents MUST read `output.txt` in case the `ref_manager` response gets truncated by the interface.
+    - **Output Truncation Mitigation:** All extraction results are written to `output.txt`. Agents MUST read `output.txt` using the `view_file` tool (NEVER use `cat` or terminal commands, as they suffer from the same truncation limits) in case the `ref_manager` response gets truncated by the interface.
     - **Multiple Tags:** Because `output.txt` solves the truncation problem, agents should be incentivized to fetch multiple tags per call.
 - **Create a tag:** Add new content to the documentation. Use: `python3 utilities/ref_manager.py --create [FULL_NEW_TAG] 'Content'`
     - **Uniqueness:** The `[FULL_NEW_TAG]` MUST NOT already exist in the target file.
