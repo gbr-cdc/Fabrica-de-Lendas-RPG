@@ -117,11 +117,13 @@ class BattlePassive:
     Representa características estáticas ou passivas que não podem ser conjuradas.
     Elas apenas alteram regras do motor através do Event Bus.
     """
-    def __init__(self, name: str, owner: 'Character', context: 'IPassiveContext'):
+    def __init__(self, name: str, owner: 'Character', context: 'IPassiveContext', template: 'BattlePassiveTemplate' | None = None):
         self.name = name
         self.owner = owner
         self.dice_service = context.dice_service
         self.context = context
+        self.template = template
+
 
     def get_hooks(self) -> Dict[str, Callable]:
         """Deve ser implementado pelas classes filhas para criar e inscrever os hooks."""

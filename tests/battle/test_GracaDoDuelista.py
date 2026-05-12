@@ -38,16 +38,22 @@ def test_graca_do_duelista_full_flow():
     manager.set_tick(attacker, 0)
     actor = manager.get_next_actor()
     
+    # Fetch data-driven parameters
+    params = manager.data_service.get_passive_template("GraçaDoDuelista").parameters
+    bonus_die = params.get("bonus_die", 6)
+    reaction_die = params.get("reaction_die", 4)
+    reaction_cost = params.get("reaction_cost", 2)
+    
     # Dice: 
-    # Atk: 10 (d10)
-    # Def: 5 (d10)
-    # Reaction (d4): 2  <-- Happens BEFORE success bonus
-    # Success Bonus (d6): 4
+    # Atk: 10
+    # Def: 5
+    # Reaction (reaction_die): 2
+    # Success Bonus (bonus_die): 4
     manager.dice_service.queue.clear()
     manager.dice_service.schedule_result(10) # ATK
     manager.dice_service.schedule_result(5)  # DEF
-    manager.dice_service.schedule_result(2)  # Reaction (d4)
-    manager.dice_service.schedule_result(4)  # Success Bonus (d6)
+    manager.dice_service.schedule_result(2)  # Reaction
+    manager.dice_service.schedule_result(4)  # Success Bonus
     
     action = AttackAction(None, actor, [target], manager)
     load = manager.run_action(action)
@@ -60,8 +66,9 @@ def test_graca_do_duelista_full_flow():
     # 2. Reaction triggered
     assert any("PASSIVE|Graça do Duelista|alvo" in h for h in load.history)
     assert any("ATK_LOAD|gda|-2|" in h for h in load.history)
-    assert any(f"FOCUS|alvo|-2|8" in h for h in load.history)
-    assert target.floating_focus == 8
+    assert any(f"FOCUS|alvo|-{reaction_cost}|{10 - reaction_cost}" in h for h in load.history)
+    assert target.floating_focus == 10 - reaction_cost
+
 
 def test_graca_do_duelista_reaction_threshold():
     """
@@ -108,6 +115,9 @@ def test_graca_do_duelista_reaction_threshold():
     manager.set_tick(attacker, 0)
     actor = manager.get_next_actor()
     
+    params = manager.data_service.get_passive_template("GraçaDoDuelista").parameters
+    reaction_cost = params.get("reaction_cost", 2)
+    
     manager.dice_service.queue.clear()
     manager.dice_service.schedule_result(6) # ATK
     manager.dice_service.schedule_result(5) # DEF
@@ -118,4 +128,5 @@ def test_graca_do_duelista_reaction_threshold():
     
     assert any("PASSIVE|Graça do Duelista|duelista" in h for h in load.history)
     assert any("ATK_LOAD|gda|-1|" in h for h in load.history)
-    assert target.floating_focus == 8
+    assert target.floating_focus == 10 - reaction_cost
+

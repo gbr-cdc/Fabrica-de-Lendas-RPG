@@ -1,7 +1,7 @@
 from __future__ import annotations
 import json
 from core.Enums import BattleActionType, ArmorType, AttributeType, WeaponType, AttackType
-from core.Structs import CombatStyle, GameRules, AttackActionTemplate, AttackEffects
+from core.Structs import CombatStyle, GameRules, AttackActionTemplate, AttackEffects, BattlePassiveTemplate
 from entities.Items import Armor, Weapon
 from entities.Characters import Character
 from battle.BattlePassives import registry as passives_registry
@@ -11,6 +11,7 @@ class DataManager:
     def __init__(self):
             # O dicionário privado que guarda os moldes na memória
             self._action_templates: dict[str, 'AttackActionTemplate'] = {}
+            self._passive_templates: dict[str, 'BattlePassiveTemplate'] = {}
             self._combat_styles: dict[str, CombatStyle] = {}
             self._characters: dict[str, Character] = {}
             self._game_rules: 'GameRules | None' = None
@@ -152,6 +153,23 @@ class DataManager:
             )
 
         self._action_templates = templates
+
+    def load_passive_templates(self, filepath: str):
+        """
+        Carrega os templates de passivas a partir de um arquivo JSON.
+        """
+        with open(filepath, 'r') as f:
+            data = json.load(f)
+
+        templates = {}
+        for key, template_data in data.items():
+            templates[key] = BattlePassiveTemplate(
+                id=template_data["id"],
+                name=template_data["name"],
+                parameters=template_data.get("parameters", {})
+            )
+
+        self._passive_templates = templates
     
     def get_action_template(self, action_id: str) -> 'AttackActionTemplate':
         """Retorna o molde de uma ação. Estoura um KeyError se o ID não existir."""
@@ -173,3 +191,10 @@ class DataManager:
             return self._combat_styles[style_id]
         except KeyError as exc:
             raise KeyError(f"[ERRO FATAL] DataManager: CombatStyle '{style_id}' não foi encontrado!") from exc
+
+    def get_passive_template(self, passive_id: str) -> 'BattlePassiveTemplate':
+        """Retorna o molde de uma passiva. Estoura um KeyError se o ID não existir."""
+        try:
+            return self._passive_templates[passive_id]
+        except KeyError as exc:
+            raise KeyError(f"[ERRO FATAL] DataManager: PassiveTemplate '{passive_id}' não foi encontrado!") from exc

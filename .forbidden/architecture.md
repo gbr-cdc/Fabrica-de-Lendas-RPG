@@ -191,6 +191,11 @@ Blueprint for complex actions, defining costs, types, and associated effects.
 - `attack_type: type["AttackType"]` [ARCH.DOC.core.Structs.AttackActionTemplate.attack_type]: Classification for rule-specific interactions.
 - `focus_cost: int` [ARCH.DOC.core.Structs.AttackActionTemplate.focus_cost]: Focus points required to execute the action.
 - `effects: List[AttackEffects]` [ARCH.DOC.core.Structs.AttackActionTemplate.effects]: Collection of effects applied during execution.
+Blueprint for passive abilities, defining their unique parameters and display data.
+- Constructor [ARCH.DOC.core.Structs.BattlePassiveTemplate.__init__]: `__init__(id: str, name: str, parameters: Dict[str, Any] = {})`
+- `id: str` [ARCH.DOC.core.Structs.BattlePassiveTemplate.id]: Unique identifier for the passive.
+- `name: str` [ARCH.DOC.core.Structs.BattlePassiveTemplate.name]: Display name of the passive.
+- `parameters: Dict[str, Any]` [ARCH.DOC.core.Structs.BattlePassiveTemplate.parameters]: Configuration parameters (e.g., thresholds, dice sizes) used by the concrete passive logic.
 
 #### Events.py [ARCH.DOC.core.Events]
 Defines payload objects used by the Event Bus to track history and state mutation during actions. 
@@ -428,30 +433,15 @@ Method description: Implements the core combat logic.
 2. Concrete actions must override this to implement damage, effects, and history logging.
 
 ##### BattlePassive [ARCH.DOC.core.BaseClasses.BattlePassive]
-[DEPENDS: ARCH.RULES.CORE.IOC, ARCH.RULES.CORE.OBSERVER, ARCH.DOC.entities.Characters.Character, ARCH.DOC.core.BaseClasses.IPassiveContext, ARCH.DOC.core.DiceManager.DiceManager]
+[DEPENDS: ARCH.RULES.CORE.IOC, ARCH.RULES.CORE.OBSERVER, ARCH.DOC.entities.Characters.Character, ARCH.DOC.core.BaseClasses.IPassiveContext, ARCH.DOC.core.DiceManager.DiceManager, ARCH.DOC.core.Structs.BattlePassiveTemplate]
 Base class for reactive components (Passives and Status Effects). These entities do not act directly but alter engine rules by subscribing to the Event Bus to modify simulation state and resolution.
 
-- Constructor [ARCH.DOC.core.BaseClasses.BattlePassive.__init__]: `__init__(name: str, owner: Character, context: IPassiveContext)`
+- Constructor [ARCH.DOC.core.BaseClasses.BattlePassive.__init__]: `__init__(name: str, owner: Character, context: IPassiveContext, template: BattlePassiveTemplate | None = None)`
 - `name: str` [ARCH.DOC.core.BaseClasses.BattlePassive.name]: Display name of the passive.
 - `owner: Character` [ARCH.DOC.core.BaseClasses.BattlePassive.owner]: The character holding the passive.
 - `context: IPassiveContext` [ARCH.DOC.core.BaseClasses.BattlePassive.context]: Interface providing access to battle state and engine services.
-- `dice_service: DiceManager` [ARCH.DOC.core.BaseClasses.BattlePassive.dice_service]: Derived access to the engine's dice service.
-
-###### get_hooks [ARCH.DOC.core.BaseClasses.BattlePassive.get_hooks]
-`get_hooks() -> Dict[str, Callable]`
-Method description: Returns a mapping of event keys to callback functions. `[ARCH.RULES.CORE.IOC]`
-1. Must be implemented by subclasses to register reactive logic with the orchestrator.
-2. Raises `NotImplementedError` if called directly on the base class.
-
-###### apply [ARCH.DOC.core.BaseClasses.BattlePassive.apply]
-`apply() -> None`
-Method description: Lifecycle hook called when the passive is initialized or added to the simulation.
-1. Placeholder method to be optionally overridden by subclasses for immediate state changes or logging.
-
-###### remove [ARCH.DOC.core.BaseClasses.BattlePassive.remove]
-`remove() -> None`
-Method description: Lifecycle hook called when the passive is removed from the simulation.
-1. Placeholder method to be optionally overridden by subclasses for cleanup logic.
+- `dice_service: DiceManager` [ARCH.DOC.core.BaseClasses.BattlePassive.dice_service]: Derived access to the engine"s dice service.
+- `template: BattlePassiveTemplate | None` [ARCH.DOC.core.BaseClasses.BattlePassive.template]: Data-driven template containing balance parameters.
 
 ##### StatusEffect [ARCH.DOC.core.BaseClasses.StatusEffect]
 [DEPENDS: ARCH.DOC.core.BaseClasses.BattlePassive, ARCH.DOC.entities.Characters.Character, ARCH.DOC.core.BaseClasses.IPassiveContext, ARCH.DOC.core.Modifiers.EphemeralModifier]
@@ -584,11 +574,12 @@ Method description: Executes a dice roll simulation, accounting for deterministi
 Acts as a central registry for loading and accessing data-driven templates from JSON files.
 
 ##### DataManager [ARCH.DOC.core.DataManager.DataManager]
-[DEPENDS: ARCH.DOC.core.Structs.CombatStyle, ARCH.DOC.core.Structs.GameRules, ARCH.DOC.core.Structs.AttackActionTemplate, ARCH.DOC.core.Structs.AttackEffects, ARCH.DOC.entities.Characters.Character, ARCH.DOC.core.CharacterSystem, ARCH.DOC.entities.Items.Armor, ARCH.DOC.entities.Items.Weapon, ARCH.RULES.CORE.DATA]
+[DEPENDS: ARCH.DOC.core.Structs.CombatStyle, ARCH.DOC.core.Structs.GameRules, ARCH.DOC.core.Structs.AttackActionTemplate, ARCH.DOC.core.Structs.AttackEffects, ARCH.DOC.core.Structs.BattlePassiveTemplate, ARCH.DOC.entities.Characters.Character, ARCH.DOC.core.CharacterSystem, ARCH.DOC.entities.Items.Armor, ARCH.DOC.entities.Items.Weapon, ARCH.RULES.CORE.DATA]
 Central data registry for loading and retrieving game definitions from JSON files. Ensures consistent instantiation of complex entities and rules.
 
 - Constructor [ARCH.DOC.core.DataManager.DataManager.__init__]: `__init__()`
 - `_action_templates: dict[str, AttackActionTemplate]` [ARCH.DOC.core.DataManager.DataManager._action_templates]: Private cache of combat action templates.
+- `_passive_templates: dict[str, BattlePassiveTemplate]` [ARCH.DOC.core.DataManager.DataManager._passive_templates]: Private cache of passive ability templates.
 - `_combat_styles: dict[str, CombatStyle]` [ARCH.DOC.core.DataManager.DataManager._combat_styles]: Private cache of combat styles.
 - `_characters: dict[str, Character]` [ARCH.DOC.core.DataManager.DataManager._characters]: Private cache of character templates.
 - `_game_rules: GameRules | None` [ARCH.DOC.core.DataManager.DataManager._game_rules]: Global game configuration and progression rules.
@@ -629,11 +620,25 @@ Method description: Loads combat action templates from JSON, instantiating `Atta
 3. Maps raw effect data into `AttackEffects` objects.
 4. Instantiates `AttackActionTemplate` and caches it in `_action_templates`.
 
+###### load_passive_templates [ARCH.DOC.core.DataManager.DataManager.load_passive_templates]
+`load_passive_templates(filepath: str) -> None`
+- `filepath: str`: Path to the JSON file containing passive templates.
+Method description: Loads passive ability templates from JSON, instantiating `BattlePassiveTemplate`.
+1. Parses the JSON and iterates through template entries.
+2. Instantiates `BattlePassiveTemplate` and caches it in `_passive_templates`.
+
 ###### get_action_template [ARCH.DOC.core.DataManager.DataManager.get_action_template]
 `get_action_template(action_id: str) -> AttackActionTemplate`
 - `action_id: str`: Unique identifier for the requested action template.
 Method description: Retrieves a cached action template by ID.
 1. Searches `_action_templates` for the given `action_id`.
+2. Returns the template if found; otherwise, raises a descriptive `KeyError`.
+
+###### get_passive_template [ARCH.DOC.core.DataManager.DataManager.get_passive_template]
+`get_passive_template(passive_id: str) -> BattlePassiveTemplate`
+- `passive_id: str`: Unique identifier for the requested passive template.
+Method description: Retrieves a cached passive template by ID.
+1. Searches `_passive_templates` for the given `passive_id`.
 2. Returns the template if found; otherwise, raises a descriptive `KeyError`.
 
 ###### get_character [ARCH.DOC.core.DataManager.DataManager.get_character]
@@ -940,60 +945,60 @@ Reactive components tied to character entities. Passives are instantiated at the
 - `registry: Dict[str, Type[BattlePassive]]` [ARCH.DOC.battle.BattlePassives.registry]: Mapping of ability IDs to their concrete class implementations, used by `BattleManager` for character initialization.
 
 ##### ForçaBruta [ARCH.DOC.battle.BattlePassives.ForçaBruta]
-[DEPENDS: GDD.STYLES.DESTRUIDOR.FORCA_BRUTA]
-A straightforward offensive passive that multiplies success grade.
+[DEPENDS: GDD.STYLES.DESTRUIDOR.FORCA_BRUTA, ARCH.DOC.core.Structs.BattlePassiveTemplate]
+Data-driven offensive passive that multiplies success grade using `multiplier`.
 
-- Constructor [ARCH.DOC.battle.BattlePassives.ForçaBruta.__init__]: `__init__(owner: Character, context: IPassiveContext)`
+- Constructor [ARCH.DOC.battle.BattlePassives.ForçaBruta.__init__]: `__init__(owner: Character, context: IPassiveContext, template: BattlePassiveTemplate | None = None)`
 
 ###### get_hooks [ARCH.DOC.battle.BattlePassives.ForçaBruta.get_hooks]
 `get_hooks() -> Dict[str, Callable]`
-Method description: Registers the doubling logic for successful hits.
-1. `multiply_hook` (on `on_gda_modify`): If the owner hits, doubles the current `GdA` and records a `PASSIVE` trigger and an `ATK_LOAD` modification.
+Method description: Registers the multiplication logic for successful hits.
+1. `multiply_hook` (on `on_gda_modify`): If the owner hits, increases `GdA` based on `multiplier` (default 2) and records a `PASSIVE` trigger and an `ATK_LOAD` modification.
 
 ##### MãosPesadas [ARCH.DOC.battle.BattlePassives.MãosPesadas]
-[DEPENDS: ARCH.DOC.battle.StatusEffects.Atordoado, GDD.STYLES.DESTRUIDOR.MAOS_PESADAS]
-Utility passive that applies CC based on hit quality.
+[DEPENDS: ARCH.DOC.battle.StatusEffects.Atordoado, GDD.STYLES.DESTRUIDOR.MAOS_PESADAS, ARCH.DOC.core.Structs.BattlePassiveTemplate]
+Data-driven utility passive that applies CC based on hit quality using `threshold` and `status_duration`.
 
-- Constructor [ARCH.DOC.battle.BattlePassives.MãosPesadas.__init__]: `__init__(owner: Character, context: IPassiveContext)`
+- Constructor [ARCH.DOC.battle.BattlePassives.MãosPesadas.__init__]: `__init__(owner: Character, context: IPassiveContext, template: BattlePassiveTemplate | None = None)`
 
 ###### get_hooks [ARCH.DOC.battle.BattlePassives.MãosPesadas.get_hooks]
 `get_hooks() -> Dict[str, Callable]`
 Method description: Registers status application logic.
-1. `effect_hook` (on `on_gda_modify`): If the owner hits with `GdA > 3`, instantiates and adds `Atordoado` status to the target. Records a `STATUS` event.
+1. `effect_hook` (on `on_gda_modify`): If the owner hits with `GdA > threshold`, instantiates and adds `Atordoado` status (with `status_duration`) to the target. Records a `STATUS` event.
 
 ##### PosturaDefensiva [ARCH.DOC.battle.BattlePassives.PosturaDefensiva]
-[DEPENDS: ARCH.RULES.BATTLE.PAYLOAD_TARGET_CHECK, ARCH.DOC.core.Modifiers.EphemeralModifier, GDD.STYLES.DESTRUIDOR.POSTURA_DEFENSIVA]
-A complex, stateful stance that trades offensive accuracy for defensive stability and reactive penalties for attackers.
+[DEPENDS: ARCH.RULES.BATTLE.PAYLOAD_TARGET_CHECK, ARCH.DOC.core.Modifiers.EphemeralModifier, GDD.STYLES.DESTRUIDOR.POSTURA_DEFENSIVA, ARCH.DOC.core.Structs.BattlePassiveTemplate]
+Data-driven stateful stance that trades offensive accuracy for defensive stability and reactive penalties for attackers.
 
-- Constructor [ARCH.DOC.battle.BattlePassives.PosturaDefensiva.__init__]: `__init__(owner: Character, context: IPassiveContext)`
+- Constructor [ARCH.DOC.battle.BattlePassives.PosturaDefensiva.__init__]: `__init__(owner: Character, context: IPassiveContext, template: BattlePassiveTemplate | None = None)`
 - `is_active: bool` [ARCH.DOC.battle.BattlePassives.PosturaDefensiva.is_active]: Current state of the stance.
 - `_tracked_targets: Dict[str, bool]` [ARCH.DOC.battle.BattlePassives.PosturaDefensiva._tracked_targets]: Maps character IDs to their penalty status.
 
 ###### toggle [ARCH.DOC.battle.BattlePassives.PosturaDefensiva.toggle]
 `toggle() -> str`
-Method description: Switches the stance on/off and updates actor stats.
-1. If ON: Registers `atk_die` (-2) and `def_die` (+2) modifiers. Returns `POSTURA|actor|ON`.
+Method description: Switches the stance on/off and updates actor stats using `atk_die_penalty` and `def_die_bonus`.
+1. If ON: Registers `atk_die` and `def_die` modifiers. Returns `POSTURA|actor|ON`.
 2. If OFF: Removes die modifiers and clears all tracked target penalties. Returns `POSTURA|actor|OFF`.
 
 ###### get_hooks [ARCH.DOC.battle.BattlePassives.PosturaDefensiva.get_hooks]
 `get_hooks() -> Dict[str, Callable]`
-Method description: Implements the reactive logic of the stance.
+Method description: Implements the reactive logic of the stance using `pre_penalty`.
 1. `hit_hook` (on `on_gda_modify`): While active, successful hits from the owner start tracking the target for penalties.
-2. `penalty_hook` (on `on_roll_modify`): If a tracked target attacks the owner, applies a -1 penalty to `attack_load.pre`.
-3. `cleanup_hook` (on `on_attack_end`): Removes tracking from the current attacker if they were tracked.
-4. `turn_end_hook` (on `on_turn_end`): Safety cleanup for targets that were tracked but didn't attack.
+2. `penalty_hook` (on `on_roll_modify`): If a tracked target attacks the owner, applies `pre_penalty` to `attack_load.pre`.
+3. `cleanup_hook` (on `on_attack_end"): Removes tracking from the current attacker if they were tracked.
+4. `turn_end_hook` (on `on_turn_end"): Safety cleanup for targets that were tracked but didn't attack.
 
 ##### GracaDoDuelista [ARCH.DOC.battle.BattlePassives.GracaDoDuelista]
-[DEPENDS: ARCH.DOC.core.CharacterSystem.spend_focus, GDD.STYLES.DUELISTA.GRACA]
-Advanced passive granting success bonuses and manual defensive reactions.
+[DEPENDS: ARCH.DOC.core.CharacterSystem.spend_focus, GDD.STYLES.DUELISTA.GRACA, ARCH.DOC.core.Structs.BattlePassiveTemplate]
+Data-driven advanced passive granting success bonuses and manual defensive reactions.
 
-- Constructor [ARCH.DOC.battle.BattlePassives.GracaDoDuelista.__init__]: `__init__(owner: Character, context: IPassiveContext)`
+- Constructor [ARCH.DOC.battle.BattlePassives.GracaDoDuelista.__init__]: `__init__(owner: Character, context: IPassiveContext, template: BattlePassiveTemplate | None = None)`
 
 ###### get_hooks [ARCH.DOC.battle.BattlePassives.GracaDoDuelista.get_hooks]
 `get_hooks() -> Dict[str, Callable]`
-Method description: Registers accuracy bonuses and reaction prompts.
-1. `passiva_acerto_hook` (on `on_gda_modify`): Adds 1d6 to the owner's `GdA` for all attacks.
-2. `reacao_evasao_hook` (on `on_defensive_reaction`): If the owner is targeted and hit, prompts the controller for a choice. If 2 Focus is spent, rolls 1d4 and subtracts from incoming `GdA`.
+Method description: Registers accuracy bonuses and reaction prompts using parameters: `bonus_die`, `reaction_die`, `reaction_cost`.
+1. `passiva_acerto_hook` (on `on_gda_modify`): Adds `bonus_die` roll to the owner's `GdA` for all attacks.
+2. `reacao_evasao_hook` (on `on_defensive_reaction`): If the owner is targeted and hit, prompts the controller for a choice. If `reaction_cost` Focus is spent, rolls `reaction_die` and subtracts from incoming `GdA`.
 
 ##### Combo [ARCH.DOC.battle.BattlePassives.Combo]
 [DEPENDS: ARCH.DOC.battle.BattleActions.AttackAction, ARCH.DOC.battle.StatusEffects.Atordoado, GDD.STYLES.LUTADOR.COMBO]
@@ -1012,27 +1017,27 @@ Method description: Implements recursive attack logic.
    - Merges sub-action histories into the main attack history using pipe-delimited events.
 
 ##### Bloquear [ARCH.DOC.battle.BattlePassives.Bloquear]
-[DEPENDS: ARCH.DOC.core.CharacterSystem.spend_focus, GDD.STYLES.DEFENSOR.BLOQUEAR]
-Defensive passive that allows focus-based reactions and grants counter-attack bonuses.
+[DEPENDS: ARCH.DOC.core.CharacterSystem.spend_focus, GDD.STYLES.DEFENSOR.BLOQUEAR, ARCH.DOC.core.Structs.BattlePassiveTemplate]
+Data-driven defensive passive that allows focus-based reactions and grants counter-attack bonuses.
 
-- Constructor [ARCH.DOC.battle.BattlePassives.Bloquear.__init__]: `__init__(owner: Character, context: IPassiveContext)`
+- Constructor [ARCH.DOC.battle.BattlePassives.Bloquear.__init__]: `__init__(owner: Character, context: IPassiveContext, template: BattlePassiveTemplate | None = None)`
 - `_counter_targets: Dict[str, bool]` [ARCH.DOC.battle.BattlePassives.Bloquear._counter_targets]: Tracks attackers eligible for counter-bonuses.
 
 ###### get_hooks [ARCH.DOC.battle.BattlePassives.Bloquear.get_hooks]
 `get_hooks() -> Dict[str, Callable]`
-Method description: Registers defensive reaction and counter-bonus hooks.
+Method description: Registers defensive reaction and counter-bonus hooks using `focus_cost`, `reduction_die`, `counter_threshold`, and `counter_bda_bonus`.
 1. `reacao_bloqueio_hook` (on `on_defensive_reaction`): 
-   - If targeted, checks for 2 Focus and controller approval.
-   - Spends Focus and subtracts 1d4 from incoming `GdA`.
-   - If final `GdA < -3`, marks the attacker for a counter-bonus.
-2. `bonus_contra_ataque_hook` (on `on_roll_modify`): If the owner attacks a marked target, applies a +1 bonus to `attack_load.bda`.
-3. `cleanup_bonus_hook` (on `on_attack_end`): Removes the target marking.
+   - If targeted, checks for `focus_cost` Focus and controller approval.
+   - Spends Focus and subtracts `reduction_die` roll from incoming `GdA`.
+   - If final `GdA < counter_threshold`, marks the attacker for a counter-bonus.
+2. `bonus_contra_ataque_hook` (on `on_roll_modify`): If the owner attacks a marked target, applies a `counter_bda_bonus` to `attack_load.bda`.
+3. `cleanup_bonus_hook` (on `on_attack_end"): Removes the target marking.
 
 ##### PosturaBatalha [ARCH.DOC.battle.BattlePassives.PosturaBatalha]
-[DEPENDS: ARCH.DOC.core.Modifiers.EphemeralModifier, GDD.STYLES.MESTRE_ARMAS.POSTURAS, ARCH.DOC.core.Events.AttackLoad]
-A stateful stance that grants offensive accuracy and damage bonuses, or defensive stability and reactive re-rolls, depending on the active mode.
+[DEPENDS: ARCH.DOC.core.Modifiers.EphemeralModifier, GDD.STYLES.MESTRE_ARMAS.POSTURAS, ARCH.DOC.core.Events.AttackLoad, ARCH.DOC.core.Structs.BattlePassiveTemplate]
+Data-driven stateful stance that grants offensive accuracy and damage bonuses, or defensive stability and reactive re-rolls.
 
-- Constructor [ARCH.DOC.battle.BattlePassives.PosturaBatalha.__init__]: `__init__(owner: Character, context: IPassiveContext)`
+- Constructor [ARCH.DOC.battle.BattlePassives.PosturaBatalha.__init__]: `__init__(owner: Character, context: IPassiveContext, template: BattlePassiveTemplate | None = None)`
 - `current_postura: str | None` [ARCH.DOC.battle.BattlePassives.PosturaBatalha.current_postura]: Current state of the stance ("OFFENSIVE", "DEFENSIVE", or None).
 
 ###### set_mode [ARCH.DOC.battle.BattlePassives.PosturaBatalha.set_mode]
@@ -1045,26 +1050,26 @@ Method description: Switches the stance on/off and updates actor stats via modif
 
 ###### get_hooks [ARCH.DOC.battle.BattlePassives.PosturaBatalha.get_hooks]
 `get_hooks() -> Dict[str, Callable]`
-Method description: Implements the reactive logic of the stance.
-1. `on_gda_modify`: While `OFFENSIVE`, successful hits from the owner add +2 to `GdA`. If the attacker's `attack_roll > 7`, it adds +4 instead.
+Method description: Implements the reactive logic of the stance using parameters: `offensive_gda_bonus`, `offensive_high_bonus`, `offensive_threshold`, `reroll_cost`.
+1. `on_gda_modify`: While `OFFENSIVE`, successful hits from the owner add `offensive_gda_bonus` to `GdA`. If the attacker's `attack_roll > offensive_threshold`, it adds `offensive_high_bonus` instead.
 2. `on_defense_reaction`: While `DEFENSIVE` and the owner is targeted, prompts the controller for a re-roll reaction.
-   - If approved and 2 Focus is spent: rolls `def_die` again, calculates the difference (`new_roll - old_defense_roll`), updates `GdA` and `defense_roll` inside `AttackLoad`, and registers the modification.
+   - If approved and `reroll_cost` Focus is spent: rolls `def_die` again, calculates the difference (`new_roll - old_defense_roll`), updates `GdA` and `defense_roll` inside `AttackLoad`, and registers the modification.
 
 ##### RitmoAcelerado [ARCH.DOC.battle.BattlePassives.RitmoAcelerado]
-[DEPENDS: ARCH.DOC.core.Events.HistoryEmitter, ARCH.DOC.core.Enums.BattleActionType, GDD.STYLES.RETALHADOR.RITMO]
-A dynamic rhythm passive that rewards consecutive successful attacks by reducing action costs and granting a precision bonus.
+[DEPENDS: ARCH.DOC.core.Events.HistoryEmitter, ARCH.DOC.core.Enums.BattleActionType, GDD.STYLES.RETALHADOR.RITMO, ARCH.DOC.core.Structs.BattlePassiveTemplate]
+A data-driven dynamic rhythm passive that rewards consecutive successful attacks by reducing action costs and granting a precision bonus.
 
-- Constructor [ARCH.DOC.battle.BattlePassives.RitmoAcelerado.__init__]: `__init__(owner: Character, context: IPassiveContext)`
+- Constructor [ARCH.DOC.battle.BattlePassives.RitmoAcelerado.__init__]: `__init__(owner: Character, context: IPassiveContext, template: BattlePassiveTemplate | None = None)`
 - `consecutive_accelerations: int` [ARCH.DOC.battle.BattlePassives.RitmoAcelerado.consecutive_accelerations]: Counter for consecutive 7+ rolls.
 - `processed_actions: set` [ARCH.DOC.battle.BattlePassives.RitmoAcelerado.processed_actions]: Tracks unique action IDs to prevent double counting in AoE or multi-target attacks.
 
 ###### get_hooks [ARCH.DOC.battle.BattlePassives.RitmoAcelerado.get_hooks]
 `get_hooks() -> Dict[str, Callable]`
 Method description: Registers hooks for the rhythm logic.
-1. `on_roll_modify`: If `consecutive_accelerations == 2`, grants +2 to `attack_load.pre`.
+1. `on_roll_modify`: If `consecutive_accelerations == 2`, grants `pre_bonus` (default +2) to `attack_load.pre`.
 2. `on_attack_end`: On the first resolution of an action:
    - If `consecutive == 2`, resets the rhythm to 0.
-   - If `attack_roll >= 7` and action is not a movement action, changes the action to `MOVE_ACTION`, increments `consecutive_accelerations`, and records the rhythm event.
+   - If `attack_roll >= threshold_roll` (default 7) and action is not a movement action, changes the action to `MOVE_ACTION`, increments `consecutive_accelerations`, and records the rhythm event.
    - Otherwise, resets the rhythm to 0.
 
 #### Judges.py [ARCH.DOC.battle.Judges]

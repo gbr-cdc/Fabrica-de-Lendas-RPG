@@ -11,7 +11,9 @@ def create_test_battle_manager():
     dice = DiceManager(seed=42)
     data = DataManager()
     data.load_action_templates('data/AttackActions.json')
+    data.load_passive_templates('data/BattlePassives.json')
     data.load_combat_styles('data/CombatStyles.json')
     data.load_game_rules('data/Rules.json')
     judge = BattleJudge()
+
     return BattleManager(dice, data, judge)

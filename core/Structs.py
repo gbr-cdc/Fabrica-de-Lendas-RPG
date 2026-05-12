@@ -53,3 +53,9 @@ class AttackActionTemplate:
     attack_type: type['AttackType']
     focus_cost: int
     effects: List[AttackEffects] = field(default_factory=list)
+
+@dataclass
+class BattlePassiveTemplate:
+    id: str
+    name: str
+    parameters: Dict[str, Any] = field(default_factory=dict)

@@ -11,37 +11,47 @@ from battle.StatusEffects import Atordoado
 from battle.BattleActions import AttackAction
 
 class ForçaBruta(BattlePassive):
-    def __init__(self, owner: 'Character', context: 'IPassiveContext'):
-        super().__init__(name="Força Bruta", owner=owner, context=context)
+    def __init__(self, owner: 'Character', context: 'IPassiveContext', template: 'BattlePassiveTemplate' | None = None):
+        super().__init__(name="Força Bruta", owner=owner, context=context, template=template)
 
     def get_hooks(self) -> Dict[str, Callable]:
         def multiply_hook(attack_load: 'AttackLoad'):
             if attack_load.character.char_id == self.owner.char_id:
-                    val = attack_load.gda
-                    attack_load.gda += val
-                    attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
-                    attack_load.history.append(HistoryEmitter.atk_load("gda", val, attack_load.gda))
+                params = self.template.parameters if self.template else {}
+                multiplier = params.get("multiplier", 2)
+                
+                val = attack_load.gda
+                # If multiplier is 2, it adds val. If 3, adds 2*val, etc.
+                added_val = val * (multiplier - 1)
+                
+                attack_load.gda += added_val
+                attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
+                attack_load.history.append(HistoryEmitter.atk_load("gda", added_val, attack_load.gda))
         return {'on_gda_modify': multiply_hook}
 
 class MãosPesadas(BattlePassive):
-    def __init__(self, owner: 'Character', context: 'IPassiveContext'):
-        super().__init__(name="Mãos Pesadas", owner=owner, context=context)
+    def __init__(self, owner: 'Character', context: 'IPassiveContext', template: 'BattlePassiveTemplate' | None = None):
+        super().__init__(name="Mãos Pesadas", owner=owner, context=context, template=template)
 
     def get_hooks(self) -> Dict[str, Callable]:
         def effect_hook(attack_load: 'AttackLoad'):
             if attack_load.target is None:
                 return
             if attack_load.character.char_id == self.owner.char_id:
-                    if attack_load.gda > 3:
-                        effect = Atordoado(duration=0, target=attack_load.target, context=self.context)
-                        self.context.add_status_effect(effect)
-                        attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
-                        attack_load.history.append(HistoryEmitter.status(attack_load.target.char_id, "Atordoado", 0, "APPLIED"))
+                params = self.template.parameters if self.template else {}
+                threshold = params.get("threshold", 3)
+                duration = params.get("status_duration", 0)
+                
+                if attack_load.gda > threshold:
+                    effect = Atordoado(duration=duration, target=attack_load.target, context=self.context)
+                    self.context.add_status_effect(effect)
+                    attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
+                    attack_load.history.append(HistoryEmitter.status(attack_load.target.char_id, "Atordoado", duration, "APPLIED"))
         return {'on_gda_modify': effect_hook}
 
 class PosturaDefensiva(BattlePassive):
-    def __init__(self, owner: 'Character', context: 'IPassiveContext'):
-        super().__init__(name="Postura Defensiva", owner=owner, context=context)
+    def __init__(self, owner: 'Character', context: 'IPassiveContext', template: 'BattlePassiveTemplate' | None = None):
+        super().__init__(name="Postura Defensiva", owner=owner, context=context, template=template)
         self.is_active = False
         self._dice_modifiers = []
         self._tracked_targets: Dict[str, bool] = {}  # char_id -> penalty_applied
@@ -50,9 +60,13 @@ class PosturaDefensiva(BattlePassive):
         from core.Modifiers import EphemeralModifier
         self.is_active = not self.is_active
         if self.is_active:
+            params = self.template.parameters if self.template else {}
+            atk_penalty = params.get("atk_die_penalty", -2)
+            def_bonus = params.get("def_die_bonus", 2)
+            
             # Atacante d12 -> d10 (-2), Defensor d8 -> d10 (+2)
-            m1 = EphemeralModifier(stat_name='atk_die', value=-2, source='PosturaDefensiva')
-            m2 = EphemeralModifier(stat_name='def_die', value=2, source='PosturaDefensiva')
+            m1 = EphemeralModifier(stat_name='atk_die', value=atk_penalty, source='PosturaDefensiva')
+            m2 = EphemeralModifier(stat_name='def_die', value=def_bonus, source='PosturaDefensiva')
             self._dice_modifiers = [m1, m2]
             self.owner.add_modifier(m1)
             self.owner.add_modifier(m2)
@@ -87,10 +101,13 @@ class PosturaDefensiva(BattlePassive):
         def penalty_hook(attack_load: 'AttackLoad'):
             cid = attack_load.character.char_id
             if self.is_active and cid in self._tracked_targets and attack_load.target is not None and attack_load.target.char_id == self.owner.char_id:
-                attack_load.pre -= 1
+                params = self.template.parameters if self.template else {}
+                pre_penalty = params.get("pre_penalty", -1)
+                
+                attack_load.pre += pre_penalty
                 self._tracked_targets[cid] = True
                 attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
-                attack_load.history.append(HistoryEmitter.atk_load("pre", -1, attack_load.pre))
+                attack_load.history.append(HistoryEmitter.atk_load("pre", pre_penalty, attack_load.pre))
 
         def cleanup_hook(attack_load: 'AttackLoad'):
             cid = attack_load.character.char_id
@@ -112,14 +129,18 @@ class PosturaDefensiva(BattlePassive):
         }
 
 class GracaDoDuelista(BattlePassive):
-    def __init__(self, owner: 'Character', context: 'IPassiveContext'):
-        super().__init__(name="Graça do Duelista", owner=owner, context=context)
+    def __init__(self, owner: 'Character', context: 'IPassiveContext', template: 'BattlePassiveTemplate' | None = None):
+        super().__init__(name="Graça do Duelista", owner=owner, context=context, template=template)
 
     def get_hooks(self) -> Dict[str, Callable]:
+        params = self.template.parameters if self.template else {}
+        bonus_die = params.get("bonus_die", 6)
+        reaction_die = params.get("reaction_die", 4)
+        reaction_cost = params.get("reaction_cost", 2)
         
         def passiva_acerto_hook(attack_load: 'AttackLoad') -> None: 
             if attack_load.character.char_id == self.owner.char_id:
-                roll = self.dice_service.roll_dice(6, RollState.NEUTRAL)
+                roll = self.dice_service.roll_dice(bonus_die, RollState.NEUTRAL)
                 attack_load.gda += roll.final_roll
                 attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
                 attack_load.history.append(HistoryEmitter.atk_load("gda", roll.final_roll, attack_load.gda))
@@ -129,14 +150,13 @@ class GracaDoDuelista(BattlePassive):
                 return
             if attack_load.target.char_id == self.owner.char_id:
                 if attack_load.gda > (0 + attack_load.grd - attack_load.pre):
-                    custo_evasao = 2
-                    if self.owner.floating_focus >= custo_evasao:
+                    if self.owner.floating_focus >= reaction_cost:
                         controller = self.context.get_controller(self.owner.char_id)
                         if controller and controller.choose_reaction(self.owner, self.name, attack_load, self.context):
-                            if CharacterSystem.spend_focus(self.owner, custo_evasao):
-                                attack_load.history.append(HistoryEmitter.focus(self.owner.char_id, -custo_evasao, self.owner.floating_focus))
+                            if CharacterSystem.spend_focus(self.owner, reaction_cost):
+                                attack_load.history.append(HistoryEmitter.focus(self.owner.char_id, -reaction_cost, self.owner.floating_focus))
                             
-                            roll = self.dice_service.roll_dice(4, RollState.NEUTRAL)
+                            roll = self.dice_service.roll_dice(reaction_die, RollState.NEUTRAL)
                             attack_load.gda -= roll.final_roll
                             attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
                             attack_load.history.append(HistoryEmitter.atk_load("gda", -roll.final_roll, attack_load.gda))
@@ -147,8 +167,8 @@ class GracaDoDuelista(BattlePassive):
         }
 
 class Combo(BattlePassive):
-    def __init__(self, owner: 'Character', context: 'IPassiveContext'):
-        super().__init__(name="Combo", owner=owner, context=context)
+    def __init__(self, owner: 'Character', context: 'IPassiveContext', template: 'BattlePassiveTemplate' | None = None):
+        super().__init__(name="Combo", owner=owner, context=context, template=template)
         self.stage = 0
         self.hit = False
     
@@ -202,38 +222,42 @@ class Combo(BattlePassive):
         return {'on_attack_end': checar_ataque_bonus}
 
 class Bloquear(BattlePassive):
-    def __init__(self, owner: 'Character', context: 'IPassiveContext'):
-        super().__init__(name="Bloquear", owner=owner, context=context)
+    def __init__(self, owner: 'Character', context: 'IPassiveContext', template: 'BattlePassiveTemplate' | None = None):
+        super().__init__(name="Bloquear", owner=owner, context=context, template=template)
         self._counter_targets: Dict[str, bool] = {}
 
     def get_hooks(self) -> Dict[str, Callable]:
         from core.Modifiers import EphemeralModifier
+        params = self.template.parameters if self.template else {}
+        focus_cost = params.get("focus_cost", 2)
+        reduction_die = params.get("reduction_die", 4)
+        counter_threshold = params.get("counter_threshold", -3)
+        counter_bda_bonus = params.get("counter_bda_bonus", 1)
 
         def reacao_bloqueio_hook(attack_load: 'AttackLoad'):
             if attack_load.target is None or attack_load.target.char_id != self.owner.char_id:
                 return
             
-            custo = 2
-            if self.owner.floating_focus >= custo:
+            if self.owner.floating_focus >= focus_cost:
                 controller = self.context.get_controller(self.owner.char_id)
                 if controller.choose_reaction(self.owner, "Bloquear", attack_load, self.context):
-                    if CharacterSystem.spend_focus(self.owner, custo):
-                        attack_load.history.append(HistoryEmitter.focus(self.owner.char_id, -custo, self.owner.floating_focus))
+                    if CharacterSystem.spend_focus(self.owner, focus_cost):
+                        attack_load.history.append(HistoryEmitter.focus(self.owner.char_id, -focus_cost, self.owner.floating_focus))
                         
-                        roll = self.dice_service.roll_dice(4, RollState.NEUTRAL)
+                        roll = self.dice_service.roll_dice(reduction_die, RollState.NEUTRAL)
                         attack_load.gda -= roll.final_roll
                         attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
                         attack_load.history.append(HistoryEmitter.atk_load("gda", -roll.final_roll, attack_load.gda))
 
-                        if attack_load.gda < -3:
+                        if attack_load.gda < counter_threshold:
                             self._counter_targets[attack_load.character.char_id] = True
 
         def bonus_contra_ataque_hook(attack_load: 'AttackLoad'):
             if attack_load.character.char_id == self.owner.char_id and attack_load.target is not None:
                 if self._counter_targets.get(attack_load.target.char_id):
-                    attack_load.bda += 1
+                    attack_load.bda += counter_bda_bonus
                     attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
-                    attack_load.history.append(HistoryEmitter.atk_load("bda", 1, attack_load.bda))
+                    attack_load.history.append(HistoryEmitter.atk_load("bda", counter_bda_bonus, attack_load.bda))
 
         def cleanup_bonus_hook(attack_load: 'AttackLoad'):
             if attack_load.character.char_id == self.owner.char_id:
@@ -247,8 +271,8 @@ class Bloquear(BattlePassive):
         }
 
 class PosturaBatalha(BattlePassive):
-    def __init__(self, owner: 'Character', context: 'IPassiveContext'):
-        super().__init__(name="Postura de Batalha", owner=owner, context=context)
+    def __init__(self, owner: 'Character', context: 'IPassiveContext', template: 'BattlePassiveTemplate' | None = None):
+        super().__init__(name="Postura de Batalha", owner=owner, context=context, template=template)
         self.current_postura = None
         self._modifiers = []
 
@@ -279,9 +303,14 @@ class PosturaBatalha(BattlePassive):
     def get_hooks(self) -> Dict[str, Callable]:
         def on_gda_modify(attack_load: 'AttackLoad'):
             if self.current_postura == "OFFENSIVE" and attack_load.character.char_id == self.owner.char_id and attack_load.hit:
-                bonus = 2
-                if attack_load.attack_roll > 7:
-                    bonus = 4
+                params = self.template.parameters if self.template else {}
+                gda_bonus = params.get("offensive_gda_bonus", 2)
+                high_bonus = params.get("offensive_high_bonus", 4)
+                threshold = params.get("offensive_threshold", 7)
+                
+                bonus = gda_bonus
+                if attack_load.attack_roll > threshold:
+                    bonus = high_bonus
                 attack_load.gda += bonus
                 attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
                 attack_load.history.append(HistoryEmitter.atk_load("gda", bonus, attack_load.gda))
@@ -289,12 +318,14 @@ class PosturaBatalha(BattlePassive):
         def on_defense_reaction(attack_load: 'AttackLoad'):
             from core.Enums import RollState
             if self.current_postura == "DEFENSIVE" and attack_load.target is not None and attack_load.target.char_id == self.owner.char_id:
-                cost = 2
-                if self.owner.floating_focus >= cost:
+                params = self.template.parameters if self.template else {}
+                reroll_cost = params.get("reroll_cost", 2)
+                
+                if self.owner.floating_focus >= reroll_cost:
                     controller = self.context.get_controller(self.owner.char_id)
                     if controller and controller.choose_reaction(self.owner, f"{self.name}_REROLL", attack_load, self.context):
-                        if CharacterSystem.spend_focus(self.owner, cost):
-                            attack_load.history.append(HistoryEmitter.focus(self.owner.char_id, -cost, self.owner.floating_focus))
+                        if CharacterSystem.spend_focus(self.owner, reroll_cost):
+                            attack_load.history.append(HistoryEmitter.focus(self.owner.char_id, -reroll_cost, self.owner.floating_focus))
                             
                             new_roll_res = self.dice_service.roll_dice(attack_load.def_die, RollState.NEUTRAL)
                             attack_load.history.append(HistoryEmitter.roll("DEF_REROLL", new_roll_res.final_roll, attack_load.def_die, self.owner.char_id))
@@ -312,8 +343,8 @@ class PosturaBatalha(BattlePassive):
         }
 
 class RitmoAcelerado(BattlePassive):
-    def __init__(self, owner: 'Character', context: 'IPassiveContext'):
-        super().__init__(name="Ritmo Acelerado", owner=owner, context=context)
+    def __init__(self, owner: 'Character', context: 'IPassiveContext', template: 'BattlePassiveTemplate' | None = None):
+        super().__init__(name="Ritmo Acelerado", owner=owner, context=context, template=template)
         self.consecutive_accelerations = 0
         self.processed_actions = set()
 
@@ -323,23 +354,29 @@ class RitmoAcelerado(BattlePassive):
         def on_roll_modify(attack_load: 'AttackLoad'):
             if attack_load.character.char_id == self.owner.char_id:
                 if self.consecutive_accelerations == 2:
-                    attack_load.pre += 2
+                    params = self.template.parameters if self.template else {}
+                    pre_bonus = params.get("pre_bonus", 2)
+                    
+                    attack_load.pre += pre_bonus
                     attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
-                    attack_load.history.append(HistoryEmitter.atk_load("pre", 2, attack_load.pre))
+                    attack_load.history.append(HistoryEmitter.atk_load("pre", pre_bonus, attack_load.pre))
 
         def on_attack_end(attack_load: 'AttackLoad'):
             if attack_load.character.char_id == self.owner.char_id:
                 current_action = self.context.current_action
                 if current_action and id(current_action) not in self.processed_actions:
+                    params = self.template.parameters if self.template else {}
+                    threshold_roll = params.get("threshold_roll", 7)
+                    
                     self.processed_actions.add(id(current_action))
                     if self.consecutive_accelerations == 2:
                         self.consecutive_accelerations = 0
-                    elif attack_load.attack_roll >= 7:
+                    elif attack_load.attack_roll >= threshold_roll:
                         if current_action.action_type != BattleActionType.MOVE_ACTION:
                             current_action.action_type = BattleActionType.MOVE_ACTION
                             self.consecutive_accelerations += 1
                             attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
-                            attack_load.history.append(HistoryEmitter.msg("Ritmo Acelerado: Ação de Movimento!"))
+                            attack_load.history.append(HistoryEmitter.msg(f"{self.name}: Ação de Movimento!"))
                     else:
                         self.consecutive_accelerations = 0
 

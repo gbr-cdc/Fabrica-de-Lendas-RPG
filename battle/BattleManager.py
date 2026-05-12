@@ -86,11 +86,17 @@ class BattleManager:
         # Permite que as habilidades inscrevam seus comandos no Event Bus
         for passive in character.passive_abilities:
             if passive in registry:
-                passive_instance = registry[passive](character, self)
+                try:
+                    template = self.data_service.get_passive_template(passive)
+                except KeyError:
+                    template = None
+                
+                passive_instance = registry[passive](character, self, template)
                 hooks = passive_instance.get_hooks()
                 for event_name, callback in hooks.items():
                     self.subscribe(event_name, callback)
                 self.active_passives[character.char_id].append((passive_instance, hooks))
+
     
     def remove_character(self, char_id: str):
         character = self.characters.pop(char_id, None)
