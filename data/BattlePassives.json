@@ -11,14 +11,14 @@
     "id": "ForçaBruta",
     "name": "Força Bruta",
     "parameters": {
-      "multiplier": 2
+      "multiplier": 1.5
     }
   },
   "GraçaDoDuelista": {
     "id": "GraçaDoDuelista",
     "name": "Graça do Duelista",
     "parameters": {
-      "bonus_die": 6,
+      "bonus_die": 4,
       "reaction_die": 4,
       "reaction_cost": 2
     }
