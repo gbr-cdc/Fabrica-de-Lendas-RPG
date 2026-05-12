@@ -308,6 +308,43 @@ class PosturaBatalha(BattlePassive):
             'on_defense_reaction': on_defense_reaction
         }
 
+class RitmoAcelerado(BattlePassive):
+    def __init__(self, owner: 'Character', context: 'IPassiveContext'):
+        super().__init__(name="Ritmo Acelerado", owner=owner, context=context)
+        self.consecutive_accelerations = 0
+        self.processed_actions = set()
+
+    def get_hooks(self) -> Dict[str, Callable]:
+        from core.Enums import BattleActionType
+
+        def on_roll_modify(attack_load: 'AttackLoad'):
+            if attack_load.character.char_id == self.owner.char_id:
+                if self.consecutive_accelerations == 2:
+                    attack_load.pre += 2
+                    attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
+                    attack_load.history.append(HistoryEmitter.atk_load("pre", 2, attack_load.pre))
+
+        def on_attack_end(attack_load: 'AttackLoad'):
+            if attack_load.character.char_id == self.owner.char_id:
+                current_action = self.context.current_action
+                if current_action and id(current_action) not in self.processed_actions:
+                    self.processed_actions.add(id(current_action))
+                    if self.consecutive_accelerations == 2:
+                        self.consecutive_accelerations = 0
+                    elif attack_load.attack_roll >= 7:
+                        if current_action.action_type != BattleActionType.MOVE_ACTION:
+                            current_action.action_type = BattleActionType.MOVE_ACTION
+                            self.consecutive_accelerations += 1
+                            attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
+                            attack_load.history.append(HistoryEmitter.msg("Ritmo Acelerado: Ação de Movimento!"))
+                    else:
+                        self.consecutive_accelerations = 0
+
+        return {
+            'on_roll_modify': on_roll_modify,
+            'on_attack_end': on_attack_end
+        }
+
 registry = {
     "MãosPesadas": MãosPesadas,
     "ForçaBruta": ForçaBruta,
@@ -315,5 +352,6 @@ registry = {
     "GraçaDoDuelista": GracaDoDuelista,
     "PosturaDefensiva": PosturaDefensiva,
     "Bloquear": Bloquear,
-    "Postura de Batalha": PosturaBatalha
+    "Postura de Batalha": PosturaBatalha,
+    "Ritmo Acelerado": RitmoAcelerado
 }

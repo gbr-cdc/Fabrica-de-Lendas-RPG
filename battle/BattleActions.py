@@ -161,14 +161,16 @@ class AttackAction(BattleAction):
                 attack_state=RollState.NEUTRAL,
                 defense_state=RollState.NEUTRAL,
                 gda = 0,
-                damage = 0
+                damage = 0,
+                bda=self.actor.bda,
+                pre=self.actor.pre
             )
             self.context.emit('on_roll_modify', master_attack_load)
             master_roll_result = self.context.dice_service.roll_dice(self.actor.atk_die, master_attack_load.attack_state)
             master_attack_load.attack_roll = master_roll_result.final_roll
             
             master_attack_load.add_event("ROLL", "ATK_AREA", master_roll_result.final_roll, self.actor.atk_die, self.actor.char_id)
-            mod_atk_roll = master_roll_result.final_roll + self.actor.rank + self.actor.bda
+            mod_atk_roll = master_roll_result.final_roll + self.actor.rank + master_attack_load.bda
             action_load.history.extend(master_attack_load.history)
 
         # --- Phase 2: Target Resolution ---
@@ -184,21 +186,27 @@ class AttackAction(BattleAction):
                 attack_state=RollState.NEUTRAL,
                 defense_state=RollState.NEUTRAL,
                 gda = 0,
-                damage = 0
+                damage = 0,
+                bda=self.actor.bda,
+                pre=self.actor.pre,
+                bdd=target.bdd,
+                grd=target.grd
             )
 
             if self.attack_type == AttackType.AREA:
                 # Area Resolution: Use the Master Roll result for every target.
                 attack_load.attack_state = master_attack_load.attack_state
                 attack_load.attack_roll = master_roll_result.final_roll
-                current_mod_atk = mod_atk_roll
+                attack_load.bda = master_attack_load.bda
+                attack_load.pre = master_attack_load.pre
+                current_mod_atk = attack_load.attack_roll + self.actor.rank + attack_load.bda
                 self.context.emit('on_roll_modify', attack_load)
             else:
                 # Single Target Resolution: Roll for this specific attack instance.
                 self.context.emit('on_roll_modify', attack_load)
                 roll_result = self.context.dice_service.roll_dice(self.actor.atk_die, attack_load.attack_state)
                 attack_load.attack_roll = roll_result.final_roll
-                current_mod_atk = roll_result.final_roll + self.actor.rank + self.actor.bda
+                current_mod_atk = roll_result.final_roll + self.actor.rank + attack_load.bda
                 attack_load.add_event("ROLL", "ATK", roll_result.final_roll, self.actor.atk_die, self.actor.char_id)
             
             # --- Phase 3: Defense Roll ---
@@ -206,7 +214,7 @@ class AttackAction(BattleAction):
             
             roll_result = self.context.dice_service.roll_dice(target.def_die, attack_load.defense_state)
             attack_load.defense_roll = roll_result.final_roll
-            mod_def_roll = roll_result.final_roll + target.rank + target.bdd
+            mod_def_roll = roll_result.final_roll + target.rank + attack_load.bdd
             attack_load.add_event("ROLL", "DEF", roll_result.final_roll, target.def_die, target.char_id)
             
             # --- Phase 4: Hit Calculation [GDD.COMBAT.FLOW.HIT] ---
@@ -215,7 +223,7 @@ class AttackAction(BattleAction):
             
             self.context.emit('on_defense_reaction', attack_load)
             
-            if attack_load.gda > (0 + target.grd - self.actor.pre):
+            if attack_load.gda > (0 + attack_load.grd - attack_load.pre):
                 attack_load.hit = True
                 attack_load.add_event("HIT", target.char_id)
                 self.context.emit('on_hit_check', attack_load)

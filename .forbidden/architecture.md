@@ -111,9 +111,9 @@ Enum classifying offensive maneuvers.
 [DEPENDS: GDD.CORE.TIME.ACTION_TYPES]
 Enum for action economy categories.
 
-- `MOVE_ACTION: str` [ARCH.DOC.core.Enums.BattleActionType.MOVE_ACTION]: Action used for navigation.
-- `STANDARD_ACTION: str` [ARCH.DOC.core.Enums.BattleActionType.STANDARD_ACTION]: Primary action (attack, cast, etc.).
-- `FREE_ACTION: str` [ARCH.DOC.core.Enums.BattleActionType.FREE_ACTION]: Minor action with no tick cost.
+- `MOVE_ACTION: str` [ARCH.DOC.core.Enums.BattleActionType.MOVE_ACTION]: Movement action, used for moving around, drinking potions, and using items.
+- `STANDARD_ACTION: str` [ARCH.DOC.core.Enums.BattleActionType.STANDARD_ACTION]: Prymary action, used for attacking, using skills and casting magics.
+- `FREE_ACTION: str` [ARCH.DOC.core.Enums.BattleActionType.FREE_ACTION]: Fast actions with no tick cost.
 
 ##### BattleState [ARCH.DOC.core.Enums.BattleState]
 Enum for high-level combat outcomes.
@@ -213,7 +213,7 @@ Method description: Standardizes event insertion into history by formatting para
 [DEPENDS: ARCH.DOC.core.Events.ActionLoad, ARCH.RULES.CORE.OBSERVER, ARCH.DOC.core.Enums.RollState, ARCH.DOC.core.Enums.AttackType, ARCH.RULES.BATTLE.AREA_ATTACK, GDD.COMBAT.FLOW.GDA]
 Specialized payload for offensive resolution, inheriting from `ActionLoad` to add combat-specific metrics.
 
-- Constructor [ARCH.DOC.core.Events.AttackLoad.__init__]: `__init__(*, character: "Character", history: List[str] = [], success: bool = True, target: Character | None = None, attack_type: AttackType, attack_state: RollState, defense_state: RollState, gda: int = 0, damage: int = 0, hit: bool = False, attack_roll: int = 0, defense_roll: int = 0)`
+- Constructor [ARCH.DOC.core.Events.AttackLoad.__init__]: `__init__(*, character: "Character", history: List[str] = [], success: bool = True, target: Character | None = None, attack_type: AttackType, attack_state: RollState, defense_state: RollState, gda: int = 0, damage: int = 0, hit: bool = False, attack_roll: int = 0, defense_roll: int = 0, pre: int = 0, bda: int = 0, bdd: int = 0, grd: int = 0)`
 - `target: Character | None` [ARCH.DOC.core.Events.AttackLoad.target]: The recipient of the attack.
 - `attack_type: AttackType` [ARCH.DOC.core.Events.AttackLoad.attack_type]: Categorization of the attack (Basic, Skill, etc.).
 - `attack_state: RollState` [ARCH.DOC.core.Events.AttackLoad.attack_state]: Advantage state applied to the attacker.
@@ -223,6 +223,10 @@ Specialized payload for offensive resolution, inheriting from `ActionLoad` to ad
 - `hit: bool` [ARCH.DOC.core.Events.AttackLoad.hit]: Flag indicating if the attack successfully connected with the target.
 - `attack_roll: int` [ARCH.DOC.core.Events.AttackLoad.attack_roll]: Raw attack dice roll result.
 - `defense_roll: int` [ARCH.DOC.core.Events.AttackLoad.defense_roll]: Raw defense dice roll result.
+- `pre: int` [ARCH.DOC.core.Events.AttackLoad.pre]: Action-scoped precision value of the attacker.
+- `bda: int` [ARCH.DOC.core.Events.AttackLoad.bda]: Action-scoped attack bonus of the attacker.
+- `bdd: int` [ARCH.DOC.core.Events.AttackLoad.bdd]: Action-scoped defense bonus of the defender.
+- `grd: int` [ARCH.DOC.core.Events.AttackLoad.grd]: Action-scoped guard value of the defender.
 
 ##### HistoryEmitter [ARCH.DOC.core.Events.HistoryEmitter]
 [DEPENDS: ARCH.RULES.CORE.HISTORY]
@@ -283,6 +287,14 @@ Method description: Returns a formatted `STATUS` event string for status effect 
 ###### turn_start [ARCH.DOC.core.Events.HistoryEmitter.turn_start]
 `turn_start(actor_id: str, hp: int, max_hp: int, mp: int, max_mp: int, focus: int, mana: int) -> str`
 Method description: Returns a formatted `TURN_START` event string containing full actor state at turn initialization.
+
+###### passive [ARCH.DOC.core.Events.HistoryEmitter.passive]
+`passive(passive_name: str, owner_id: str) -> str`
+Method description: Returns a formatted `PASSIVE` event string indicating a passive ability has triggered.
+
+###### atk_load [ARCH.DOC.core.Events.HistoryEmitter.atk_load]
+`atk_load(attribute: str, delta: int, current: int) -> str`
+Method description: Returns a formatted `ATK_LOAD` event string indicating an internal modification to the attack load.
 
 #### BaseClasses.py [ARCH.DOC.core.BaseClasses]
 Provides foundational abstract classes and interfaces ensuring modularity and decoupling.
@@ -352,8 +364,8 @@ Protocol defining access to static game data and templates.
 - `get_template(template_id: str) -> "AttackActionTemplate"`: Loads a pre-defined action blueprint from the data service.
 
 ##### IPassiveContext [ARCH.DOC.core.BaseClasses.IPassiveContext]
-[DEPENDS: ARCH.DOC.core.BaseClasses.IEventContext, ARCH.DOC.core.BaseClasses.IEffectContext, ARCH.DOC.core.BaseClasses.ITimelineContext, ARCH.DOC.core.BaseClasses.IRegistryContext, ARCH.DOC.core.BaseClasses.IDiceContext]
-Composite protocol `(IEventContext, IEffectContext, ITimelineContext, IRegistryContext, IDiceContext, Protocol)` used by `BattlePassive` and `StatusEffect`. It provides the full suite of methods required for reactive logic, including event emission, effect management, and state registry access.
+[DEPENDS: ARCH.DOC.core.BaseClasses.IEventContext, ARCH.DOC.core.BaseClasses.IEffectContext, ARCH.DOC.core.BaseClasses.ITimelineContext, ARCH.DOC.core.BaseClasses.IRegistryContext, ARCH.DOC.core.BaseClasses.IDiceContext, ARCH.DOC.core.BaseClasses.IActionStateContext]
+Composite protocol `(IEventContext, IEffectContext, ITimelineContext, IRegistryContext, IDiceContext, IActionStateContext, Protocol)` used by `BattlePassive` and `StatusEffect`. It provides the full suite of methods required for reactive logic, including event emission, effect management, action state inspection, and state registry access.
 
 ##### IActionContext [ARCH.DOC.core.BaseClasses.IActionContext]
 [DEPENDS: ARCH.DOC.core.BaseClasses.IEventContext, ARCH.DOC.core.BaseClasses.IEffectContext, ARCH.DOC.core.BaseClasses.IDiceContext]
@@ -369,7 +381,7 @@ Composite protocol `(IRegistryContext, ITimelineContext, Protocol)` used by `IBa
 
 ##### IBattleContext [ARCH.DOC.core.BaseClasses.IBattleContext]
 [DEPENDS: ARCH.DOC.core.BaseClasses.IPassiveContext, ARCH.DOC.core.BaseClasses.IActionContext, ARCH.DOC.core.BaseClasses.IControllerContext, ARCH.DOC.core.BaseClasses.IJudgeContext]
-Composite protocol `(IEventContext, IEffectContext, ITimelineContext, IRegistryContext, IDiceContext, IDataContext, Protocol)` implemented by the battle orchestrator (typically `BattleManager`). It serves as the complete contract that aggregates all segregated interfaces, ensuring the engine satisfies every requirement of the combat system.
+Composite protocol `(IEventContext, IEffectContext, ITimelineContext, IRegistryContext, IDiceContext, IDataContext, IActionStateContext, Protocol)` implemented by the battle orchestrator (typically `BattleManager`). It serves as the complete contract that aggregates all segregated interfaces, ensuring the engine satisfies every requirement of the combat system.
 
 ##### IBattleJudge [ARCH.DOC.core.BaseClasses.IBattleJudge]
 [DEPENDS: ARCH.DOC.core.BaseClasses.IJudgeContext, ARCH.DOC.core.Structs.BattleResult, ARCH.DOC.core.Enums.BattleState]
@@ -469,6 +481,11 @@ Method description: Internal utility to synchronize modifier registration.
 Method description: Internal utility to synchronize modifier removal.
 1. Removes the `modifier` from the internal `modifiers` list if present.
 2. Removes the `modifier` from the owner character's modifier stack.
+
+##### IActionStateContext [ARCH.DOC.core.BaseClasses.IActionStateContext]
+Protocol defining access to the currently executing battle action.
+
+- `current_action: "BattleAction" | None` [ARCH.DOC.core.BaseClasses.IActionStateContext.current_action]: Read-only property exposing the action currently being resolved.
 
 #### CharacterSystem.py [ARCH.DOC.core.CharacterSystem]
 [DEPENDS: ARCH.DOC.entities.Characters.Character, ARCH.DOC.entities.Items.Weapon, ARCH.DOC.entities.Items.Armor, ARCH.DOC.core.Structs.GameRules, ARCH.RULES.CORE.ENTITIES]
@@ -682,6 +699,7 @@ The central orchestrator of the battle engine. Manages the tick-based timeline, 
 - `characters: Dict[str, Character]` [ARCH.DOC.battle.BattleManager.BattleManager.characters]: Active characters indexed by their unique ID.
 - `battle_state: BattleState` [ARCH.DOC.battle.BattleManager.BattleManager.battle_state]: The current state of the battle (RUNNING, FINISHED, ERROR).
 - `listeners: Dict[str, List[Callable]]` [ARCH.DOC.battle.BattleManager.BattleManager.listeners]: Registry for the Event Bus, mapping signal names to subscriber hook functions. See [ARCH.DOC.battle.BattleManager.BattleManager.listeners.registry]. `[ARCH.RULES.CORE.OBSERVER]`
+- `current_action: "BattleAction" | None` [ARCH.DOC.battle.BattleManager.BattleManager.current_action]: The currently executing action, available to ephemeral hooks during resolution.
 
 ###### listeners registry [ARCH.DOC.battle.BattleManager.BattleManager.listeners.registry]
 Supported event signals and their triggers:
@@ -830,8 +848,8 @@ Method description: Retrieves ephemeral hooks defined in the action template.
 
 ###### execute [ARCH.DOC.battle.BattleActions.AttackAction.execute]
 `execute() -> ActionLoad`
-Method description: Resolves the attack according to the standard Combat Flow. Handles resource consumption, Master Rolls for AoE, and individual target resolution.
-1. **Resource Consumption**: Deducts `focus_cost` from actor's `floating_focus` and records `EXEC` and `FOCUS` events.
+Method description: Resolves the attack according to the standard Combat Flow. Handles resource consumption, Master Rolls for AoE, and individual target resolution. Initializes stat metrics (`pre`, `bda`, `bdd`, `grd`) directly into the `AttackLoad` to support action-scoped stat modifications.
+1. **Resource Consumption**: Deducts `focus_cost` from actor"s `floating_focus` and records `EXEC` and `FOCUS` events.
 2. **Phase 1: Attack Roll**: 
    - If AoE, performs one "Master Roll" using `actor.atk_die` (emits `on_roll_modify` for the attacker).
    - If Single Target, the roll happens during individual resolution.
@@ -841,7 +859,7 @@ Method description: Resolves the attack according to the standard Combat Flow. H
    - Performs defense roll using `target.def_die`.
    - Emits `on_defense_reaction`.
    - Calculates `GdA = (Attack Roll + Rank + BDA) - (Defense Roll + Rank + BDD)`.
-   - **Hit Validation**: Hit is successful if `GdA > (target.grd - actor.pre)`.
+   - **Hit Validation**: Hit is successful if `GdA > (attack_load.grd - attack_load.pre)`.
    - If hit: Emits `on_hit_check`, `on_gda_modify`, `on_damage_calculation`, and `on_damage_taken`.
    - **Damage Application**: Calculates damage as `pda + (mda * max(0, GdA))`. Applies damage via `CharacterSystem.take_damage`.
    - Records `HIT`/`MISS`, `DMG`, and `HP` events.
@@ -1025,6 +1043,23 @@ Method description: Implements the reactive logic of the stance.
 1. `on_gda_modify`: While `OFFENSIVE`, successful hits from the owner add +2 to `GdA`. If the attacker's `attack_roll > 7`, it adds +4 instead.
 2. `on_defense_reaction`: While `DEFENSIVE` and the owner is targeted, prompts the controller for a re-roll reaction.
    - If approved and 2 Focus is spent: rolls `def_die` again, calculates the difference (`new_roll - old_defense_roll`), updates `GdA` and `defense_roll` inside `AttackLoad`, and registers the modification.
+
+##### RitmoAcelerado [ARCH.DOC.battle.BattlePassives.RitmoAcelerado]
+[DEPENDS: ARCH.DOC.core.Events.HistoryEmitter, ARCH.DOC.core.Enums.BattleActionType, GDD.STYLES.RETALHADOR.RITMO]
+A dynamic rhythm passive that rewards consecutive successful attacks by reducing action costs and granting a precision bonus.
+
+- Constructor [ARCH.DOC.battle.BattlePassives.RitmoAcelerado.__init__]: `__init__(owner: Character, context: IPassiveContext)`
+- `consecutive_accelerations: int` [ARCH.DOC.battle.BattlePassives.RitmoAcelerado.consecutive_accelerations]: Counter for consecutive 7+ rolls.
+- `processed_actions: set` [ARCH.DOC.battle.BattlePassives.RitmoAcelerado.processed_actions]: Tracks unique action IDs to prevent double counting in AoE or multi-target attacks.
+
+###### get_hooks [ARCH.DOC.battle.BattlePassives.RitmoAcelerado.get_hooks]
+`get_hooks() -> Dict[str, Callable]`
+Method description: Registers hooks for the rhythm logic.
+1. `on_roll_modify`: If `consecutive_accelerations == 2`, grants +2 to `attack_load.pre`.
+2. `on_attack_end`: On the first resolution of an action:
+   - If `consecutive == 2`, resets the rhythm to 0.
+   - If `attack_roll >= 7` and action is not a movement action, changes the action to `MOVE_ACTION`, increments `consecutive_accelerations`, and records the rhythm event.
+   - Otherwise, resets the rhythm to 0.
 
 #### Judges.py [ARCH.DOC.battle.Judges]
 [DEPENDS: ARCH.DOC.core.BaseClasses.IBattleJudge, ARCH.DOC.core.Enums.BattleState]

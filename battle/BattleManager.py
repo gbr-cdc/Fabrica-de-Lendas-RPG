@@ -41,6 +41,7 @@ class BattleManager:
 
         self.battle_result = BattleResult()
         self.battle_state = BattleState.RUNNING
+        self.current_action: 'BattleAction' | None = None
         
         # Event Bus (Observer Pattern) para comandos de habilidades
         self.listeners: Dict[str, List[Callable]] = {
@@ -289,6 +290,7 @@ class BattleManager:
                 self.subscribe(event_name, callback)
                 
             # 4. Executa a ação
+            self.current_action = action
             action_load = action.execute_if_possible()
             
             # 5. Registra no histórico e resolve mortes
@@ -315,6 +317,7 @@ class BattleManager:
             return action_load
             
         finally:
+            self.current_action = None
             # 9. Garante a desinscrição dos hooks (ARCH.RULES.BATTLE.EPHEMERAL_HOOKS)
             for event_name, callback in action_hooks.items():
                 self.unsubscribe(event_name, callback)
@@ -356,6 +359,7 @@ class BattleManager:
                     for event_name, callback in action_hooks.items():
                         self.subscribe(event_name, callback)
                         
+                    self.current_action = action
                     action_load = action.execute_if_possible()
 
                     decision_attempts = 0
@@ -380,6 +384,7 @@ class BattleManager:
                         for event_name, callback in action_hooks.items():
                             self.subscribe(event_name, callback)
                             
+                        self.current_action = action
                         action_load = action.execute_if_possible()
                     
                     if self.battle_state == BattleState.ERROR:
@@ -395,6 +400,7 @@ class BattleManager:
                     self.battle_state = self.judge.rule(self, self.battle_result)
 
                 finally:
+                    self.current_action = None
                     for event_name, callback in action_hooks.items():
                         self.unsubscribe(event_name, callback)
 

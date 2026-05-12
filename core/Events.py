@@ -30,6 +30,10 @@ class AttackLoad(ActionLoad):
     hit: bool = False
     attack_roll: int = 0
     defense_roll: int = 0
+    pre: int = 0
+    bda: int = 0
+    bdd: int = 0
+    grd: int = 0
 
 class HistoryEmitter:
     """Utility to generate structured event tags."""
@@ -88,3 +92,11 @@ class HistoryEmitter:
     @staticmethod
     def turn_start(actor_id: str, hp: int, max_hp: int, mp: int, max_mp: int, focus: int, mana: int) -> str:
         return f"TURN_START|{actor_id}|{hp}|{max_hp}|{mp}|{max_mp}|{focus}|{mana}"
+
+    @staticmethod
+    def passive(passive_name: str, owner_id: str) -> str:
+        return f"PASSIVE|{passive_name}|{owner_id}"
+
+    @staticmethod
+    def atk_load(attribute: str, delta: int, current: int) -> str:
+        return f"ATK_LOAD|{attribute}|{delta}|{current}"
