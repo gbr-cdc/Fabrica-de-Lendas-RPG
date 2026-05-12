@@ -1401,12 +1401,15 @@ Method description: The translation engine that converts technical tags into nar
    - `EXEC`: Action usage.
    - `ROLL`: Dice roll details.
    - `MOD`: Attribute modifications.
-   - \`HIT / MISS\`: Accuracy outcomes.
+   - `HIT / MISS`: Accuracy outcomes.
    - `DMG`: Damage application.
-   - \`HP / FOCUS / MANA_F / MANA_T\`: Dynamic stat updates.
+   - `HP / FOCUS / MANA_F / MANA_T`: Dynamic stat updates.
    - `STATUS`: Application or removal of temporary conditions.
    - `TURN_START`: Comprehensive status dump at the start of a turn.
    - `DEATH`: Defeat notification.
+   - `PASSIVE`: Passive ability triggers.
+   - `ACTION_HOOK / STATUS_HOOK`: Reactive hook activations.
+   - `ATK_LOAD`: Action-scoped stat modifications.
 3. Returns a formatted string with a category prefix (e.g., `[ACTION]`, `[ROLL]`).
 4. Gracefully falls back to the raw string on error or unknown tags.
 

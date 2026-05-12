@@ -86,6 +86,14 @@ class BattleView:
                 return f"[STATUS] {parts[1]}: {parts[2]} ({parts[3]} turns) -> {parts[4]}"
             elif tag == "TURN_START":
                 return f">>> TURN START: {parts[1]} (HP: {parts[2]}/{parts[3]}, MP: {parts[4]}/{parts[5]}, Focus: {parts[6]}, Mana: {parts[7]})"
+            elif tag == "PASSIVE":
+                return f"[PASSIVE] {parts[2]} triggers {parts[1]}"
+            elif tag == "ACTION_HOOK":
+                return f"[HOOK] {parts[2]} triggers {parts[1]} effect"
+            elif tag == "STATUS_HOOK":
+                return f"[HOOK] {parts[1]} effect triggered on {parts[2]}"
+            elif tag == "ATK_LOAD":
+                return f"[ATK_LOAD] {parts[1]} modified: {parts[3]} ({parts[2]})"
             else:
                 return entry
         except IndexError:
