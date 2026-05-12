@@ -132,13 +132,13 @@ class GracaDoDuelista(BattlePassive):
             if attack_load.target is None:
                 return
             if attack_load.target.char_id == self.owner.char_id:
-                if attack_load.gda > (0 + self.owner.grd - attack_load.character.pre):
+                if attack_load.gda > (0 + attack_load.grd - attack_load.pre):
                     custo_evasao = 2
                     if self.owner.floating_focus >= custo_evasao:
                         controller = self.context.get_controller(self.owner.char_id)
                         if controller and controller.choose_reaction(self.owner, self.name, attack_load, self.context):
-                            CharacterSystem.spend_focus(self.owner, custo_evasao)
-                            attack_load.add_event("FOCUS", self.owner.char_id, -custo_evasao, self.owner.floating_focus)
+                            if CharacterSystem.spend_focus(self.owner, custo_evasao):
+                                attack_load.add_event("FOCUS", self.owner.char_id, -custo_evasao, self.owner.floating_focus)
                             
                             roll = self.dice_service.roll_dice(4, RollState.NEUTRAL)
                             attack_load.gda -= roll.final_roll
@@ -146,7 +146,7 @@ class GracaDoDuelista(BattlePassive):
 
         return {
             "on_gda_modify": passiva_acerto_hook,
-            "on_defensive_reaction": reacao_evasao_hook
+            "on_defense_reaction": reacao_evasao_hook
         }
 
 class Combo(BattlePassive):

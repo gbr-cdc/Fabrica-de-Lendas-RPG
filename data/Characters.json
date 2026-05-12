@@ -19,7 +19,9 @@
       "SkillNivelUm",
       "GenerateFocusAction"
     ],
-    "Passives": [],
+    "Passives": [
+      "MãosPesadas"
+    ],
     "CombatStyle": "Destruidor"
   },
   "Cavaleiro": {
@@ -42,7 +44,9 @@
       "SkillNivelUm",
       "GenerateFocusAction"
     ],
-    "Passives": [],
+    "Passives": [
+      "Postura de Batalha"
+    ],
     "CombatStyle": "Mestre_das_Armas"
   },
   "Duelista": {
@@ -65,7 +69,34 @@
       "SkillNivelUm",
       "GenerateFocusAction"
     ],
-    "Passives": [],
+    "Passives": [
+      "GraçaDoDuelista"
+    ],
     "CombatStyle": "Duelista"
+  },
+  "Retalhador": {
+    "Nome": "Retalhador",
+    "FIS": 3,
+    "HAB": 5,
+    "MEN": 2,
+    "Weapon": {
+      "name": "Lâmina Dupla",
+      "db": 3,
+      "mda": 1,
+      "type": "double_weapon"
+    },
+    "Armor": {
+      "name": "Armadura Leve",
+      "hp_bonus": 15,
+      "type": "light"
+    },
+    "Abilities": [
+      "SkillNivelUm",
+      "GenerateFocusAction"
+    ],
+    "Passives": [
+      "Ritmo Acelerado"
+    ],
+    "CombatStyle": "Retalhador"
   }
 }
