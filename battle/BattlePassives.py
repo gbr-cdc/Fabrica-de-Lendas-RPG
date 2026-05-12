@@ -346,7 +346,6 @@ class RitmoAcelerado(BattlePassive):
     def __init__(self, owner: 'Character', context: 'IPassiveContext', template: 'BattlePassiveTemplate' | None = None):
         super().__init__(name="Ritmo Acelerado", owner=owner, context=context, template=template)
         self.consecutive_accelerations = 0
-        self.processed_actions = set()
 
     def get_hooks(self) -> Dict[str, Callable]:
         from core.Enums import BattleActionType
@@ -364,19 +363,17 @@ class RitmoAcelerado(BattlePassive):
         def on_attack_end(attack_load: 'AttackLoad'):
             if attack_load.character.char_id == self.owner.char_id:
                 current_action = self.context.current_action
-                if current_action and id(current_action) not in self.processed_actions:
+                if current_action and current_action.action_type != BattleActionType.MOVE_ACTION:
                     params = self.template.parameters if self.template else {}
                     threshold_roll = params.get("threshold_roll", 7)
                     
-                    self.processed_actions.add(id(current_action))
                     if self.consecutive_accelerations == 2:
                         self.consecutive_accelerations = 0
                     elif attack_load.attack_roll >= threshold_roll:
-                        if current_action.action_type != BattleActionType.MOVE_ACTION:
-                            current_action.action_type = BattleActionType.MOVE_ACTION
-                            self.consecutive_accelerations += 1
-                            attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
-                            attack_load.history.append(HistoryEmitter.msg(f"{self.name}: Ação de Movimento!"))
+                        current_action.action_type = BattleActionType.MOVE_ACTION
+                        self.consecutive_accelerations += 1
+                        attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
+                        attack_load.history.append(HistoryEmitter.msg(f"{self.name}: Ação de Movimento!"))
                     else:
                         self.consecutive_accelerations = 0
 

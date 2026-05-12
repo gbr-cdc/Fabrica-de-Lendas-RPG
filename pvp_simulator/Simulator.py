@@ -13,6 +13,7 @@ from core.Structs import BattleResult
 CHARACTERS_FILE = "data/Characters.json"
 COMBAT_STYLES_FILE = "data/CombatStyles.json"
 RULES_FILE = "data/Rules.json"
+BATTLE_PASSIVES_FILE = "data/BattlePassives.json"
 ATTACK_ACTIONS_FILE = "data/AttackActions.json"
 
 class PvPSimulator:
@@ -40,6 +41,7 @@ class PvPSimulator:
         dm.load_game_rules(rules_filepath)
         dm.load_combat_styles(combat_styles_filepath)
         dm.load_action_templates(ATTACK_ACTIONS_FILE)
+        dm.load_passive_templates(BATTLE_PASSIVES_FILE)
         dm.load_characters(characters_filepath)
 
         char1 = dm.get_character(char1_id)
@@ -90,6 +92,7 @@ def simulate_multiple_battles(
     dm.load_game_rules(rules_filepath)
     dm.load_combat_styles(combat_styles_filepath)
     dm.load_action_templates(ATTACK_ACTIONS_FILE)
+    dm.load_passive_templates(BATTLE_PASSIVES_FILE)
     dm.load_characters(characters_filepath)
     
     char1_template = dm.get_character(char1_id)
