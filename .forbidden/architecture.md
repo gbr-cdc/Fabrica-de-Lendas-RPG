@@ -32,7 +32,8 @@ These rules are context-exclusive and MUST be referenced in `MISSION_LOG.md` whe
 - **Passive Abilities Hooks [ARCH.RULES.BATTLE.PASSIVE_HOOKS]:** Passive abilities are registered in `Character.passive_abilities` as a list of strings used by `BattleManager` to find the implementations when `BattleManager.add_character()` is called. `BattleManager` uses `BattlePassive.get_hooks()` to receive hooks, register them, and keep the references in `BattleManager.active_passives`. Passive hooks are removed only when `remove_character`is called.  
 - **Lazy Death Resolution [ARCH.RULES.BATTLE.DEATH_RESOLUTION]:** Characters aren't removed from the timeline when they die. The `BattleManager.get_next_actor()` function should remove and ignore dead characters. The function `BattleManager.resolve_deaths()` should be called at the beginning and end of a character turn to remove dead characters from battle.
 - **Data-Driven Attacks [ARCH.RULES.BATTLE.ATTACK_DATA]:** AttackAction constructor receives an AttackAction template. This template includes list of effects to modify the AttackAction resolution. Each effect have an id and a list of parameters. AttackAction uses the effects ids to find and call hook builders that return returns a tuple {"signal", hook_function}. BattleManager handles those hooks, following [ARCH.RULES.CORE.IOC] and [ARCH.RULES.BATTLE.EPHEMERAL_HOOKS].
-- **Attack Load Modification [ARCH.RULES.BATTLE.ATTACK_LOAD]:** `AttackLoad` holds all character attributes and other parameters involved in the attack resolution. Any `BattlePassive`, `StatusEffect` or effect hook that modifies `AttackAction` must do so by changing `AttackLoad` parameters. 
+- **Attack Load Modification [ARCH.RULES.BATTLE.ATTACK_LOAD]:** `AttackLoad` holds all character attributes and other parameters involved in the attack resolution. Any `BattlePassive`, `StatusEffect` or effect hook that modifies `AttackAction` must do so by changing `AttackLoad` parameters.
+- **Data-Driven Passives [ARCH.RULES.BATTLE.PASSIVE_DATA]:** BattlePassive constructor receives a `BattlePassiveTemplate` with a dictionary of parameters `parameters: Dict[str, Any]` which allows the passives to be configured with `BattlePassive.json`. BattlePassive should give standard values in case it is instantiated without a template.
 
 ## Project Structure [ARCH.STRUCT_MAP]
 
@@ -1056,21 +1057,16 @@ Method description: Implements the reactive logic of the stance using parameters
    - If approved and `reroll_cost` Focus is spent: rolls `def_die` again, calculates the difference (`new_roll - old_defense_roll`), updates `GdA` and `defense_roll` inside `AttackLoad`, and registers the modification.
 
 ##### RitmoAcelerado [ARCH.DOC.battle.BattlePassives.RitmoAcelerado]
-[DEPENDS: ARCH.DOC.core.Events.HistoryEmitter, ARCH.DOC.core.Enums.BattleActionType, GDD.STYLES.RETALHADOR.RITMO, ARCH.DOC.core.Structs.BattlePassiveTemplate]
-A data-driven dynamic rhythm passive that rewards consecutive successful attacks by reducing action costs and granting a precision bonus.
+[DEPENDS: ARCH.DOC.core.Events.HistoryEmitter, ARCH.DOC.core.Enums.BattleActionType, ARCH.DOC.core.Structs.BattlePassiveTemplate]
+A data-driven rhythm passive that rewards high attack rolls by reducing action costs.
 
 - Constructor [ARCH.DOC.battle.BattlePassives.RitmoAcelerado.__init__]: `__init__(owner: Character, context: IPassiveContext, template: BattlePassiveTemplate | None = None)`
-- `consecutive_accelerations: int` [ARCH.DOC.battle.BattlePassives.RitmoAcelerado.consecutive_accelerations]: Counter for consecutive 7+ rolls.
-- `processed_actions: set` [ARCH.DOC.battle.BattlePassives.RitmoAcelerado.processed_actions]: Tracks unique action IDs to prevent double counting in AoE or multi-target attacks.
 
 ###### get_hooks [ARCH.DOC.battle.BattlePassives.RitmoAcelerado.get_hooks]
 `get_hooks() -> Dict[str, Callable]`
 Method description: Registers hooks for the rhythm logic.
-1. `on_roll_modify`: If `consecutive_accelerations == 2`, grants `pre_bonus` (default +2) to `attack_load.pre`.
-2. `on_attack_end`: On the first resolution of an action:
-   - If `consecutive == 2`, resets the rhythm to 0.
-   - If `attack_roll >= threshold_roll` (default 7) and action is not a movement action, changes the action to `MOVE_ACTION`, increments `consecutive_accelerations`, and records the rhythm event.
-   - Otherwise, resets the rhythm to 0.
+1. `on_attack_end`: On the resolution of an action:
+   - If `attack_roll >= threshold_roll` (default 7) and the action is not already a movement action, changes the action to `MOVE_ACTION` and records the rhythm event.
 
 #### Judges.py [ARCH.DOC.battle.Judges]
 [DEPENDS: ARCH.DOC.core.BaseClasses.IBattleJudge, ARCH.DOC.core.Enums.BattleState]

@@ -345,20 +345,9 @@ class PosturaBatalha(BattlePassive):
 class RitmoAcelerado(BattlePassive):
     def __init__(self, owner: 'Character', context: 'IPassiveContext', template: 'BattlePassiveTemplate' | None = None):
         super().__init__(name="Ritmo Acelerado", owner=owner, context=context, template=template)
-        self.consecutive_accelerations = 0
 
     def get_hooks(self) -> Dict[str, Callable]:
         from core.Enums import BattleActionType
-
-        def on_roll_modify(attack_load: 'AttackLoad'):
-            if attack_load.character.char_id == self.owner.char_id:
-                if self.consecutive_accelerations == 2:
-                    params = self.template.parameters if self.template else {}
-                    pre_bonus = params.get("pre_bonus", 2)
-                    
-                    attack_load.pre += pre_bonus
-                    attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
-                    attack_load.history.append(HistoryEmitter.atk_load("pre", pre_bonus, attack_load.pre))
 
         def on_attack_end(attack_load: 'AttackLoad'):
             if attack_load.character.char_id == self.owner.char_id:
@@ -367,18 +356,12 @@ class RitmoAcelerado(BattlePassive):
                     params = self.template.parameters if self.template else {}
                     threshold_roll = params.get("threshold_roll", 7)
                     
-                    if self.consecutive_accelerations == 2:
-                        self.consecutive_accelerations = 0
-                    elif attack_load.attack_roll >= threshold_roll:
+                    if attack_load.attack_roll >= threshold_roll:
                         current_action.action_type = BattleActionType.MOVE_ACTION
-                        self.consecutive_accelerations += 1
                         attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
                         attack_load.history.append(HistoryEmitter.msg(f"{self.name}: Ação de Movimento!"))
-                    else:
-                        self.consecutive_accelerations = 0
 
         return {
-            'on_roll_modify': on_roll_modify,
             'on_attack_end': on_attack_end
         }
 
