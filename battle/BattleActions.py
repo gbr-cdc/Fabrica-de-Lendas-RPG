@@ -49,6 +49,17 @@ def _build_swap_atk_def_die(effect, action: 'AttackAction'):
 
     return {'on_roll_modify': swap_die_hook}
 
+def _build_add_bda(effect, action: 'AttackAction'):
+    """Increases the action-scoped attack bonus (BdA) by a fixed amount during roll modification."""
+
+    amount = effect.parameters.get("amount", 0)
+    def add_bda_hook(attack_load: 'AttackLoad'):
+        if attack_load.character.char_id == action.actor.char_id:
+            attack_load.bda += amount
+            attack_load.history.append(HistoryEmitter.action_hook(action.name, attack_load.character.char_id))
+            attack_load.history.append(HistoryEmitter.atk_load("bda", amount, attack_load.bda))
+    return {'on_roll_modify': add_bda_hook}
+
 def _build_set_gda_zero_on_dmg(effect, action: 'AttackAction'):
     """Forces GdA to 0 during damage calculation, usually for non-damaging utility hits."""
 
@@ -83,6 +94,7 @@ def _build_apply_status_on_hit_threshold(effect, action: 'AttackAction'):
 # Registry mapping template effect IDs to their corresponding hook builder functions.
 EFFECT_HOOK_BUILDERS: Dict[str, Callable] = {
 
+    "add_bda": _build_add_bda,
     "add_gda": _build_add_gda,
     "swap_atk_def_die": _build_swap_atk_def_die,
     "set_gda_zero_on_dmg": _build_set_gda_zero_on_dmg,

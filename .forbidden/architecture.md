@@ -808,7 +808,7 @@ Method description: Returns a list of all characters currently in the graveyard.
 [DEPENDS: ARCH.RULES.CORE.COMMAND, ARCH.RULES.CORE.OBSERVER, ARCH.RULES.BATTLE.ATTACK_DATA, ARCH.DOC.core.BaseClasses.BattleAction]
 Defines the available maneuvers characters can perform during combat. Utilizes the Command Pattern to encapsulate complex game logic and allows for behavioral modification via ephemeral hooks.
 
-- `EFFECT_HOOK_BUILDERS: Dict[str, Callable]` [ARCH.DOC.battle.BattleActions.EFFECT_HOOK_BUILDERS]: Registry mapping template effect IDs to their corresponding hook builder functions.
+`EFFECT_HOOK_BUILDERS: Dict[str, Callable]` [ARCH.DOC.battle.BattleActions.EFFECT_HOOK_BUILDERS]: Registry mapping template effect IDs to their corresponding hook builder functions. Registered builders: `add_bda`, `add_gda`, `swap_atk_def_die`, `set_gda_zero_on_dmg`, `apply_status_on_hit_threshold`.
 
 ##### _build_add_gda [ARCH.DOC.battle.BattleActions._build_add_gda]
 `_build_add_gda(effect, action: AttackAction) -> Dict[str, Callable]`
@@ -938,6 +938,13 @@ Method description: Switches the stance of the battle passive.
 2. Evaluates the current stance and determines the next in the cycle: `None` -> `OFFENSIVE` -> `DEFENSIVE` -> `None`.
 3. Calls the passive's `set_mode()` method with the next mode and the current action load.
 4. Returns an `ActionLoad` containing the result message or an error if the passive is missing.
+`_build_add_bda(effect, action: AttackAction) -> Dict[str, Callable]`
+- `effect`: Data object containing the "amount" parameter.
+- `action`: The `AttackAction` instance triggering the hook.
+- Description: Creates a hook for `on_roll_modify`.
+1. Extracts `amount` from `effect.parameters`.
+2. Defines `add_bda_hook` which increases `attack_load.bda` by the amount if the actor matches the action's actor.
+3. Records an `ACTION_HOOK` and `ATK_LOAD` event in the attack history.
 
 #### BattlePassives.py [ARCH.DOC.battle.BattlePassives]
 [DEPENDS: ARCH.RULES.CORE.IOC, ARCH.RULES.CORE.OBSERVER, ARCH.DOC.core.BaseClasses.BattlePassive]
@@ -1430,7 +1437,8 @@ Method description: The translation engine that converts technical tags into nar
 - **Battle Context [ARCH.TEST_QUALITY.IBATTLECONTEXT]:** Get a `BattleManager` with `create_test_battle_manager()` from `tests/utils/test_utils.py` when a concrete implementation of `IBattleContext` (or any of its segregated forms like `IActionContext`, `IPassiveContext`) is required for behavioral tests, avoid mocking of the battle state.
 - **Testing Actions [ARCH.TEST_QUALITY.ACTIONS]:** When testing the outcome of an BattleAction, you should: use `BattleManager.add_character()` to add all actors in the battle (use 'start_tick = 1000' to facilitate timeline manipulation), use `BattleManager.set_tick()` to manipulate the timeline if necessary, use `BattleManager.get_next_actor()` to take the actor you want out of the timeline, create a `BattleAction` with that actor and call `BattleManager.run_action` with that action. The actor will be reinserted in the timeline unless you executed a free action. 
 - **Structured History [ARCH.TEST_QUALITY.STRUCTURED_HISTORY]:** Tests verifying action outcomes MUST assert against structured event tags (`TAG|PARAM1|PARAM2...`) rather than narrative strings or partial substrings of `MSG` tags. This ensures tests remain resilient to localization changes and narrative polish. `[ARCH.RULES.CORE.HISTORY]`
-- **AttackAction Data Loading [ARCH.TEST_QUALITY.ATTACK_ACTION_DATA]:** Abilities implemented through `AttackActions` MUST be tested by loading their `AttackActionTemplate` through `DataManager` from `data/AttackActions.json`. This ensures tests reflect actual game data definitions and prevents discrepancies between hardcoded mocks and production content.
+- **AttackAction Data Loading [ARCH.TEST_QUALITY.ATTACK_ACTION_DATA]:** Integration tests that verify a specific named skill end-to-end (e.g., AoE behaviour, focus cost) MAY load templates via `DataManager` from `data/AttackActions.json`. Effect hook unit tests MUST NOT do this; see `[ARCH.TEST_QUALITY.EFFECT_HOOKS]`.
+- **Effect Hook Testing [ARCH.TEST_QUALITY.EFFECT_HOOKS]:** AttackAction effect hooks MUST be tested by constructing a minimal `AttackActionTemplate` programmatically with only the target effect, rather than loading real skills from `data/AttackActions.json`. This decouples the test from game balance changes and focuses on the hook behavior in isolation. If all possible effect hooks are tested this way, all skills using those hooks are implicitly validated.
 
 ## Documentation Standards [ARCH.DOC_STANDARDS]
 
