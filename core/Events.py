@@ -34,6 +34,8 @@ class AttackLoad(ActionLoad):
     bda: int = 0
     bdd: int = 0
     grd: int = 0
+    atk_die: int = 0
+    def_die: int = 0
 
 class HistoryEmitter:
     """Utility to generate structured event tags."""

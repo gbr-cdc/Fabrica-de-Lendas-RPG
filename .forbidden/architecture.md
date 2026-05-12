@@ -32,6 +32,7 @@ These rules are context-exclusive and MUST be referenced in `MISSION_LOG.md` whe
 - **Passive Abilities Hooks [ARCH.RULES.BATTLE.PASSIVE_HOOKS]:** Passive abilities are registered in `Character.passive_abilities` as a list of strings used by `BattleManager` to find the implementations when `BattleManager.add_character()` is called. `BattleManager` uses `BattlePassive.get_hooks()` to receive hooks, register them, and keep the references in `BattleManager.active_passives`. Passive hooks are removed only when `remove_character`is called.  
 - **Lazy Death Resolution [ARCH.RULES.BATTLE.DEATH_RESOLUTION]:** Characters aren't removed from the timeline when they die. The `BattleManager.get_next_actor()` function should remove and ignore dead characters. The function `BattleManager.resolve_deaths()` should be called at the beginning and end of a character turn to remove dead characters from battle.
 - **Data-Driven Attacks [ARCH.RULES.BATTLE.ATTACK_DATA]:** AttackAction constructor receives an AttackAction template. This template includes list of effects to modify the AttackAction resolution. Each effect have an id and a list of parameters. AttackAction uses the effects ids to find and call hook builders that return returns a tuple {"signal", hook_function}. BattleManager handles those hooks, following [ARCH.RULES.CORE.IOC] and [ARCH.RULES.BATTLE.EPHEMERAL_HOOKS].
+- **Attack Load Modification [ARCH.RULES.BATTLE.ATTACK_LOAD]:** `AttackLoad` holds all character attributes and other parameters involved in the attack resolution. Any `BattlePassive`, `StatusEffect` or effect hook that modifies `AttackAction` must do so by changing `AttackLoad` parameters. 
 
 ## Project Structure [ARCH.STRUCT_MAP]
 
@@ -213,7 +214,7 @@ Method description: Standardizes event insertion into history by formatting para
 [DEPENDS: ARCH.DOC.core.Events.ActionLoad, ARCH.RULES.CORE.OBSERVER, ARCH.DOC.core.Enums.RollState, ARCH.DOC.core.Enums.AttackType, ARCH.RULES.BATTLE.AREA_ATTACK, GDD.COMBAT.FLOW.GDA]
 Specialized payload for offensive resolution, inheriting from `ActionLoad` to add combat-specific metrics.
 
-- Constructor [ARCH.DOC.core.Events.AttackLoad.__init__]: `__init__(*, character: "Character", history: List[str] = [], success: bool = True, target: Character | None = None, attack_type: AttackType, attack_state: RollState, defense_state: RollState, gda: int = 0, damage: int = 0, hit: bool = False, attack_roll: int = 0, defense_roll: int = 0, pre: int = 0, bda: int = 0, bdd: int = 0, grd: int = 0)`
+- Constructor [ARCH.DOC.core.Events.AttackLoad.__init__]: `__init__(*, character: "Character", history: List[str] = [], success: bool = True, target: Character | None = None, attack_type: AttackType, attack_state: RollState, defense_state: RollState, gda: int = 0, damage: int = 0, hit: bool = False, attack_roll: int = 0, defense_roll: int = 0, pre: int = 0, bda: int = 0, bdd: int = 0, grd: int = 0, atk_die: int = 0, def_die: int = 0)`
 - `target: Character | None` [ARCH.DOC.core.Events.AttackLoad.target]: The recipient of the attack.
 - `attack_type: AttackType` [ARCH.DOC.core.Events.AttackLoad.attack_type]: Categorization of the attack (Basic, Skill, etc.).
 - `attack_state: RollState` [ARCH.DOC.core.Events.AttackLoad.attack_state]: Advantage state applied to the attacker.
@@ -227,6 +228,8 @@ Specialized payload for offensive resolution, inheriting from `ActionLoad` to ad
 - `bda: int` [ARCH.DOC.core.Events.AttackLoad.bda]: Action-scoped attack bonus of the attacker.
 - `bdd: int` [ARCH.DOC.core.Events.AttackLoad.bdd]: Action-scoped defense bonus of the defender.
 - `grd: int` [ARCH.DOC.core.Events.AttackLoad.grd]: Action-scoped guard value of the defender.
+- `atk_die: int` [ARCH.DOC.core.Events.AttackLoad.atk_die]: Action-scoped attack die size of the attacker.
+- `def_die: int` [ARCH.DOC.core.Events.AttackLoad.def_die]: Action-scoped defense die size of the defender.
 
 ##### HistoryEmitter [ARCH.DOC.core.Events.HistoryEmitter]
 [DEPENDS: ARCH.RULES.CORE.HISTORY]
@@ -808,9 +811,8 @@ Defines the available maneuvers characters can perform during combat. Utilizes t
 
 ##### _build_swap_atk_def_die [ARCH.DOC.battle.BattleActions._build_swap_atk_def_die]
 `_build_swap_atk_def_die(effect, action: AttackAction) -> Dict[str, Callable]`
-- Description: Creates hooks to temporarily swap the character's attack die with their defense die. Registers an `EphemeralModifier` and cleans it up at the end of the attack.
-1. `swap_die_hook`: Calculates the difference between defense and attack dice. Registers an `EphemeralModifier` to `atk_die` on the actor. Registered to `on_roll_modify`.
-2. `cleanup_hook`: Removes all modifiers from the actor associated with this action's name. Registered to `on_attack_end`.
+- Description: Creates a hook to temporarily swap the characters attack die with their defense die by modifying the `attack_load` directly.
+1. `swap_die_hook`: Sets `attack_load.atk_die` to `action.actor.def_die`. Registered to `on_roll_modify`.
 
 ##### _build_set_gda_zero_on_dmg [ARCH.DOC.battle.BattleActions._build_set_gda_zero_on_dmg]
 `_build_set_gda_zero_on_dmg(effect, action: AttackAction) -> Dict[str, Callable]`
@@ -848,15 +850,15 @@ Method description: Retrieves ephemeral hooks defined in the action template.
 
 ###### execute [ARCH.DOC.battle.BattleActions.AttackAction.execute]
 `execute() -> ActionLoad`
-Method description: Resolves the attack according to the standard Combat Flow. Handles resource consumption, Master Rolls for AoE, and individual target resolution. Initializes stat metrics (`pre`, `bda`, `bdd`, `grd`) directly into the `AttackLoad` to support action-scoped stat modifications.
+Method description: Resolves the attack according to the standard Combat Flow. Handles resource consumption, Master Rolls for AoE, and individual target resolution. Initializes stat metrics (`pre`, `bda`, `bdd`, `grd`, `atk_die`, `def_die`) directly into the `AttackLoad` to support action-scoped stat modifications.
 1. **Resource Consumption**: Deducts `focus_cost` from actor"s `floating_focus` and records `EXEC` and `FOCUS` events.
 2. **Phase 1: Attack Roll**: 
-   - If AoE, performs one "Master Roll" using `actor.atk_die` (emits `on_roll_modify` for the attacker).
+   - If AoE, performs one "Master Roll" using `attack_load.atk_die` (emits `on_roll_modify` for the attacker).
    - If Single Target, the roll happens during individual resolution.
 3. **Phase 2: Target Resolution Loop**: Iterates through each living target:
    - Emits `on_roll_modify`
    - Performs/Retrieves attack roll.
-   - Performs defense roll using `target.def_die`.
+   - Performs defense roll using `attack_load.def_die`.
    - Emits `on_defense_reaction`.
    - Calculates `GdA = (Attack Roll + Rank + BDA) - (Defense Roll + Rank + BDD)`.
    - **Hit Validation**: Hit is successful if `GdA > (attack_load.grd - attack_load.pre)`.
@@ -973,8 +975,8 @@ Method description: Switches the stance on/off and updates actor stats.
 `get_hooks() -> Dict[str, Callable]`
 Method description: Implements the reactive logic of the stance.
 1. `hit_hook` (on `on_gda_modify`): While active, successful hits from the owner start tracking the target for penalties.
-2. `penalty_hook` (on `on_roll_modify`): If a tracked target attacks the owner, applies a -1 `pre` penalty via `EphemeralModifier`.
-3. `cleanup_hook` (on `on_attack_end`): Removes penalties from the current attacker if they were tracked.
+2. `penalty_hook` (on `on_roll_modify`): If a tracked target attacks the owner, applies a -1 penalty to `attack_load.pre`.
+3. `cleanup_hook` (on `on_attack_end`): Removes tracking from the current attacker if they were tracked.
 4. `turn_end_hook` (on `on_turn_end`): Safety cleanup for targets that were tracked but didn't attack.
 
 ##### GracaDoDuelista [ARCH.DOC.battle.BattlePassives.GracaDoDuelista]
@@ -1019,8 +1021,8 @@ Method description: Registers defensive reaction and counter-bonus hooks.
    - If targeted, checks for 2 Focus and controller approval.
    - Spends Focus and subtracts 1d4 from incoming `GdA`.
    - If final `GdA < -3`, marks the attacker for a counter-bonus.
-2. `bonus_contra_ataque_hook` (on `on_roll_modify`): If the owner attacks a marked target, applies a +1 `bda` bonus via `EphemeralModifier`.
-3. `cleanup_bonus_hook` (on `on_attack_end`): Removes `Bloquear_Counter` modifiers and clears the target marking.
+2. `bonus_contra_ataque_hook` (on `on_roll_modify`): If the owner attacks a marked target, applies a +1 bonus to `attack_load.bda`.
+3. `cleanup_bonus_hook` (on `on_attack_end`): Removes the target marking.
 
 ##### PosturaBatalha [ARCH.DOC.battle.BattlePassives.PosturaBatalha]
 [DEPENDS: ARCH.DOC.core.Modifiers.EphemeralModifier, GDD.STYLES.MESTRE_ARMAS.POSTURAS, ARCH.DOC.core.Events.AttackLoad]

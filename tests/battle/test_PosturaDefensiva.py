@@ -56,11 +56,11 @@ def test_postura_defensiva_hit_tracking():
     # 2. Tracked target attacks owner
     atk_load = AttackLoad(character=target, target=char, 
                           attack_type=AttackType.BASIC_ATTACK, attack_state=RollState.NEUTRAL, defense_state=RollState.NEUTRAL, 
-                          gda=0, damage=0)
+                          gda=0, damage=0, pre=0)
     manager.emit("on_roll_modify", atk_load)
     
     assert passive._tracked_targets[target.char_id] is True
-    assert any(m.stat_name == 'pre' and m.value == -1 for m in target.modifiers)
+    assert atk_load.pre == -1
     assert "MOD|PosturaDefensiva" in atk_load.history[0]
     assert sum(len(subs) for subs in manager.listeners.values()) == baseline
 
@@ -74,8 +74,6 @@ def test_postura_defensiva_cleanup_success():
     passive = PosturaDefensiva(char, manager)
     passive.is_active = True
     passive._tracked_targets[target.char_id] = True
-    from core.Modifiers import EphemeralModifier
-    target.add_modifier(EphemeralModifier(stat_name='pre', value=-1, source='PosturaDefensiva_Penalidade'))
     
     hooks = passive.get_hooks()
     for ev, cb in hooks.items():
@@ -88,7 +86,6 @@ def test_postura_defensiva_cleanup_success():
                           gda=5, damage=0)
     manager.emit("on_attack_end", atk_load)
     
-    assert not any(m.source == "PosturaDefensiva_Penalidade" for m in target.modifiers)
     assert target.char_id not in passive._tracked_targets
     assert sum(len(subs) for subs in manager.listeners.values()) == baseline
 
@@ -112,7 +109,6 @@ def test_postura_defensiva_cleanup_miss():
     manager.emit("on_turn_end", action_load)
     
     assert target.char_id not in passive._tracked_targets
-    assert not any(m.source == "PosturaDefensiva_Penalidade" for m in target.modifiers)
     assert sum(len(subs) for subs in manager.listeners.values()) == baseline
 
 def test_postura_defensiva_multi_tracking():

@@ -36,21 +36,16 @@ def _build_add_gda(effect, action: 'AttackAction'):
 
 def _build_swap_atk_def_die(effect, action: 'AttackAction'):
     """
-    Temporarily swaps the character's attack die with their defense die.
-    Registers an EphemeralModifier [ARCH.RULES.CORE.MODIFIER] and cleans it up at the end of the attack.
+    Temporarily swaps the character's attack die with their defense die
+    by modifying the attack_load directly.
     """
 
     def swap_die_hook(attack_load: 'AttackLoad'):
         if attack_load.character.char_id == action.actor.char_id:
-            diff = action.actor.def_die - action.actor.atk_die
-            mod = EphemeralModifier(stat_name="atk_die", value=diff, source=action.name)
-            action.actor.add_modifier(mod)
+            attack_load.atk_die = action.actor.def_die
+            attack_load.add_event("MOD", action.name, attack_load.atk_die, attack_load.character.char_id)
 
-    def cleanup_hook(attack_load: 'AttackLoad'):
-        if attack_load.character.char_id == action.actor.char_id:
-            action.actor.remove_modifiers_by_source(action.name)
-            
-    return {'on_roll_modify': swap_die_hook, 'on_attack_end': cleanup_hook}
+    return {'on_roll_modify': swap_die_hook}
 
 def _build_set_gda_zero_on_dmg(effect, action: 'AttackAction'):
     """Forces GdA to 0 during damage calculation, usually for non-damaging utility hits."""
@@ -163,13 +158,15 @@ class AttackAction(BattleAction):
                 gda = 0,
                 damage = 0,
                 bda=self.actor.bda,
-                pre=self.actor.pre
+                pre=self.actor.pre,
+                atk_die=self.actor.atk_die,
+                def_die=0
             )
             self.context.emit('on_roll_modify', master_attack_load)
-            master_roll_result = self.context.dice_service.roll_dice(self.actor.atk_die, master_attack_load.attack_state)
+            master_roll_result = self.context.dice_service.roll_dice(master_attack_load.atk_die, master_attack_load.attack_state)
             master_attack_load.attack_roll = master_roll_result.final_roll
             
-            master_attack_load.add_event("ROLL", "ATK_AREA", master_roll_result.final_roll, self.actor.atk_die, self.actor.char_id)
+            master_attack_load.add_event("ROLL", "ATK_AREA", master_roll_result.final_roll, master_attack_load.atk_die, self.actor.char_id)
             mod_atk_roll = master_roll_result.final_roll + self.actor.rank + master_attack_load.bda
             action_load.history.extend(master_attack_load.history)
 
@@ -190,7 +187,9 @@ class AttackAction(BattleAction):
                 bda=self.actor.bda,
                 pre=self.actor.pre,
                 bdd=target.bdd,
-                grd=target.grd
+                grd=target.grd,
+                atk_die=self.actor.atk_die,
+                def_die=target.def_die
             )
 
             if self.attack_type == AttackType.AREA:
@@ -199,23 +198,24 @@ class AttackAction(BattleAction):
                 attack_load.attack_roll = master_roll_result.final_roll
                 attack_load.bda = master_attack_load.bda
                 attack_load.pre = master_attack_load.pre
+                attack_load.atk_die = master_attack_load.atk_die
                 current_mod_atk = attack_load.attack_roll + self.actor.rank + attack_load.bda
                 self.context.emit('on_roll_modify', attack_load)
             else:
                 # Single Target Resolution: Roll for this specific attack instance.
                 self.context.emit('on_roll_modify', attack_load)
-                roll_result = self.context.dice_service.roll_dice(self.actor.atk_die, attack_load.attack_state)
+                roll_result = self.context.dice_service.roll_dice(attack_load.atk_die, attack_load.attack_state)
                 attack_load.attack_roll = roll_result.final_roll
                 current_mod_atk = roll_result.final_roll + self.actor.rank + attack_load.bda
-                attack_load.add_event("ROLL", "ATK", roll_result.final_roll, self.actor.atk_die, self.actor.char_id)
+                attack_load.add_event("ROLL", "ATK", roll_result.final_roll, attack_load.atk_die, self.actor.char_id)
             
             # --- Phase 3: Defense Roll ---
 
             
-            roll_result = self.context.dice_service.roll_dice(target.def_die, attack_load.defense_state)
+            roll_result = self.context.dice_service.roll_dice(attack_load.def_die, attack_load.defense_state)
             attack_load.defense_roll = roll_result.final_roll
             mod_def_roll = roll_result.final_roll + target.rank + attack_load.bdd
-            attack_load.add_event("ROLL", "DEF", roll_result.final_roll, target.def_die, target.char_id)
+            attack_load.add_event("ROLL", "DEF", roll_result.final_roll, attack_load.def_die, target.char_id)
             
             # --- Phase 4: Hit Calculation [GDD.COMBAT.FLOW.HIT] ---
             attack_load.gda = current_mod_atk - mod_def_roll

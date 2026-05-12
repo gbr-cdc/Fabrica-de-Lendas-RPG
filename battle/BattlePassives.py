@@ -69,17 +69,11 @@ class PosturaDefensiva(BattlePassive):
             self._tracked_targets[target.char_id] = False
 
     def _clear_tracking(self, char_id: str | None = None):
-        chars = {c.char_id: c for c in self.context.get_characters()}
         if char_id:
             if char_id in self._tracked_targets:
-                if self._tracked_targets[char_id] and char_id in chars:
-                    chars[char_id].remove_modifiers_by_source("PosturaDefensiva_Penalidade")
                 del self._tracked_targets[char_id]
         else:
-            for cid, applied in self._tracked_targets.items():
-                if applied and cid in chars:
-                    chars[cid].remove_modifiers_by_source("PosturaDefensiva_Penalidade")
-            self._tracked_targets = {}
+            self._tracked_targets.clear()
 
     def get_hooks(self) -> Dict[str, Callable]:
         from core.Modifiers import EphemeralModifier
@@ -92,8 +86,7 @@ class PosturaDefensiva(BattlePassive):
         def penalty_hook(attack_load: 'AttackLoad'):
             cid = attack_load.character.char_id
             if self.is_active and cid in self._tracked_targets and attack_load.target is not None and attack_load.target.char_id == self.owner.char_id:
-                mod = EphemeralModifier(stat_name='pre', value=-1, source='PosturaDefensiva_Penalidade')
-                attack_load.character.add_modifier(mod)
+                attack_load.pre -= 1
                 self._tracked_targets[cid] = True
                 attack_load.add_event("MOD", "PosturaDefensiva", -1, attack_load.character.char_id)
 
@@ -230,13 +223,11 @@ class Bloquear(BattlePassive):
         def bonus_contra_ataque_hook(attack_load: 'AttackLoad'):
             if attack_load.character.char_id == self.owner.char_id and attack_load.target is not None:
                 if self._counter_targets.get(attack_load.target.char_id):
-                    mod = EphemeralModifier(stat_name="bda", value=1, source="Bloquear_Counter")
-                    self.owner.add_modifier(mod)
+                    attack_load.bda += 1
                     attack_load.add_event("MOD", "Bloquear_Counter", 1, self.owner.char_id)
 
         def cleanup_bonus_hook(attack_load: 'AttackLoad'):
             if attack_load.character.char_id == self.owner.char_id:
-                self.owner.remove_modifiers_by_source("Bloquear_Counter")
                 if attack_load.target is not None:
                     self._counter_targets.pop(attack_load.target.char_id, None)
 
@@ -295,8 +286,8 @@ class PosturaBatalha(BattlePassive):
                         if CharacterSystem.spend_focus(self.owner, cost):
                             attack_load.add_event("FOCUS", self.owner.char_id, -cost, self.owner.floating_focus)
                             
-                            new_roll_res = self.dice_service.roll_dice(self.owner.def_die, RollState.NEUTRAL)
-                            attack_load.add_event("ROLL", "DEF_REROLL", new_roll_res.final_roll, self.owner.def_die, self.owner.char_id)
+                            new_roll_res = self.dice_service.roll_dice(attack_load.def_die, RollState.NEUTRAL)
+                            attack_load.add_event("ROLL", "DEF_REROLL", new_roll_res.final_roll, attack_load.def_die, self.owner.char_id)
                             
                             diff = new_roll_res.final_roll - attack_load.defense_roll
                             attack_load.gda -= diff

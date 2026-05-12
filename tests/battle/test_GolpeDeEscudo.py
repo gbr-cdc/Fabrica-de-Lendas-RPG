@@ -68,15 +68,9 @@ def test_swap_atk_def_die_cleanup():
     action = AttackAction(template, actor, [create_dummy_character()], manager)
     hooks = action.get_hooks()
     
-    # Before
-    assert actor.atk_die == 6
-    
     # During on_roll_modify
-    load = MagicMock()
-    load.character = actor
-    hooks['on_roll_modify'](load)
-    assert actor.atk_die == 12
+    from core.Enums import AttackType, RollState
+    load = AttackLoad(character=actor, attack_type=AttackType.BASIC_ATTACK, attack_state=RollState.NEUTRAL, defense_state=RollState.NEUTRAL, atk_die=actor.atk_die)
     
-    # After on_attack_end
-    hooks['on_attack_end'](load)
-    assert actor.atk_die == 6
+    hooks['on_roll_modify'](load)
+    assert load.atk_die == 12
