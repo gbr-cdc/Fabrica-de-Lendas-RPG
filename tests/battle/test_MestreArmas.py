@@ -65,25 +65,39 @@ def test_postura_batalha_offensive_bonus(mestre_armas, target):
     action = MudarPosturaBatalha(actor=mestre_armas, targets=[], context=bm)
     bm.run_action(action)
     
-    # Simulate attack roll > 7 (schedule 8)
-    bm.dice_service.schedule_result(8) # Atk roll
+    # Get parameters
+    params = bm.data_service.get_passive_template("Postura de Batalha").parameters
+    offensive_gda_bonus = params.get("offensive_gda_bonus", 2)
+    offensive_high_bonus = params.get("offensive_high_bonus", 4)
+    offensive_threshold = params.get("offensive_threshold", 7)
+    
+    # Simulate attack roll > threshold (schedule threshold + 1)
+    roll = offensive_threshold + 1
+    bm.dice_service.schedule_result(roll) # Atk roll
     bm.dice_service.schedule_result(2) # Def roll
     
     atk_action = AttackAction(None, mestre_armas, [target], bm)
     load = bm.run_action(atk_action)
     
+    # GdA = (roll + rank + bda) - (def_roll + rank + bdd) + bonus
+    expected_gda = (roll + mestre_armas.rank + 0) - (2 + target.rank + 0) + offensive_high_bonus
+    
     assert "PASSIVE|Postura de Batalha|mestre1" in load.history
-    assert "ATK_LOAD|gda|4|10" in load.history
+    assert f"ATK_LOAD|gda|{offensive_high_bonus}|{expected_gda}" in load.history
 
-    # Now test with roll <= 7
-    bm.dice_service.schedule_result(5) # Atk roll
+    # Now test with roll <= threshold
+    roll = offensive_threshold
+    bm.dice_service.schedule_result(roll) # Atk roll
     bm.dice_service.schedule_result(2) # Def roll
     
     atk_action = AttackAction(None, mestre_armas, [target], bm)
     load = bm.run_action(atk_action)
     
+    # GdA = (roll + rank + bda) - (def_roll + rank + bdd) + bonus
+    expected_gda = (roll + mestre_armas.rank + 0) - (2 + target.rank + 0) + offensive_gda_bonus
+    
     assert "PASSIVE|Postura de Batalha|mestre1" in load.history
-    assert "ATK_LOAD|gda|2|5" in load.history
+    assert f"ATK_LOAD|gda|{offensive_gda_bonus}|{expected_gda}" in load.history
 
 def test_postura_batalha_defensive_reroll(mestre_armas, target):
     bm = create_test_battle_manager()
@@ -116,10 +130,14 @@ def test_postura_batalha_defensive_reroll(mestre_armas, target):
     bm.dice_service.schedule_result(1)  # Mestre first def roll (will trigger reroll)
     bm.dice_service.schedule_result(8)  # Mestre new def roll
     
+    # Get parameters
+    params = bm.data_service.get_passive_template("Postura de Batalha").parameters
+    reroll_cost = params.get("reroll_cost", 2)
+    
     atk_action = AttackAction(None, target, [mestre_armas], bm)
     load = bm.run_action(atk_action)
     
-    assert "FOCUS|mestre1|-2|3" in load.history
+    assert f"FOCUS|mestre1|-{reroll_cost}|{5 - reroll_cost}" in load.history
     assert "ROLL|DEF_REROLL|8|10|mestre1" in load.history
     
     # Diff should be new - old = 8 - 1 = 7

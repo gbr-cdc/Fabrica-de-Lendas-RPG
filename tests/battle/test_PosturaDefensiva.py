@@ -12,14 +12,18 @@ def test_postura_defensiva_toggle_modifiers():
     manager = create_test_battle_manager()
     manager.add_character(char, MagicMock())
     
-    passive = PosturaDefensiva(char, manager)
+    template = manager.data_service.get_passive_template("PosturaDefensiva")
+    passive = PosturaDefensiva(char, manager, template)
+    params = template.parameters
+    atk_penalty = params.get("atk_die_penalty", -2)
+    def_bonus = params.get("def_die_bonus", 2)
     
     # Toggle ON
     msg = passive.toggle()
     assert passive.is_active is True
     assert f"POSTURA|{char.char_id}|ON" in msg
-    assert any(m.stat_name == 'atk_die' and m.value == -2 for m in char.modifiers)
-    assert any(m.stat_name == 'def_die' and m.value == 2 for m in char.modifiers)
+    assert any(m.stat_name == 'atk_die' and m.value == atk_penalty for m in char.modifiers)
+    assert any(m.stat_name == 'def_die' and m.value == def_bonus for m in char.modifiers)
     
     # Toggle OFF
     msg = passive.toggle()
@@ -34,7 +38,10 @@ def test_postura_defensiva_hit_tracking():
     manager.add_character(char, MagicMock())
     manager.add_character(target, MagicMock())
     
-    passive = PosturaDefensiva(char, manager)
+    template = manager.data_service.get_passive_template("PosturaDefensiva")
+    passive = PosturaDefensiva(char, manager, template)
+    pre_penalty = template.parameters.get("pre_penalty", -1)
+    
     passive.is_active = True
     hooks = passive.get_hooks()
     
@@ -61,9 +68,9 @@ def test_postura_defensiva_hit_tracking():
     manager.emit("on_roll_modify", atk_load)
     
     assert passive._tracked_targets[target.char_id] is True
-    assert atk_load.pre == -1
+    assert atk_load.pre == pre_penalty
     assert "PASSIVE|Postura Defensiva|owner" in atk_load.history
-    assert any("ATK_LOAD|pre|-1|" in h for h in atk_load.history)
+    assert any(f"ATK_LOAD|pre|{pre_penalty}|" in h for h in atk_load.history)
     assert sum(len(subs) for subs in manager.listeners.values()) == baseline
 
 def test_postura_defensiva_cleanup_success():

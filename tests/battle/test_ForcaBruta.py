@@ -19,8 +19,12 @@ def test_forca_bruta_gda_bonus():
     manager.set_tick(char, 0)
     actor = manager.get_next_actor()
     
+    # Get the multiplier from the data manager to avoid hardcoding
+    template = manager.data_service.get_passive_template("ForçaBruta")
+    multiplier = template.parameters.get("multiplier", 2)
+    
     # 10 (atk) - 5 (def) = 5 GdA. 
-    # ForcaBruta should double it to 10.
+    base_gda = 10 - 5
     manager.dice_service.queue.clear()
     manager.dice_service.schedule_result(10)
     manager.dice_service.schedule_result(5)
@@ -28,8 +32,9 @@ def test_forca_bruta_gda_bonus():
     action = AttackAction(None, actor, [target], manager)
     load = manager.run_action(action)
     
+    # Calculation following Força Bruta logic: added_val = val * (multiplier - 1)
+    expected_added_gda = base_gda * (multiplier - 1)
+    
     # In AttackAction, the final GdA is not exposed in the ActionLoad return.
-    # We check the history for the doubled GdA in damage or similar if needed, 
-    # but the presence of the MOD event with value 5 (doubling the original 5) is sufficient.
     assert any("PASSIVE|Força Bruta|brucutu" in h for h in load.history)
-    assert any("ATK_LOAD|gda|5|" in h for h in load.history)
+    assert any(f"ATK_LOAD|gda|{expected_added_gda}|" in h for h in load.history)
