@@ -31,4 +31,5 @@ def test_forca_bruta_gda_bonus():
     # In AttackAction, the final GdA is not exposed in the ActionLoad return.
     # We check the history for the doubled GdA in damage or similar if needed, 
     # but the presence of the MOD event with value 5 (doubling the original 5) is sufficient.
-    assert any("MOD|Força Bruta|5|brucutu" in h for h in load.history)
+    assert any("PASSIVE|Força Bruta|brucutu" in h for h in load.history)
+    assert any("ATK_LOAD|gda|5|" in h for h in load.history)

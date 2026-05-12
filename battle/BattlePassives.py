@@ -17,10 +17,10 @@ class ForçaBruta(BattlePassive):
     def get_hooks(self) -> Dict[str, Callable]:
         def multiply_hook(attack_load: 'AttackLoad'):
             if attack_load.character.char_id == self.owner.char_id:
-                if attack_load.hit:
                     val = attack_load.gda
                     attack_load.gda += val
-                    attack_load.add_event("MOD", self.name, val, self.owner.char_id)
+                    attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
+                    attack_load.history.append(HistoryEmitter.atk_load("gda", val, attack_load.gda))
         return {'on_gda_modify': multiply_hook}
 
 class MãosPesadas(BattlePassive):
@@ -32,11 +32,11 @@ class MãosPesadas(BattlePassive):
             if attack_load.target is None:
                 return
             if attack_load.character.char_id == self.owner.char_id:
-                if attack_load.hit:
                     if attack_load.gda > 3:
                         effect = Atordoado(duration=0, target=attack_load.target, context=self.context)
                         self.context.add_status_effect(effect)
-                        attack_load.add_event("STATUS", attack_load.target.char_id, "Atordoado", 0, "APPLIED")
+                        attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
+                        attack_load.history.append(HistoryEmitter.status(attack_load.target.char_id, "Atordoado", 0, "APPLIED"))
         return {'on_gda_modify': effect_hook}
 
 class PosturaDefensiva(BattlePassive):
@@ -81,6 +81,7 @@ class PosturaDefensiva(BattlePassive):
         def hit_hook(attack_load: 'AttackLoad'):
             if self.is_active and attack_load.character.char_id == self.owner.char_id and attack_load.hit:
                 self._start_tracking(attack_load.target)
+                attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
                 attack_load.add_event("POSTURA", self.owner.char_id, "OBSERVE", attack_load.target.char_id)
 
         def penalty_hook(attack_load: 'AttackLoad'):
@@ -88,7 +89,8 @@ class PosturaDefensiva(BattlePassive):
             if self.is_active and cid in self._tracked_targets and attack_load.target is not None and attack_load.target.char_id == self.owner.char_id:
                 attack_load.pre -= 1
                 self._tracked_targets[cid] = True
-                attack_load.add_event("MOD", "PosturaDefensiva", -1, attack_load.character.char_id)
+                attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
+                attack_load.history.append(HistoryEmitter.atk_load("pre", -1, attack_load.pre))
 
         def cleanup_hook(attack_load: 'AttackLoad'):
             cid = attack_load.character.char_id
@@ -119,7 +121,8 @@ class GracaDoDuelista(BattlePassive):
             if attack_load.character.char_id == self.owner.char_id:
                 roll = self.dice_service.roll_dice(6, RollState.NEUTRAL)
                 attack_load.gda += roll.final_roll
-                attack_load.add_event("MOD", self.name, roll.final_roll, self.owner.char_id)
+                attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
+                attack_load.history.append(HistoryEmitter.atk_load("gda", roll.final_roll, attack_load.gda))
 
         def reacao_evasao_hook(attack_load: 'AttackLoad') -> None:
             if attack_load.target is None:
@@ -131,11 +134,12 @@ class GracaDoDuelista(BattlePassive):
                         controller = self.context.get_controller(self.owner.char_id)
                         if controller and controller.choose_reaction(self.owner, self.name, attack_load, self.context):
                             if CharacterSystem.spend_focus(self.owner, custo_evasao):
-                                attack_load.add_event("FOCUS", self.owner.char_id, -custo_evasao, self.owner.floating_focus)
+                                attack_load.history.append(HistoryEmitter.focus(self.owner.char_id, -custo_evasao, self.owner.floating_focus))
                             
                             roll = self.dice_service.roll_dice(4, RollState.NEUTRAL)
                             attack_load.gda -= roll.final_roll
-                            attack_load.add_event("MOD", f"{self.name}_EVASAO", -roll.final_roll, self.owner.char_id)
+                            attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
+                            attack_load.history.append(HistoryEmitter.atk_load("gda", -roll.final_roll, attack_load.gda))
 
         return {
             "on_gda_modify": passiva_acerto_hook,
@@ -166,6 +170,7 @@ class Combo(BattlePassive):
                 self.hit = False
                 
                 if response.success:
+                    attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
                     attack_load.add_event("COMBO", self.owner.char_id, 1)
                     attack_load.history.extend(response.history)
 
@@ -179,6 +184,7 @@ class Combo(BattlePassive):
                 response = AttackAction(None, attack_load.character, [attack_load.target], self.context, attack_type=AttackType.EXTRA_ATTACK).execute_if_possible()
                 
                 if response.success:
+                    attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
                     attack_load.add_event("COMBO", self.owner.char_id, 2)
                     attack_load.history.extend(response.history)
                 else:
@@ -189,7 +195,8 @@ class Combo(BattlePassive):
                 if attack_load.hit:
                     effect = Atordoado(0, attack_load.target, self.context)
                     self.context.add_status_effect(effect)
-                    attack_load.add_event("STATUS", attack_load.target.char_id, "Atordoado", 0, "APPLIED")
+                    attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
+                    attack_load.history.append(HistoryEmitter.status(attack_load.target.char_id, "Atordoado", 0, "APPLIED"))
                     attack_load.add_event("COMBO", self.owner.char_id, self.stage, "FINAL")
         
         return {'on_attack_end': checar_ataque_bonus}
@@ -211,11 +218,12 @@ class Bloquear(BattlePassive):
                 controller = self.context.get_controller(self.owner.char_id)
                 if controller.choose_reaction(self.owner, "Bloquear", attack_load, self.context):
                     if CharacterSystem.spend_focus(self.owner, custo):
-                        attack_load.add_event("FOCUS", self.owner.char_id, -custo, self.owner.floating_focus)
+                        attack_load.history.append(HistoryEmitter.focus(self.owner.char_id, -custo, self.owner.floating_focus))
                         
                         roll = self.dice_service.roll_dice(4, RollState.NEUTRAL)
                         attack_load.gda -= roll.final_roll
-                        attack_load.add_event("MOD", self.name, -roll.final_roll, self.owner.char_id)
+                        attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
+                        attack_load.history.append(HistoryEmitter.atk_load("gda", -roll.final_roll, attack_load.gda))
 
                         if attack_load.gda < -3:
                             self._counter_targets[attack_load.character.char_id] = True
@@ -224,7 +232,8 @@ class Bloquear(BattlePassive):
             if attack_load.character.char_id == self.owner.char_id and attack_load.target is not None:
                 if self._counter_targets.get(attack_load.target.char_id):
                     attack_load.bda += 1
-                    attack_load.add_event("MOD", "Bloquear_Counter", 1, self.owner.char_id)
+                    attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
+                    attack_load.history.append(HistoryEmitter.atk_load("bda", 1, attack_load.bda))
 
         def cleanup_bonus_hook(attack_load: 'AttackLoad'):
             if attack_load.character.char_id == self.owner.char_id:
@@ -274,7 +283,8 @@ class PosturaBatalha(BattlePassive):
                 if attack_load.attack_roll > 7:
                     bonus = 4
                 attack_load.gda += bonus
-                attack_load.add_event("MOD", f"{self.name}_OFF", bonus, self.owner.char_id)
+                attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
+                attack_load.history.append(HistoryEmitter.atk_load("gda", bonus, attack_load.gda))
 
         def on_defense_reaction(attack_load: 'AttackLoad'):
             from core.Enums import RollState
@@ -284,15 +294,17 @@ class PosturaBatalha(BattlePassive):
                     controller = self.context.get_controller(self.owner.char_id)
                     if controller and controller.choose_reaction(self.owner, f"{self.name}_REROLL", attack_load, self.context):
                         if CharacterSystem.spend_focus(self.owner, cost):
-                            attack_load.add_event("FOCUS", self.owner.char_id, -cost, self.owner.floating_focus)
+                            attack_load.history.append(HistoryEmitter.focus(self.owner.char_id, -cost, self.owner.floating_focus))
                             
                             new_roll_res = self.dice_service.roll_dice(attack_load.def_die, RollState.NEUTRAL)
-                            attack_load.add_event("ROLL", "DEF_REROLL", new_roll_res.final_roll, attack_load.def_die, self.owner.char_id)
+                            attack_load.history.append(HistoryEmitter.roll("DEF_REROLL", new_roll_res.final_roll, attack_load.def_die, self.owner.char_id))
                             
                             diff = new_roll_res.final_roll - attack_load.defense_roll
                             attack_load.gda -= diff
                             attack_load.defense_roll = new_roll_res.final_roll
-                            attack_load.add_event("MOD", f"{self.name}_DEF", -diff, self.owner.char_id)
+                            attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
+                            attack_load.history.append(HistoryEmitter.atk_load("defense_roll", diff, attack_load.defense_roll))
+                            attack_load.history.append(HistoryEmitter.atk_load("gda", -diff, attack_load.gda))
 
         return {
             'on_gda_modify': on_gda_modify,

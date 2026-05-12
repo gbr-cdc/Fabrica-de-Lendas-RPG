@@ -31,7 +31,8 @@ def _build_add_gda(effect, action: 'AttackAction'):
     def add_gda_hook(attack_load: 'AttackLoad'):
         if attack_load.character.char_id == action.actor.char_id:
             attack_load.gda += amount
-            attack_load.add_event("MOD", action.name, amount, attack_load.character.char_id)
+            attack_load.history.append(HistoryEmitter.action_hook(action.name, attack_load.character.char_id))
+            attack_load.history.append(HistoryEmitter.atk_load("gda", amount, attack_load.gda))
     return {'on_damage_calculation': add_gda_hook}
 
 def _build_swap_atk_def_die(effect, action: 'AttackAction'):
@@ -43,7 +44,8 @@ def _build_swap_atk_def_die(effect, action: 'AttackAction'):
     def swap_die_hook(attack_load: 'AttackLoad'):
         if attack_load.character.char_id == action.actor.char_id:
             attack_load.atk_die = action.actor.def_die
-            attack_load.add_event("MOD", action.name, attack_load.atk_die, attack_load.character.char_id)
+            attack_load.history.append(HistoryEmitter.action_hook(action.name, attack_load.character.char_id))
+            attack_load.history.append(HistoryEmitter.atk_load("atk_die", 0, attack_load.atk_die))
 
     return {'on_roll_modify': swap_die_hook}
 
@@ -53,7 +55,8 @@ def _build_set_gda_zero_on_dmg(effect, action: 'AttackAction'):
     def set_gda_zero_hook(attack_load: 'AttackLoad'):
         if attack_load.character.char_id == action.actor.char_id:
             attack_load.gda = 0
-            attack_load.add_event("MOD", action.name, 0, attack_load.character.char_id)
+            attack_load.history.append(HistoryEmitter.action_hook(action.name, attack_load.character.char_id))
+            attack_load.history.append(HistoryEmitter.atk_load("gda", 0, 0))
     return {'on_damage_calculation': set_gda_zero_hook}
 
 def _build_apply_status_on_hit_threshold(effect, action: 'AttackAction'):
@@ -73,7 +76,8 @@ def _build_apply_status_on_hit_threshold(effect, action: 'AttackAction'):
                     from battle.StatusEffects import Atordoado
                     effect = Atordoado(duration=duration, target=attack_load.target, context=action.context)
                     action.context.add_status_effect(effect)
-                    attack_load.add_event("STATUS", attack_load.target.char_id, status_name, duration, "APPLIED")
+                    attack_load.history.append(HistoryEmitter.action_hook(action.name, attack_load.character.char_id))
+                    attack_load.history.append(HistoryEmitter.status(attack_load.target.char_id, status_name, duration, "APPLIED"))
     return {'on_hit_check': apply_status_hook}
 
 # Registry mapping template effect IDs to their corresponding hook builder functions.
@@ -136,10 +140,10 @@ class AttackAction(BattleAction):
         # --- Resource Consumption ---
 
         action_load = ActionLoad(character=self.actor)
-        action_load.add_event("EXEC", self.template.nome, self.actor.char_id)
+        action_load.history.append(HistoryEmitter.exec(self.template.nome, self.actor.char_id))
         if self.template.focus_cost > 0:
             CharacterSystem.spend_focus(self.actor, self.template.focus_cost)
-            action_load.add_event("FOCUS", self.actor.char_id, -self.template.focus_cost, self.actor.floating_focus)
+            action_load.history.append(HistoryEmitter.focus(self.actor.char_id, -self.template.focus_cost, self.actor.floating_focus))
 
         master_attack_load = None
         master_roll_result = None
@@ -166,7 +170,7 @@ class AttackAction(BattleAction):
             master_roll_result = self.context.dice_service.roll_dice(master_attack_load.atk_die, master_attack_load.attack_state)
             master_attack_load.attack_roll = master_roll_result.final_roll
             
-            master_attack_load.add_event("ROLL", "ATK_AREA", master_roll_result.final_roll, master_attack_load.atk_die, self.actor.char_id)
+            master_attack_load.history.append(HistoryEmitter.roll("ATK_AREA", master_roll_result.final_roll, master_attack_load.atk_die, self.actor.char_id))
             mod_atk_roll = master_roll_result.final_roll + self.actor.rank + master_attack_load.bda
             action_load.history.extend(master_attack_load.history)
 
@@ -207,7 +211,7 @@ class AttackAction(BattleAction):
                 roll_result = self.context.dice_service.roll_dice(attack_load.atk_die, attack_load.attack_state)
                 attack_load.attack_roll = roll_result.final_roll
                 current_mod_atk = roll_result.final_roll + self.actor.rank + attack_load.bda
-                attack_load.add_event("ROLL", "ATK", roll_result.final_roll, attack_load.atk_die, self.actor.char_id)
+                attack_load.history.append(HistoryEmitter.roll("ATK", roll_result.final_roll, attack_load.atk_die, self.actor.char_id))
             
             # --- Phase 3: Defense Roll ---
 
@@ -215,7 +219,7 @@ class AttackAction(BattleAction):
             roll_result = self.context.dice_service.roll_dice(attack_load.def_die, attack_load.defense_state)
             attack_load.defense_roll = roll_result.final_roll
             mod_def_roll = roll_result.final_roll + target.rank + attack_load.bdd
-            attack_load.add_event("ROLL", "DEF", roll_result.final_roll, attack_load.def_die, target.char_id)
+            attack_load.history.append(HistoryEmitter.roll("DEF", roll_result.final_roll, attack_load.def_die, target.char_id))
             
             # --- Phase 4: Hit Calculation [GDD.COMBAT.FLOW.HIT] ---
             attack_load.gda = current_mod_atk - mod_def_roll
@@ -225,7 +229,7 @@ class AttackAction(BattleAction):
             
             if attack_load.gda > (0 + attack_load.grd - attack_load.pre):
                 attack_load.hit = True
-                attack_load.add_event("HIT", target.char_id)
+                attack_load.history.append(HistoryEmitter.hit(target.char_id))
                 self.context.emit('on_hit_check', attack_load)
                 
                 if attack_load.gda < 0:
@@ -240,11 +244,11 @@ class AttackAction(BattleAction):
                 
                 self.context.emit('on_damage_taken', attack_load)
                 CharacterSystem.take_damage(target, attack_load.damage)
-                attack_load.add_event("DMG", target.char_id, attack_load.damage, self.attack_type.value)
-                attack_load.add_event("HP", target.char_id, -attack_load.damage, target.current_hp)
+                attack_load.history.append(HistoryEmitter.dmg(target.char_id, attack_load.damage, self.attack_type.value))
+                attack_load.history.append(HistoryEmitter.hp(target.char_id, -attack_load.damage, target.current_hp))
             else:
                 # Attack missed: GdA + Pre - Grd <= 0
-                attack_load.add_event("MISS", target.char_id)
+                attack_load.history.append(HistoryEmitter.miss(target.char_id))
                 self.context.emit('on_hit_check', attack_load)
 
 
@@ -254,7 +258,7 @@ class AttackAction(BattleAction):
         if self.attack_type == AttackType.BASIC_ATTACK:
             old_focus = self.actor.floating_focus
             new_focus = CharacterSystem.generate_focus(self.actor)
-            action_load.add_event("FOCUS", self.actor.char_id, new_focus - old_focus, new_focus)
+            action_load.history.append(HistoryEmitter.focus(self.actor.char_id, new_focus - old_focus, new_focus))
 
         return action_load
 
@@ -285,8 +289,8 @@ class GenerateManaAction(BattleAction):
         new_total = self.actor.current_mp
         
         load = ActionLoad(character=self.actor)
-        load.add_event("MANA_T", self.actor.char_id, new_total - old_total, new_total)
-        load.add_event("MANA_F", self.actor.char_id, new_floating - old_floating, new_floating)
+        load.history.append(HistoryEmitter.mana_t(self.actor.char_id, new_total - old_total, new_total))
+        load.history.append(HistoryEmitter.mana_f(self.actor.char_id, new_floating - old_floating, new_floating))
         return load
 
 class GenerateFocusAction(BattleAction):
@@ -313,7 +317,7 @@ class GenerateFocusAction(BattleAction):
         new_focus = CharacterSystem.generate_focus(self.actor)
         
         load = ActionLoad(character=self.actor)
-        load.add_event("FOCUS", self.actor.char_id, new_focus - old_focus, new_focus)
+        load.history.append(HistoryEmitter.focus(self.actor.char_id, new_focus - old_focus, new_focus))
         return load
 
 class TogglePosturaDefensiva(BattleAction):

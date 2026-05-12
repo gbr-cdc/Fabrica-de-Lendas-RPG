@@ -298,6 +298,10 @@ Method description: Returns a formatted `PASSIVE` event string indicating a pass
 ###### atk_load [ARCH.DOC.core.Events.HistoryEmitter.atk_load]
 `atk_load(attribute: str, delta: int, current: int) -> str`
 Method description: Returns a formatted `ATK_LOAD` event string indicating an internal modification to the attack load.
+`action_hook(action_name: str, actor_id: str) -> str`
+Method description: Returns a formatted `ACTION_HOOK` event string indicating an ephemeral action hook has triggered.
+`status_hook(status_name: str, target_id: str) -> str`
+Method description: Returns a formatted `STATUS_HOOK` event string indicating a status effect hook has triggered.
 
 #### BaseClasses.py [ARCH.DOC.core.BaseClasses]
 Provides foundational abstract classes and interfaces ensuring modularity and decoupling.
@@ -944,7 +948,7 @@ A straightforward offensive passive that multiplies success grade.
 ###### get_hooks [ARCH.DOC.battle.BattlePassives.ForçaBruta.get_hooks]
 `get_hooks() -> Dict[str, Callable]`
 Method description: Registers the doubling logic for successful hits.
-1. `multiply_hook` (on `on_gda_modify`): If the owner hits, doubles the current `GdA` and records a `MOD` event.
+1. `multiply_hook` (on `on_gda_modify`): If the owner hits, doubles the current `GdA` and records a `PASSIVE` trigger and an `ATK_LOAD` modification.
 
 ##### MãosPesadas [ARCH.DOC.battle.BattlePassives.MãosPesadas]
 [DEPENDS: ARCH.DOC.battle.StatusEffects.Atordoado, GDD.STYLES.DESTRUIDOR.MAOS_PESADAS]
@@ -1109,7 +1113,7 @@ Method description: Triggers the stun's immediate impact.
 ###### get_hooks [ARCH.DOC.battle.StatusEffects.Atordoado.get_hooks]
 `get_hooks() -> Dict[str, Callable]`
 Method description: Monitors turn progression to manage expiration.
-1. `check_stun_end` (on `on_turn_start`): If the owner's turn starts, records a `STATUS` removal event and calls `remove()` to end the effect.
+1. `check_stun_end` (on `on_turn_start`): If the owner\"s turn starts, records a `STATUS_HOOK` activation and a `STATUS` removal event, then calls `remove()` to end the effect.
 
 ### MODULE: Entities [ARCH.DOC.entities]
 The `entities` module contains data-only classes representing game objects. `[ARCH.RULES.CORE.ENTITIES]`

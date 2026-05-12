@@ -72,7 +72,8 @@ def test_postura_batalha_offensive_bonus(mestre_armas, target):
     atk_action = AttackAction(None, mestre_armas, [target], bm)
     load = bm.run_action(atk_action)
     
-    assert "MOD|Postura de Batalha_OFF|4|mestre1" in load.history
+    assert "PASSIVE|Postura de Batalha|mestre1" in load.history
+    assert "ATK_LOAD|gda|4|10" in load.history
 
     # Now test with roll <= 7
     bm.dice_service.schedule_result(5) # Atk roll
@@ -81,7 +82,8 @@ def test_postura_batalha_offensive_bonus(mestre_armas, target):
     atk_action = AttackAction(None, mestre_armas, [target], bm)
     load = bm.run_action(atk_action)
     
-    assert "MOD|Postura de Batalha_OFF|2|mestre1" in load.history
+    assert "PASSIVE|Postura de Batalha|mestre1" in load.history
+    assert "ATK_LOAD|gda|2|5" in load.history
 
 def test_postura_batalha_defensive_reroll(mestre_armas, target):
     bm = create_test_battle_manager()
@@ -122,4 +124,6 @@ def test_postura_batalha_defensive_reroll(mestre_armas, target):
     
     # Diff should be new - old = 8 - 1 = 7
     # Mod should be -diff = -7
-    assert "MOD|Postura de Batalha_DEF|-7|mestre1" in load.history
+    assert "PASSIVE|Postura de Batalha|mestre1" in load.history
+    assert "ATK_LOAD|defense_roll|7|8" in load.history
+    assert any("ATK_LOAD|gda|-7|" in h for h in load.history)

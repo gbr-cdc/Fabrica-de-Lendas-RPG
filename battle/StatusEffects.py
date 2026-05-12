@@ -24,7 +24,8 @@ class Atordoado(StatusEffect):
         def check_stun_end(action_load: 'ActionLoad'):
             if action_load.character.char_id == self.character.char_id:
                 # Efeito expira e manda a ordem de remoção
-                action_load.add_event("STATUS", self.character.char_id, self.name, 0, "REMOVED")
+                action_load.history.append(HistoryEmitter.status_hook(self.name, self.character.char_id))
+                action_load.history.append(HistoryEmitter.status(self.character.char_id, self.name, 0, "REMOVED"))
                 self.remove()
         
         return {'on_turn_start': check_stun_end}

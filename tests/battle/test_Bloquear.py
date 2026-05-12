@@ -33,7 +33,8 @@ def test_bloquear_reaction_trigger():
     action = AttackAction(None, actor, [defensor], manager)
     load = manager.run_action(action)
     
-    assert any("MOD|Bloquear|-3|defensor" in h for h in load.history)
+    assert any("PASSIVE|Bloquear|defensor" in h for h in load.history)
+    assert any("ATK_LOAD|gda|-3|" in h for h in load.history)
     assert defensor.floating_focus == 8
 
 def test_bloquear_counter_bonus():
@@ -76,5 +77,6 @@ def test_bloquear_counter_bonus():
     action = AttackAction(None, actor, [attacker], manager)
     load_counter = manager.run_action(action)
     
-    assert any("MOD|Bloquear_Counter|1|defensor" in h for h in load_counter.history)
+    assert any("PASSIVE|Bloquear|defensor" in h for h in load_counter.history)
+    assert any("ATK_LOAD|bda|1|" in h for h in load_counter.history)
     assert not any(m.source == "Bloquear_Counter" for m in defensor.modifiers)

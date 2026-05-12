@@ -51,7 +51,8 @@ def test_postura_defensiva_hit_tracking():
     manager.emit("on_gda_modify", load)
     
     assert target.char_id in passive._tracked_targets
-    assert "POSTURA|owner|OBSERVE|target" in load.history[0]
+    assert "PASSIVE|Postura Defensiva|owner" in load.history
+    assert any("POSTURA|owner|OBSERVE|target" in h for h in load.history)
     
     # 2. Tracked target attacks owner
     atk_load = AttackLoad(character=target, target=char, 
@@ -61,7 +62,8 @@ def test_postura_defensiva_hit_tracking():
     
     assert passive._tracked_targets[target.char_id] is True
     assert atk_load.pre == -1
-    assert "MOD|PosturaDefensiva" in atk_load.history[0]
+    assert "PASSIVE|Postura Defensiva|owner" in atk_load.history
+    assert any("ATK_LOAD|pre|-1|" in h for h in atk_load.history)
     assert sum(len(subs) for subs in manager.listeners.values()) == baseline
 
 def test_postura_defensiva_cleanup_success():

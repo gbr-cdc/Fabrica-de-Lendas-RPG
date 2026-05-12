@@ -123,7 +123,8 @@ def test_attack_action_gda_hook():
     
     hooks["on_damage_calculation"](load)
     assert load.gda == 5
-    assert "MOD|Habilidade Nível 1|5|" in load.history[0]
+    assert "ACTION_HOOK|Habilidade Nível 1|dummy_01" in load.history[0]
+    assert "ATK_LOAD|gda|5|5" in load.history[1]
 
 def test_attack_action_execute_miss():
     manager = create_test_battle_manager()

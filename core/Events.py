@@ -100,5 +100,13 @@ class HistoryEmitter:
         return f"PASSIVE|{passive_name}|{owner_id}"
 
     @staticmethod
+    def action_hook(action_name: str, actor_id: str) -> str:
+        return f"ACTION_HOOK|{action_name}|{actor_id}"
+
+    @staticmethod
+    def status_hook(status_name: str, target_id: str) -> str:
+        return f"STATUS_HOOK|{status_name}|{target_id}"
+
+    @staticmethod
     def atk_load(attribute: str, delta: int, current: int) -> str:
         return f"ATK_LOAD|{attribute}|{delta}|{current}"

@@ -54,10 +54,12 @@ def test_graca_do_duelista_full_flow():
     
     # Assertions:
     # 1. Success Bonus triggered
-    assert any(f"MOD|Graça do Duelista|4|duelista" in h for h in load.history)
+    assert any("PASSIVE|Graça do Duelista|duelista" in h for h in load.history)
+    assert any("ATK_LOAD|gda|4|" in h for h in load.history)
     
     # 2. Reaction triggered
-    assert any(f"MOD|Graça do Duelista_EVASAO|-2|alvo" in h for h in load.history)
+    assert any("PASSIVE|Graça do Duelista|alvo" in h for h in load.history)
+    assert any("ATK_LOAD|gda|-2|" in h for h in load.history)
     assert any(f"FOCUS|alvo|-2|8" in h for h in load.history)
     assert target.floating_focus == 8
 
@@ -97,7 +99,7 @@ def test_graca_do_duelista_reaction_threshold():
     action = AttackAction(None, actor, [target], manager)
     load = manager.run_action(action)
     
-    assert not any("MOD|Graça do Duelista_EVASAO" in h for h in load.history)
+    assert not any("PASSIVE|Graça do Duelista" in h for h in load.history)
     assert target.floating_focus == 10
     
     # Scenario B: Just above threshold (gda = 1).
@@ -114,5 +116,6 @@ def test_graca_do_duelista_reaction_threshold():
     action = AttackAction(None, actor, [target], manager)
     load = manager.run_action(action)
     
-    assert any("MOD|Graça do Duelista_EVASAO" in h for h in load.history)
+    assert any("PASSIVE|Graça do Duelista|duelista" in h for h in load.history)
+    assert any("ATK_LOAD|gda|-1|" in h for h in load.history)
     assert target.floating_focus == 8
