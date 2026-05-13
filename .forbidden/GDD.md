@@ -25,7 +25,7 @@ Combat uses a continuous flow of "Ticks" instead of rounds.
 ## Attribute Scale [GDD.CORE.SCALE]
 | Value | Scale | Description |
 | :--- | :--- | :--- |
-| 0 | Very Weak | Below human level. |
+| 0-1 | Very Weak | Below human level. |
 | 2-3 | Common | Average human. |
 | 4-6 | Heroic | Peak human / Adventurer. |
 | 7-9 | Legendary | Near sonic speeds, town-level magic. |

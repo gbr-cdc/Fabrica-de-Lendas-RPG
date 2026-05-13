@@ -18,7 +18,7 @@
   "Defensor": {
     "name": "Defensor",
     "atq_die": 8,
-    "def_die": 12,
+    "def_die": 10,
     "main_stat": "FIS",
     "armor_type": "heavy",
     "weapon_type": "weapon_and_shield"

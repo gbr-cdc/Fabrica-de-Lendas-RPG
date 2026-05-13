@@ -12,7 +12,7 @@
     },
     "Armor": {
       "name": "Armadura Pesada",
-      "hp_bonus": 25,
+      "hp_bonus": 20,
       "type": "heavy"
     },
     "Abilities": [
@@ -37,7 +37,7 @@
     },
     "Armor": {
       "name": "Armadura Pesada",
-      "hp_bonus": 25,
+      "hp_bonus": 20,
       "type": "heavy"
     },
     "Abilities": [
@@ -112,7 +112,7 @@
     },
     "Armor": {
       "name": "Armadura Leve",
-      "hp_bonus": 25,
+      "hp_bonus": 20,
       "type": "heavy"
     },
     "Abilities": [
