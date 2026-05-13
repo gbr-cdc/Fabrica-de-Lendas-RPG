@@ -22,7 +22,7 @@ class ForçaBruta(BattlePassive):
                 
                 val = attack_load.gda
                 # If multiplier is 2, it adds val. If 3, adds 2*val, etc.
-                added_val = val * (multiplier - 1)
+                added_val = int(val * (multiplier - 1))
                 
                 attack_load.gda += added_val
                 attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))

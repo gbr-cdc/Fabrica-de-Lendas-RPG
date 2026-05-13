@@ -33,7 +33,7 @@ def test_forca_bruta_gda_bonus():
     load = manager.run_action(action)
     
     # Calculation following Força Bruta logic: added_val = val * (multiplier - 1)
-    expected_added_gda = base_gda * (multiplier - 1)
+    expected_added_gda = int(base_gda * (multiplier - 1))
     
     # In AttackAction, the final GdA is not exposed in the ActionLoad return.
     assert any("PASSIVE|Força Bruta|brucutu" in h for h in load.history)
