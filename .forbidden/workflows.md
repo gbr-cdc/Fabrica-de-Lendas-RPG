@@ -70,3 +70,16 @@ Note: This workflow is designed to work across multiple rapid interactions. Foll
 3. **Evaluate**: Fetch all required file documentation tags in a single batched `ref_manager.py` call. Check for missing elements or discrepancies vs [ARCH.DOC_STANDARDS.MODULE] based on recent changes (e.g., public APIs, state transitions, or core logic).
 4. **Sync**: Use `ref_manager.py --update` or `--create` to align the module documentation with the code.
     - If `--create` fails with `"Error: Parent tag [ARCH.module_name] not found."`, default to creating the missing module documentation (`[ARCH.module_name]`) with the file documentation (`[ARCH.module_name.FileName]`) inside, strictly following [ARCH.DOC_STANDARDS.MODULE].
+
+## PROJECT INITIALIZATION [WORKFLOWS.PROJECT_INIT]
+1. **Understand & Scope:** Ask the user for the project's high-level objective, target tech stack, and preferred architectural paradigm (e.g., MVC, Hexagonal, Data-Driven, ECS). If the user hasn't provided this information, STOP and ask for it.
+2. **Analyze:** Evaluate the project requirements and map out the necessary technical foundations. Identify what core guardrails will be needed to keep the code clean and scalable.
+3. **Propose Structure & Modules:** Draft a base directory tree for the project. Based on the directory tree, explicitly list the high-level Modules that will make up the system (e.g., `core`, `database`, `api`).
+    - Ensure the Python script `ref_manager.py` is logically placed (e.g., in `utilities/` or `tools/`).
+    - Ensure framework tracking files (`agent_rules.md`, `workflows.md`, `architecture.md`) are placed in their designated secure locations (e.g., `.forbidden/`).
+4. **Propose Architecture:** Draft the initial text for `[ARCH.VISION]` (the "why" of the project) and define 3 to 5 strict rules for `[ARCH.RULES.CORE]` (the "how" of the project) based on the stack and paradigm discussed.
+5. **HALT EXECUTION:** Present the proposed directory structure, the list of initial modules, `[ARCH.VISION]`, and `[ARCH.RULES.CORE]` to the user for approval. **YOU MUST STOP GENERATING TEXT HERE.** Do not proceed under any circumstances until the user explicitly replies with approval.
+6. **Scaffold:** Execute shell commands to create the approved directories and move the boilerplate framework files to their final locations.
+7. **Document Vision & Rules:** Use the `ref_manager.py` tool to inject the approved `[ARCH.VISION]` and `[ARCH.RULES.CORE]` into the newly placed `architecture.md`.
+8. **Document Modules:** Use the `ref_manager.py` tool with `--create` to instantiate the base `[ARCH.DOC]` section if missing, and then inject the headers and brief descriptions for each of the approved modules (e.g., `[ARCH.DOC.module_name]`) into `architecture.md`.
+9. **Git Protocol:** STOP and ask the user to commit changes. Suggest message: `chore: initialize project structure, agent framework, and base architecture`.

@@ -45,6 +45,7 @@ These rules are context-exclusive and MUST be referenced in `MISSION_LOG.md` whe
 ├── controllers/         # Decision making (AI/Player input)
 ├── data/                # JSON definitions (Rules, Styles, Actions)
 ├── utilities/           # Helper scripts and standalone tools
+├── views/               # Game interface and visualization.
 ├── tests/               # Pytest suite (Red/Green TDD)
 └── pvp_simulator/       # Main entry point for simulation
 ```
@@ -324,6 +325,8 @@ Method description: Returns a formatted `ATK_CALC` event string with the full at
 ###### dmg_calc [ARCH.DOC.core.Events.HistoryEmitter.dmg_calc]
 `dmg_calc(target_id: str, pda: int, gda: int, mda: int, modifier: int, final: int) -> str`
 Method description: Returns a formatted `DMG_CALC` event string with the full damage formula breakdown: `final = pda + (gda * mda) + modifier`.
+
+###### def_calc [ARCH.DOC.core.Events.HistoryEmitter.def_calc]
 `def_calc(target_id: str, roll: int, rank: int, bdd: int, final: int) -> str`
 Method description: Returns a formatted `DEF_CALC` event string with the full defense formula breakdown: `final = roll + rank + bdd`.
 
@@ -857,6 +860,15 @@ Defines the available maneuvers characters can perform during combat. Utilizes t
 3. If hit is successful and `attack_load.gda > threshold`, instantiates the status effect (e.g., `Atordoado`) and adds it to the battle context.
 4. Records a `STATUS` event.
 
+##### _build_add_bda [ARCH.DOC.battle.BattleActions._build_add_bda]
+`_build_add_bda(effect, action: AttackAction) -> Dict[str, Callable]`
+- `effect`: Data object containing the "amount" parameter.
+- `action`: The `AttackAction` instance triggering the hook.
+- Description: Creates a hook for `on_roll_modify`.
+1. Extracts `amount` from `effect.parameters`.
+2. Defines `add_bda_hook` which increases `attack_load.bda` by the amount if the actor matches the action's actor.
+3. Records an `ACTION_HOOK` and `ATK_LOAD` event in the attack history.
+
 ##### AttackAction [ARCH.DOC.battle.BattleActions.AttackAction]
 [DEPENDS: ARCH.RULES.CORE.DATA, ARCH.RULES.BATTLE.TARGETING, ARCH.RULES.BATTLE.AREA_ATTACK, ARCH.DOC.core.Structs.AttackActionTemplate, ARCH.RULES.CORE.IOC, GDD.COMBAT.FLOW, ARCH.DOC.core.Events.AttackLoad]
 A generic, data-driven attack action. Logic is driven by an `AttackActionTemplate`, which defines costs, types, and special effects injected via hooks. Constructor can be called with `template = None` to instantiate a "Basic Attack".
@@ -955,13 +967,6 @@ Method description: Switches the stance of the battle passive.
 2. Evaluates the current stance and determines the next in the cycle: `None` -> `OFFENSIVE` -> `DEFENSIVE` -> `None`.
 3. Calls the passive's `set_mode()` method with the next mode and the current action load.
 4. Returns an `ActionLoad` containing the result message or an error if the passive is missing.
-`_build_add_bda(effect, action: AttackAction) -> Dict[str, Callable]`
-- `effect`: Data object containing the "amount" parameter.
-- `action`: The `AttackAction` instance triggering the hook.
-- Description: Creates a hook for `on_roll_modify`.
-1. Extracts `amount` from `effect.parameters`.
-2. Defines `add_bda_hook` which increases `attack_load.bda` by the amount if the actor matches the action's actor.
-3. Records an `ACTION_HOOK` and `ATK_LOAD` event in the attack history.
 
 #### BattlePassives.py [ARCH.DOC.battle.BattlePassives]
 [DEPENDS: ARCH.RULES.CORE.IOC, ARCH.RULES.CORE.OBSERVER, ARCH.DOC.core.BaseClasses.BattlePassive]
@@ -1553,3 +1558,53 @@ Description of command-line usage.
 - **Section Tags for Methods:** All class methods MUST use the `######` Section Tag format to safely house multi-line logic steps without breaking tag bounding boxes.
 - **Line Tags for Properties:** Properties and Constructors generally use Line Tags unless they require complex multi-line descriptions.
 - **Dependencies:** `[DEPENDS: ...]` tags MUST list all requisite Interfaces, core architectural rules, and tightly coupled objects (preferring interfaces over concrete implementations to reduce tag recursive bloat).
+
+### ARCHITECTURE FILE [ARCH.DOC_STANDARDS.ARCHITECTURE_FILE]
+
+Defines the canonical top-level structure of `architecture.md`. Every section is mandatory and must appear in the exact order listed below. An agent building this file from scratch MUST follow this skeleton precisely and populate it using `ref_manager.py --create`.
+
+#### Top-Level Skeleton [ARCH.DOC_STANDARDS.ARCHITECTURE_FILE.SKELETON]
+
+```
+# Project Documentation [ARCH.GLOBAL]
+
+One-line description of the engine or application.
+
+## Project Vision [ARCH.VISION]
+The "why" of the project. A concise paragraph describing the goals, target users, and guiding design philosophy.
+
+## Architectural Guardrails [ARCH.RULES]
+Preamble: "These rules are context-exclusive and MUST be referenced in `MISSION_LOG.md` when relevant to the task."
+
+### Core Patterns [ARCH.RULES.CORE]
+Strict, named rules governing universal implementation decisions (e.g., MVC, Command Pattern, Observer, IoC, Data-Driven).
+Each rule MUST follow the Line Tag format:
+- **Rule Name [ARCH.RULES.CORE.RULE_ID]:** Rule description.
+
+### Domain-Specific Rules [ARCH.RULES.<DOMAIN>]
+One or more domain subsections (e.g., [ARCH.RULES.BATTLE]) for rules that only apply within a specific context.
+Each rule MUST follow the Line Tag format:
+- **Rule Name [ARCH.RULES.<DOMAIN>.RULE_ID]:** Rule description.
+
+## Project Structure [ARCH.STRUCT_MAP]
+A fenced `text` code block showing the directory tree of the project with inline comments.
+
+## Modules Documentation [ARCH.DOC]
+Container for all module documentation. Add one `### MODULE` section per module using [ARCH.DOC_STANDARDS.MODULE].
+Each module section header: `### MODULE: module_name [ARCH.DOC.module_name]`
+
+## Test Quality Standards [ARCH.TEST_QUALITY]
+A flat list of named rules governing test methodology, one per line using the Line Tag format:
+- **Rule Name [ARCH.TEST_QUALITY.RULE_ID]:** Rule description.
+
+## Documentation Standards [ARCH.DOC_STANDARDS]
+Self-referential section. Contains the standards for maintaining this file. Must include [ARCH.DOC_STANDARDS.MISSION], [ARCH.DOC_STANDARDS.MODULE], and [ARCH.DOC_STANDARDS.ARCHITECTURE_FILE].
+```
+
+#### Ordering Rules [ARCH.DOC_STANDARDS.ARCHITECTURE_FILE.RULES]
+- Sections MUST appear in the exact order defined in [ARCH.DOC_STANDARDS.ARCHITECTURE_FILE.SKELETON].
+- `[ARCH.RULES.CORE]` MUST come before any domain-specific rule subsection.
+- `[ARCH.DOC]` is the only section that grows unboundedly; all other sections have a fixed shape.
+- `[ARCH.DOC_STANDARDS]` MUST always be the last top-level section.
+- When adding a new domain rule group, create it as `[ARCH.RULES.<DOMAIN>]` immediately after `[ARCH.RULES.CORE]`.
+- `[ARCH.TEST_QUALITY]` applies only to projects with a test suite; omit if the project has none.
