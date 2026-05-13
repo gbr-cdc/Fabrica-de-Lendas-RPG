@@ -118,3 +118,7 @@ class HistoryEmitter:
     @staticmethod
     def dmg_calc(target_id: str, pda: int, gda: int, mda: int, modifier: int, final: int) -> str:
         return f"DMG_CALC|{target_id}|{pda}|{gda}|{mda}|{modifier}|{final}"
+
+    @staticmethod
+    def def_calc(target_id: str, roll: int, rank: int, bdd: int, final: int) -> str:
+        return f"DEF_CALC|{target_id}|{roll}|{rank}|{bdd}|{final}"

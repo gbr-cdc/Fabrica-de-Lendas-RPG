@@ -320,6 +320,8 @@ Method description: Returns a formatted `ATK_CALC` event string with the full at
 ###### dmg_calc [ARCH.DOC.core.Events.HistoryEmitter.dmg_calc]
 `dmg_calc(target_id: str, pda: int, gda: int, mda: int, modifier: int, final: int) -> str`
 Method description: Returns a formatted `DMG_CALC` event string with the full damage formula breakdown: `final = pda + (gda * mda) + modifier`.
+`def_calc(target_id: str, roll: int, rank: int, bdd: int, final: int) -> str`
+Method description: Returns a formatted `DEF_CALC` event string with the full defense formula breakdown: `final = roll + rank + bdd`.
 
 #### BaseClasses.py [ARCH.DOC.core.BaseClasses]
 Provides foundational abstract classes and interfaces ensuring modularity and decoupling.
@@ -880,7 +882,7 @@ Method description: Resolves the attack according to the standard Combat Flow. H
 3. **Phase 2: Target Resolution Loop**: Iterates through each living target:
    - Emits `on_roll_modify`
    - Performs/Retrieves attack roll.
-   - Performs defense roll using `attack_load.def_die`. Records `ROLL` (DEF) event.
+   - Performs defense roll using `attack_load.def_die`. Records `ROLL` (DEF) and `DEF_CALC` events.
    - Emits `on_defense_reaction`.
    - Calculates `GdA = (Attack Roll + Rank + BDA) - (Defense Roll + Rank + BDD)`.
    - **Hit Validation**: Hit is successful if `GdA > (attack_load.grd - attack_load.pre)`.
@@ -1431,6 +1433,7 @@ Method description: The translation engine that converts technical tags into nar
    - `ACTION_HOOK / STATUS_HOOK`: Reactive hook activations.
    - `ATK_LOAD`: Action-scoped stat modifications.
    - `ATK_CALC`: Full attack formula breakdown (`roll + rank + bda = final`). Rendered as `[CALC]`.
+   - `DEF_CALC`: Full defense formula breakdown (`roll + rank + bdd = final`). Rendered as `[CALC]`.
    - `DMG_CALC`: Full damage formula breakdown (`pda + (gda * mda) + modifier = final`). Rendered as `[CALC]`.
 3. Returns a formatted string with a category prefix (e.g., `[ACTION]`, `[ROLL]`, `[CALC]`).
 4. Gracefully falls back to the raw string on error or unknown tags.

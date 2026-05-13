@@ -234,6 +234,7 @@ class AttackAction(BattleAction):
             attack_load.defense_roll = roll_result.final_roll
             mod_def_roll = roll_result.final_roll + target.rank + attack_load.bdd
             attack_load.history.append(HistoryEmitter.roll("DEF", roll_result.final_roll, attack_load.def_die, target.char_id))
+            attack_load.history.append(HistoryEmitter.def_calc(target.char_id, roll_result.final_roll, target.rank, attack_load.bdd, mod_def_roll))
             
             # --- Phase 4: Hit Calculation [GDD.COMBAT.FLOW.HIT] ---
             attack_load.gda = current_mod_atk - mod_def_roll

@@ -150,6 +150,63 @@ class TestDmgCalcHistory:
 
 
 # ---------------------------------------------------------------------------
+# DEF_CALC tag
+# ---------------------------------------------------------------------------
+
+class TestDefCalcHistory:
+    """DEF_CALC|target_id|roll|rank|bdd|final must appear after every defense roll."""
+
+    def test_def_calc_tag_present_on_hit(self):
+        load, actor, target = _run_basic_attack([10, 10, 10], [1, 1, 1], atk_roll=10, def_roll=1)
+        assert any(e.startswith("DEF_CALC|") for e in load.history), \
+            "DEF_CALC tag missing from history"
+
+    def test_def_calc_tag_present_on_miss(self):
+        load, actor, target = _run_basic_attack([1, 1, 1], [15, 15, 15], atk_roll=1, def_roll=20)
+        assert any(e.startswith("DEF_CALC|") for e in load.history), \
+            "DEF_CALC tag missing even when attack misses"
+
+    def test_def_calc_values_match_formula(self):
+        """Final defense value == roll + rank + bdd."""
+        manager = create_test_battle_manager()
+        actor = create_dummy_character(char_id="actor", attributes=[10, 10, 10])
+        target = create_dummy_character(char_id="target", attributes=[5, 5, 5])
+
+        manager.add_character(actor, MagicMock(), start_tick=1000)
+        manager.add_character(target, MagicMock(), start_tick=1000)
+        manager.set_tick(actor, 0)
+        manager.set_tick(target, 100)
+        actor = manager.get_next_actor()
+
+        def_roll = 12
+        manager.dice_service.schedule_result(10) # atk
+        manager.dice_service.schedule_result(def_roll)
+
+        action = AttackAction(None, actor, [target], manager)
+        load = manager.run_action(action)
+
+        # Find the DEF_CALC entry
+        def_calc = next(e for e in load.history if e.startswith("DEF_CALC|"))
+        parts = def_calc.split("|")
+        # DEF_CALC|target_id|roll|rank|bdd|final
+        assert parts[1] == "target"
+        roll, rank, bdd, final = int(parts[2]), int(parts[3]), int(parts[4]), int(parts[5])
+        assert roll == def_roll, f"Expected roll={def_roll}, got {roll}"
+        assert rank == target.rank, f"Expected rank={target.rank}, got {rank}"
+        assert bdd == target.bdd, f"Expected bdd={target.bdd}, got {bdd}"
+        assert final == roll + rank + bdd, \
+            f"Final ({final}) != roll({roll}) + rank({rank}) + bdd({bdd})"
+
+    def test_def_calc_appears_after_roll_tag(self):
+        """DEF_CALC must come after the corresponding ROLL|DEF tag."""
+        load, actor, target = _run_basic_attack([10, 10, 10], [1, 1, 1], atk_roll=5, def_roll=5)
+        history = load.history
+        roll_idx = next(i for i, e in enumerate(history) if e.startswith("ROLL|DEF|"))
+        calc_idx = next(i for i, e in enumerate(history) if e.startswith("DEF_CALC|"))
+        assert calc_idx > roll_idx, "DEF_CALC should appear after ROLL|DEF tag"
+
+
+# ---------------------------------------------------------------------------
 # BattleView parsing
 # ---------------------------------------------------------------------------
 
@@ -192,3 +249,19 @@ class TestBattleViewCalcParsing:
         result = self.view._parse_entry(tag)
         # Expect format: [CALC] target Damage: 11 = 4 (PdA) + (2 GdA * 3 MdA) + 1 (Mod)
         assert "PdA" in result or "GdA" in result or "Damage" in result
+
+    def test_def_calc_parsed(self):
+        tag = "DEF_CALC|Legolas|12|4|2|18"
+        result = self.view._parse_entry(tag)
+        assert "[CALC]" in result
+        assert "Legolas" in result
+        assert "18" in result
+        assert "12" in result  # roll
+        assert "4" in result   # rank
+        assert "2" in result   # bdd
+
+    def test_def_calc_full_narrative(self):
+        tag = "DEF_CALC|defender|15|3|1|19"
+        result = self.view._parse_entry(tag)
+        # Expect format: [CALC] defender Final Defense: 19 = 15 (Roll) + 3 (Rank) + 1 (BdD)
+        assert "Final Defense" in result or "BdD" in result

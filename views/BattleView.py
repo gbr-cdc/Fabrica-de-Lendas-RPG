@@ -100,6 +100,9 @@ class BattleView:
             elif tag == "DMG_CALC":
                 # DMG_CALC|target_id|pda|gda|mda|modifier|final
                 return f"[CALC] {parts[1]} Damage: {parts[6]} = {parts[2]} (PdA) + ({parts[3]} GdA * {parts[4]} MdA) + {parts[5]} (Mod)"
+            elif tag == "DEF_CALC":
+                # DEF_CALC|target_id|roll|rank|bdd|final
+                return f"[CALC] {parts[1]} Final Defense: {parts[5]} = {parts[2]} (Roll) + {parts[3]} (Rank) + {parts[4]} (BdD)"
             else:
                 return entry
         except IndexError:
