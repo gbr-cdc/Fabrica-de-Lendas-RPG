@@ -1,6 +1,5 @@
 # GDD: Sistema de RPG Fábrica de Lendas
-**Versão:** 1.0 (Draft Mecânico)
-**Autor:** Gabriel
+**Autor:** Shino
 
 ## Visão Geral do Sistema
 * **Objetivo:** Criar um sistema de RPG focado em histórias de alta fantasia, com a estética de cenários de anime shonen. O sistema prioriza a simplicidade e a versatilidade, utilizando um combate que se comporta mecanicamente de forma inspirada em jogos eletrônicos. Ele é projetado para representar toda a jornada de desenvolvimento de um personagem, desde um aventureiro comum até se tornar uma lenda que se aproxima do nível das divindades.
@@ -29,21 +28,21 @@ O Fábrica de Lendas utiliza três atributos principais que buscam englobar trê
 | Físico | PV |
 | ---: | ---: |
 | 0 | 10 |
-| 1 | 20 |
-| 2 | 30 |
-| 3 | 40 |
-| 4 | 50 |
-| 5 | 65 |
-| 6 | 80 |
-| 7 | 95 |
-| 8 | 115 |
-| 9 | 135 |
-| 10 | 155 |
-| 11 | 180 |
-| 12 | 205 |
-| 13 | 230 |
-| 14 | 270 |
-| 15 | 310 |
+| 1 | 15 |
+| 2 | 25 |
+| 3 | 35 |
+| 4 | 45 |
+| 5 | 55 |
+| 6 | 65 |
+| 7 | 80 |
+| 8 | 95 |
+| 9 | 110 |
+| 10 | 130 |
+| 11 | 150 |
+| 12 | 170 |
+| 13 | 200 |
+| 14 | 230 |
+| 15 | 260 |
 
 | Habilidade | Custo de Ação |
 | ---: | ---: |
@@ -206,11 +205,11 @@ Para começar, eu tomei a decisão de padronizar o dano das armas de acordo com 
 
 | Tier | Manto | Leve | Pesada |
 | :---: | :---: | :---: | :---: |
-| **1** | 10 | 15 | 25 |
-| **2** | 15 | 25 | 40 |
-| **3** | 25 | 45 | 70 |
-| **4** | 35 | 70 | 110 |
-| **5** | 55 | 110 | 160 |
+| **1** | 5 | 15 | 25 | 20 |
+| **2** | 10 | 20 | 40 | 30 |
+| **3** | 20 | 40 | 70 | 60 |
+| **4** | 30 | 60 | 110 | 90 |
+| **5** | 45 | 90 | 160 | 135 |
 
 ### Notas de Design 
 Para simplificar as coisas, e como não existe um conceito de classe de armadura nesse sistema, armaduras concedem um bônus de HP. Matematicamente isso vai funcionar de maneira análoga a "armaduras absorvem parte do dano", mas sem precisar calcular essa redução toda vez que o dano for calculado. A armadura que um personagem utiliza é determinada pelo Estilo de Combate. O cálculo utilizado para definir os bônus foi feito a partir da referência dos mesmos valores de atributo usados para as armas, de maneira que mantos aumentem os PVs em 20%, armaduras leves em 40% e armaduras pesadas em 60%. Quanto a escudos, eles não possuem uma progressão separada. Existe um Estilo de Combate que usa escudos e concede habilidades defensivas. Para esse RPG, os equipamentos arma e escudo são tratados como um elemento só. Então, quando receber uma recompensa por derrotar um inimigo ou encontrar um baú de tesouro, você pode encontrar um conjunto de arma e escudo tier X, e nunca um escudo separado. Isso é um elemento de jogo que pode ser meio estranho do ponto de vista interpretativo, mas não imagino que vá ser estranho ao ponto de quebrar a suspensão de descrença.
@@ -265,7 +264,7 @@ O estilo de combate junto com os atributos principais formam o núcleo do person
 * **Armas:** Espada Larga, Machado Grande, Martelo Grande
 
 ##### Habilidades
-* **Força Bruta:** Os ataques que você acertar têm seu GdA dobrado.
+* **Força Bruta:** Os ataques que você acertar têm seu GdA aumentado em 50%(arredondado para baixo).
 * **Mãos Pesadas:** Toda vez que atacar com uma arma pesada, se o GdA for maior que 3, o alvo é atordoado.
   > **Atordoado:** Some metade do tempo de ação do personagem ao seu contador. Até o fim do seu próximo turno, ele recebe -1 de Defesa.
 * **Alcance:** Enquanto usar uma arma pesada, pode gastar 2 de foco para realizar um ataque contra todos os alvos que estiverem ao seu alcance em combate corpo a corpo.
@@ -281,7 +280,7 @@ O estilo de combate junto com os atributos principais formam o núcleo do person
 * **Armas:** Espadas, Machados, Maças, Lanças e Escudo
 
 ##### Habilidades
-* **Bloquear:** Enquanto equipar um escudo, quando um ataque for acertá-lo, pode gastar 2 de foco para adicionar 1d4 à sua defesa. Toda vez que sua guarda superar a defesa do oponente, se o GdA for menor que -3, ganha +1 de Ataque contra aquele oponente.
+* **Bloquear:** Enquanto equipar um escudo, quando um ataque for acertá-lo, pode gastar 2 de foco para adicionar 1d4 à sua defesa.
 * **Golpe de Escudo:** Pode gastar 2 de Foco para fazer um ataque usando seu dado de defesa. O dano desse ataque é reduzido pela metade e o GdA é considerado 0 para calcular o dano. Se o GdA desse ataque for maior do que 3, o alvo é atordoado.
 * **Pressionar:** Pode gastar 2 de foco para jogar testes para ameaçar o oponente com vantagem. Toda vez que um teste para deter o oponente for um sucesso, seu próximo ataque contra ele ganha vantagem.
 * **Proteger:** Se um aliado adjacente for receber um ataque, pode gastar 2 de foco para direcionar esse ataque para você. Não funciona contra técnicas ou magias.
@@ -296,7 +295,7 @@ O estilo de combate junto com os atributos principais formam o núcleo do person
 * **Armas:** Adagas, Espadas Curtas, Floretes
 
 ##### Habilidades
-* **Graça do Duelista:** Toda vez que um ataque acertar, some 1d6 no GdA daquele ataque. Toda vez que for ser acertado por um ataque, pode gastar 2 de Foco para somar 1d4 na sua defesa.
+* **Graça do Duelista:** Toda vez que um ataque acertar, some 1d4 no GdA daquele ataque. Toda vez que for ser acertado por um ataque, pode gastar 2 de Foco para somar 1d4 na sua defesa.
 * **Golpe Baixo:** Você pode gastar 2 de Foco para desequilibrar o oponente. Faça um teste resistido de HAB contra o alvo, se tiver sucesso ele é desequilibrado e esta ação consome apenas uma ação de movimento. Se falhar ela consome uma ação completa.
   > **Desequilibrado:** O personagem joga sua defesa com desvantagem até o início do seu próximo turno(joga o dado duas vezes e escolhe o pior).
 * **Contra Ataque:** Toda vez que sua defesa superar o ataque de um oponente, você pode gastar 2 de foco para contra-atacar.
@@ -330,7 +329,7 @@ O estilo de combate junto com os atributos principais formam o núcleo do person
 * **Armas:** Duas Adagas, Duas Espadas, Dois Machados
 
 ##### Habilidades
-* **Ritmo Acelerado:** Toda vez que você atacar um mesmo alvo pela segunda vez consecutiva, você pode gastar o tempo de uma Ação de Movimento para realizar um ataque bônus imediato. Após realizar este ataque, a contagem de ataques contra o alvo é zerada.
+* **Ritmo Acelerado:** Toda vez que você atacar, se rolar um valor igual ou maior do que 5, o seu ataque é considerado uma ação de movimento para determinar seu custo de ação.
 * **Ritmo Crescente:** Ganha +1 de Precisão toda vez que acertar o alvo, até um máximo de +2. Perde esse bônus se errar um ataque.
 * **Pressionar:** Pode gastar 2 de foco para jogar testes para deter o oponente com vantagem. Toda vez que um teste para deter o oponente for um sucesso, você ataca aquele oponente com vantagem.
 * **Barreira de Lâminas:** Toda vez que atacar um oponente, ele ganha uma penalidade de Precisão contra você. O efeito não acumula. A penalidade dobra se você acertar o ataque.
