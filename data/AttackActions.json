@@ -6,9 +6,9 @@
         "focus_cost": 4,
         "effects": [
             {
-                "id": "add_gda",
+                "id": "add_bda",
                 "parameters": {
-                    "amount": 5
+                    "amount": 2
                 }
             }
         ]

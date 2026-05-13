@@ -110,3 +110,11 @@ class HistoryEmitter:
     @staticmethod
     def atk_load(attribute: str, delta: int, current: int) -> str:
         return f"ATK_LOAD|{attribute}|{delta}|{current}"
+
+    @staticmethod
+    def atk_calc(actor_id: str, roll: int, rank: int, bda: int, final: int) -> str:
+        return f"ATK_CALC|{actor_id}|{roll}|{rank}|{bda}|{final}"
+
+    @staticmethod
+    def dmg_calc(target_id: str, pda: int, gda: int, mda: int, modifier: int, final: int) -> str:
+        return f"DMG_CALC|{target_id}|{pda}|{gda}|{mda}|{modifier}|{final}"

@@ -304,10 +304,22 @@ Method description: Returns a formatted `PASSIVE` event string indicating a pass
 ###### atk_load [ARCH.DOC.core.Events.HistoryEmitter.atk_load]
 `atk_load(attribute: str, delta: int, current: int) -> str`
 Method description: Returns a formatted `ATK_LOAD` event string indicating an internal modification to the attack load.
+
+###### action_hook [ARCH.DOC.core.Events.HistoryEmitter.action_hook]
 `action_hook(action_name: str, actor_id: str) -> str`
 Method description: Returns a formatted `ACTION_HOOK` event string indicating an ephemeral action hook has triggered.
+
+###### status_hook [ARCH.DOC.core.Events.HistoryEmitter.status_hook]
 `status_hook(status_name: str, target_id: str) -> str`
 Method description: Returns a formatted `STATUS_HOOK` event string indicating a status effect hook has triggered.
+
+###### atk_calc [ARCH.DOC.core.Events.HistoryEmitter.atk_calc]
+`atk_calc(actor_id: str, roll: int, rank: int, bda: int, final: int) -> str`
+Method description: Returns a formatted `ATK_CALC` event string with the full attack formula breakdown: `final = roll + rank + bda`.
+
+###### dmg_calc [ARCH.DOC.core.Events.HistoryEmitter.dmg_calc]
+`dmg_calc(target_id: str, pda: int, gda: int, mda: int, modifier: int, final: int) -> str`
+Method description: Returns a formatted `DMG_CALC` event string with the full damage formula breakdown: `final = pda + (gda * mda) + modifier`.
 
 #### BaseClasses.py [ARCH.DOC.core.BaseClasses]
 Provides foundational abstract classes and interfaces ensuring modularity and decoupling.
@@ -861,20 +873,20 @@ Method description: Retrieves ephemeral hooks defined in the action template.
 ###### execute [ARCH.DOC.battle.BattleActions.AttackAction.execute]
 `execute() -> ActionLoad`
 Method description: Resolves the attack according to the standard Combat Flow. Handles resource consumption, Master Rolls for AoE, and individual target resolution. Initializes stat metrics (`pre`, `bda`, `bdd`, `grd`, `atk_die`, `def_die`) directly into the `AttackLoad` to support action-scoped stat modifications.
-1. **Resource Consumption**: Deducts `focus_cost` from actor"s `floating_focus` and records `EXEC` and `FOCUS` events.
+1. **Resource Consumption**: Deducts `focus_cost` from actor`s `floating_focus` and records `EXEC` and `FOCUS` events.
 2. **Phase 1: Attack Roll**: 
-   - If AoE, performs one "Master Roll" using `attack_load.atk_die` (emits `on_roll_modify` for the attacker).
-   - If Single Target, the roll happens during individual resolution.
+   - If AoE, performs one "Master Roll" using `attack_load.atk_die` (emits `on_roll_modify` for the attacker). Records `ROLL` and `ATK_CALC` events.
+   - If Single Target, the roll happens during individual resolution. Records `ROLL` and `ATK_CALC` events.
 3. **Phase 2: Target Resolution Loop**: Iterates through each living target:
    - Emits `on_roll_modify`
    - Performs/Retrieves attack roll.
-   - Performs defense roll using `attack_load.def_die`.
+   - Performs defense roll using `attack_load.def_die`. Records `ROLL` (DEF) event.
    - Emits `on_defense_reaction`.
    - Calculates `GdA = (Attack Roll + Rank + BDA) - (Defense Roll + Rank + BDD)`.
    - **Hit Validation**: Hit is successful if `GdA > (attack_load.grd - attack_load.pre)`.
    - If hit: Emits `on_hit_check`, `on_gda_modify`, `on_damage_calculation`, and `on_damage_taken`.
-   - **Damage Application**: Calculates damage as `pda + (mda * max(0, GdA))`. Applies damage via `CharacterSystem.take_damage`.
-   - Records `HIT`/`MISS`, `DMG`, and `HP` events.
+   - **Damage Application**: Calculates damage as `pda + (mda * max(0, GdA)) + modifier`. Records `DMG_CALC`, `DMG`, and `HP` events. Applies damage via `CharacterSystem.take_damage`.
+   - If miss: Records `MISS` event.
 4. **Finalization**: Emits `on_attack_end` for each target. If `BASIC_ATTACK`, generates actor focus. Returns `ActionLoad` with full history.
 
 ##### GenerateManaAction [ARCH.DOC.battle.BattleActions.GenerateManaAction]
@@ -1418,7 +1430,9 @@ Method description: The translation engine that converts technical tags into nar
    - `PASSIVE`: Passive ability triggers.
    - `ACTION_HOOK / STATUS_HOOK`: Reactive hook activations.
    - `ATK_LOAD`: Action-scoped stat modifications.
-3. Returns a formatted string with a category prefix (e.g., `[ACTION]`, `[ROLL]`).
+   - `ATK_CALC`: Full attack formula breakdown (`roll + rank + bda = final`). Rendered as `[CALC]`.
+   - `DMG_CALC`: Full damage formula breakdown (`pda + (gda * mda) + modifier = final`). Rendered as `[CALC]`.
+3. Returns a formatted string with a category prefix (e.g., `[ACTION]`, `[ROLL]`, `[CALC]`).
 4. Gracefully falls back to the raw string on error or unknown tags.
 
 ###### parse [ARCH.DOC.views.BattleView.BattleView.parse]

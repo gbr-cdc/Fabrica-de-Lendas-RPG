@@ -184,6 +184,7 @@ class AttackAction(BattleAction):
             
             master_attack_load.history.append(HistoryEmitter.roll("ATK_AREA", master_roll_result.final_roll, master_attack_load.atk_die, self.actor.char_id))
             mod_atk_roll = master_roll_result.final_roll + self.actor.rank + master_attack_load.bda
+            master_attack_load.history.append(HistoryEmitter.atk_calc(self.actor.char_id, master_roll_result.final_roll, self.actor.rank, master_attack_load.bda, mod_atk_roll))
             action_load.history.extend(master_attack_load.history)
 
         # --- Phase 2: Target Resolution ---
@@ -224,6 +225,7 @@ class AttackAction(BattleAction):
                 attack_load.attack_roll = roll_result.final_roll
                 current_mod_atk = roll_result.final_roll + self.actor.rank + attack_load.bda
                 attack_load.history.append(HistoryEmitter.roll("ATK", roll_result.final_roll, attack_load.atk_die, self.actor.char_id))
+                attack_load.history.append(HistoryEmitter.atk_calc(self.actor.char_id, roll_result.final_roll, self.actor.rank, attack_load.bda, current_mod_atk))
             
             # --- Phase 3: Defense Roll ---
 
@@ -251,8 +253,10 @@ class AttackAction(BattleAction):
                 
                 self.context.emit('on_damage_calculation', attack_load)
                 final_gda = max(0, attack_load.gda)
-                attack_load.damage = attack_load.damage + self.actor.pda + (self.actor.mda * final_gda)
+                damage_modifier = attack_load.damage
+                attack_load.damage = damage_modifier + self.actor.pda + (self.actor.mda * final_gda)
                 attack_load.damage = max(0, attack_load.damage)
+                attack_load.history.append(HistoryEmitter.dmg_calc(target.char_id, self.actor.pda, final_gda, self.actor.mda, damage_modifier, attack_load.damage))
                 
                 self.context.emit('on_damage_taken', attack_load)
                 CharacterSystem.take_damage(target, attack_load.damage)

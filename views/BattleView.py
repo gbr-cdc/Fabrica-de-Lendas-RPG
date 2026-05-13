@@ -94,6 +94,12 @@ class BattleView:
                 return f"[HOOK] {parts[1]} effect triggered on {parts[2]}"
             elif tag == "ATK_LOAD":
                 return f"[ATK_LOAD] {parts[1]} modified: {parts[3]} ({parts[2]})"
+            elif tag == "ATK_CALC":
+                # ATK_CALC|actor_id|roll|rank|bda|final
+                return f"[CALC] {parts[1]} Final Attack: {parts[5]} = {parts[2]} (Roll) + {parts[3]} (Rank) + {parts[4]} (BdA)"
+            elif tag == "DMG_CALC":
+                # DMG_CALC|target_id|pda|gda|mda|modifier|final
+                return f"[CALC] {parts[1]} Damage: {parts[6]} = {parts[2]} (PdA) + ({parts[3]} GdA * {parts[4]} MdA) + {parts[5]} (Mod)"
             else:
                 return entry
         except IndexError:
