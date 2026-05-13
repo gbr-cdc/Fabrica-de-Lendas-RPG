@@ -149,17 +149,17 @@ class GracaDoDuelista(BattlePassive):
             if attack_load.target is None:
                 return
             if attack_load.target.char_id == self.owner.char_id:
-                if attack_load.gda > (0 + attack_load.grd - attack_load.pre):
-                    if self.owner.floating_focus >= reaction_cost:
-                        controller = self.context.get_controller(self.owner.char_id)
-                        if controller and controller.choose_reaction(self.owner, self.name, attack_load, self.context):
-                            if CharacterSystem.spend_focus(self.owner, reaction_cost):
-                                attack_load.history.append(HistoryEmitter.focus(self.owner.char_id, -reaction_cost, self.owner.floating_focus))
-                            
-                            roll = self.dice_service.roll_dice(reaction_die, RollState.NEUTRAL)
-                            attack_load.gda -= roll.final_roll
-                            attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
-                            attack_load.history.append(HistoryEmitter.atk_load("gda", -roll.final_roll, attack_load.gda))
+                # on_defense_reaction only fires on a confirmed hit; no GdA check needed.
+                if self.owner.floating_focus >= reaction_cost:
+                    controller = self.context.get_controller(self.owner.char_id)
+                    if controller and controller.choose_reaction(self.owner, self.name, attack_load, self.context):
+                        if CharacterSystem.spend_focus(self.owner, reaction_cost):
+                            attack_load.history.append(HistoryEmitter.focus(self.owner.char_id, -reaction_cost, self.owner.floating_focus))
+                        
+                        roll = self.dice_service.roll_dice(reaction_die, RollState.NEUTRAL)
+                        attack_load.gda -= roll.final_roll
+                        attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
+                        attack_load.history.append(HistoryEmitter.atk_load("gda", -roll.final_roll, attack_load.gda))
 
         return {
             "on_gda_modify": passiva_acerto_hook,
@@ -237,7 +237,7 @@ class Bloquear(BattlePassive):
         def reacao_bloqueio_hook(attack_load: 'AttackLoad'):
             if attack_load.target is None or attack_load.target.char_id != self.owner.char_id:
                 return
-            
+            # on_defense_reaction only fires on a confirmed hit; no GdA check needed.
             if self.owner.floating_focus >= focus_cost:
                 controller = self.context.get_controller(self.owner.char_id)
                 if controller.choose_reaction(self.owner, "Bloquear", attack_load, self.context):
@@ -249,7 +249,7 @@ class Bloquear(BattlePassive):
                         attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
                         attack_load.history.append(HistoryEmitter.atk_load("gda", -roll.final_roll, attack_load.gda))
 
-                        if attack_load.gda < counter_threshold:
+                        if attack_load.gda <= counter_threshold:
                             self._counter_targets[attack_load.character.char_id] = True
 
         def bonus_contra_ataque_hook(attack_load: 'AttackLoad'):
@@ -318,6 +318,7 @@ class PosturaBatalha(BattlePassive):
         def on_defense_reaction(attack_load: 'AttackLoad'):
             from core.Enums import RollState
             if self.current_postura == "DEFENSIVE" and attack_load.target is not None and attack_load.target.char_id == self.owner.char_id:
+                # on_defense_reaction only fires on a confirmed hit; no GdA check needed.
                 params = self.template.parameters if self.template else {}
                 reroll_cost = params.get("reroll_cost", 2)
                 

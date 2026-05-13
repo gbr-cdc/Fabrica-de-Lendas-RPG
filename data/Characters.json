@@ -98,5 +98,30 @@
       "Ritmo Acelerado"
     ],
     "CombatStyle": "Retalhador"
+  },
+  "Defensor": {
+    "Nome": "Defensor",
+    "FIS": 5,
+    "HAB": 3,
+    "MEN": 2,
+    "Weapon": {
+      "name": "Arma e Escudo",
+      "db": 3,
+      "mda": 1,
+      "type": "weapon_and_shield"
+    },
+    "Armor": {
+      "name": "Armadura Leve",
+      "hp_bonus": 25,
+      "type": "heavy"
+    },
+    "Abilities": [
+      "SkillN1",
+      "GenerateFocusAction"
+    ],
+    "Passives": [
+      "Bloquear"
+    ],
+    "CombatStyle": "Defensor"
   }
 }

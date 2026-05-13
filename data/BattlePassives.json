@@ -46,8 +46,8 @@
     "parameters": {
       "focus_cost": 2,
       "reduction_die": 4,
-      "counter_threshold": -3,
-      "counter_bda_bonus": 1
+      "counter_threshold": 0,
+      "counter_bda_bonus": 0
     }
   },
   "PosturaDefensiva": {

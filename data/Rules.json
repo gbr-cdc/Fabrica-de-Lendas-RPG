@@ -3,7 +3,7 @@
   "limite_mana": 5,
   "regras_progressao": {
     "tabela_hp": {
-      "0": 10,
+      "0": 8,
       "1": 30,
       "2": 50,
       "3": 60,

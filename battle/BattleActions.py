@@ -239,36 +239,39 @@ class AttackAction(BattleAction):
             # --- Phase 4: Hit Calculation [GDD.COMBAT.FLOW.HIT] ---
             attack_load.gda = current_mod_atk - mod_def_roll
 
-            
-            self.context.emit('on_defense_reaction', attack_load)
-            
-            if attack_load.gda > (0 + attack_load.grd - attack_load.pre):
+            # Emit on_defense_reaction only after a hit is initially confirmed.
+            if attack_load.gda > (attack_load.grd - attack_load.pre):
                 attack_load.hit = True
+                self.context.emit('on_defense_reaction', attack_load)
+                # Re-evaluate hit after reactions: a reaction can turn a hit into a miss.
+                if attack_load.gda <= (attack_load.grd - attack_load.pre):
+                    attack_load.hit = False
+
+            if attack_load.hit:
                 attack_load.history.append(HistoryEmitter.hit(target.char_id))
                 self.context.emit('on_hit_check', attack_load)
-                
+
                 if attack_load.gda < 0:
                     attack_load.gda = 0
-                    
+
                 self.context.emit('on_gda_modify', attack_load)
-                
+
                 self.context.emit('on_damage_calculation', attack_load)
                 final_gda = max(0, attack_load.gda)
                 damage_modifier = attack_load.damage
                 attack_load.damage = damage_modifier + self.actor.pda + (self.actor.mda * final_gda)
                 attack_load.damage = max(0, attack_load.damage)
                 attack_load.history.append(HistoryEmitter.dmg_calc(target.char_id, self.actor.pda, final_gda, self.actor.mda, damage_modifier, attack_load.damage))
-                
+
                 self.context.emit('on_damage_taken', attack_load)
                 CharacterSystem.take_damage(target, attack_load.damage)
                 attack_load.history.append(HistoryEmitter.dmg(target.char_id, attack_load.damage, self.attack_type.value))
                 attack_load.history.append(HistoryEmitter.hp(target.char_id, -attack_load.damage, target.current_hp))
             else:
-                # Attack missed: GdA + Pre - Grd <= 0
+                # Attack missed (or reaction converted hit to miss).
                 attack_load.history.append(HistoryEmitter.miss(target.char_id))
-                self.context.emit('on_hit_check', attack_load)
 
-
+            self.context.emit('on_hit_check', attack_load)
             self.context.emit('on_attack_end', attack_load)
             action_load.history.extend(attack_load.history)
         

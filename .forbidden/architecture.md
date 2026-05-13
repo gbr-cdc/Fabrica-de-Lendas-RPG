@@ -877,20 +877,18 @@ Method description: Retrieves ephemeral hooks defined in the action template.
 `execute() -> ActionLoad`
 Method description: Resolves the attack according to the standard Combat Flow. Handles resource consumption, Master Rolls for AoE, and individual target resolution. Initializes stat metrics (`pre`, `bda`, `bdd`, `grd`, `atk_die`, `def_die`) directly into the `AttackLoad` to support action-scoped stat modifications.
 1. **Resource Consumption**: Deducts `focus_cost` from actor`s `floating_focus` and records `EXEC` and `FOCUS` events.
-2. **Phase 1: Attack Roll**: 
+2. **Phase 1: Attack Roll**:
    - If AoE, performs one "Master Roll" using `attack_load.atk_die` (emits `on_roll_modify` for the attacker). Records `ROLL` and `ATK_CALC` events.
    - If Single Target, the roll happens during individual resolution. Records `ROLL` and `ATK_CALC` events.
 3. **Phase 2: Target Resolution Loop**: Iterates through each living target:
-   - Emits `on_roll_modify`
-   - Performs/Retrieves attack roll.
+   - Emits `on_roll_modify`. Performs/Retrieves attack roll.
    - Performs defense roll using `attack_load.def_die`. Records `ROLL` (DEF) and `DEF_CALC` events.
-   - Emits `on_defense_reaction`.
    - Calculates `GdA = (Attack Roll + Rank + BDA) - (Defense Roll + Rank + BDD)`.
-   - **Hit Validation**: Hit is successful if `GdA > (attack_load.grd - attack_load.pre)`.
-   - If hit: Emits `on_hit_check`, `on_gda_modify`, `on_damage_calculation`, and `on_damage_taken`.
-   - **Damage Application**: Calculates damage as `pda + (mda * max(0, GdA)) + modifier`. Records `DMG_CALC`, `DMG`, and `HP` events. Applies damage via `CharacterSystem.take_damage`.
-   - If miss: Records `MISS` event.
-4. **Finalization**: Emits `on_attack_end` for each target. If `BASIC_ATTACK`, generates actor focus. Returns `ActionLoad` with full history.
+   - **Initial Hit Check**: If `GdA > (grd - pre)`, sets `attack_load.hit = True` and emits `on_defense_reaction`. After all reactions, re-evaluates: if `GdA <= (grd - pre)`, sets `attack_load.hit = False` (reaction turned a hit into a miss).
+   - If `attack_load.hit` is True: records `HIT`, emits `on_hit_check`, `on_gda_modify`, `on_damage_calculation`, and `on_damage_taken`. Records `DMG_CALC`, `DMG`, and `HP` events. Applies damage via `CharacterSystem.take_damage`.
+   - If `attack_load.hit` is False: records `MISS`.
+   - Emits `on_hit_check` unconditionally (after HIT/MISS record), then emits `on_attack_end`.
+4. **Finalization**: If `BASIC_ATTACK`, generates actor focus. Returns `ActionLoad` with full history.
 
 ##### GenerateManaAction [ARCH.DOC.battle.BattleActions.GenerateManaAction]
 [DEPENDS: ARCH.DOC.core.CharacterSystem.generate_mana, GDD.CORE.RESOURCES.MANA]
@@ -1021,7 +1019,7 @@ Data-driven advanced passive granting success bonuses and manual defensive react
 `get_hooks() -> Dict[str, Callable]`
 Method description: Registers accuracy bonuses and reaction prompts using parameters: `bonus_die`, `reaction_die`, `reaction_cost`.
 1. `passiva_acerto_hook` (on `on_gda_modify`): Adds `bonus_die` roll to the owner's `GdA` for all attacks.
-2. `reacao_evasao_hook` (on `on_defensive_reaction`): If the owner is targeted and hit, prompts the controller for a choice. If `reaction_cost` Focus is spent, rolls `reaction_die` and subtracts from incoming `GdA`.
+2. `reacao_evasao_hook` (on `on_defense_reaction`): Triggered only when the owner is targeted and the attack is initially a hit. Prompts the controller for a choice. If `reaction_cost` Focus is spent, rolls `reaction_die` and subtracts from incoming `GdA`. The engine re-evaluates `attack_load.hit` after this hook, so reducing `GdA` below the threshold converts the hit into a miss.
 
 ##### Combo [ARCH.DOC.battle.BattlePassives.Combo]
 [DEPENDS: ARCH.DOC.battle.BattleActions.AttackAction, ARCH.DOC.battle.StatusEffects.Atordoado, GDD.STYLES.LUTADOR.COMBO]
@@ -1049,12 +1047,12 @@ Data-driven defensive passive that allows focus-based reactions and grants count
 ###### get_hooks [ARCH.DOC.battle.BattlePassives.Bloquear.get_hooks]
 `get_hooks() -> Dict[str, Callable]`
 Method description: Registers defensive reaction and counter-bonus hooks using `focus_cost`, `reduction_die`, `counter_threshold`, and `counter_bda_bonus`.
-1. `reacao_bloqueio_hook` (on `on_defensive_reaction`): 
-   - If targeted, checks for `focus_cost` Focus and controller approval.
+1. `reacao_bloqueio_hook` (on `on_defense_reaction`): Triggered only when the owner is targeted and the attack is initially a hit.
+   - Checks for `focus_cost` Focus and controller approval.
    - Spends Focus and subtracts `reduction_die` roll from incoming `GdA`.
-   - If final `GdA < counter_threshold`, marks the attacker for a counter-bonus.
-2. `bonus_contra_ataque_hook` (on `on_roll_modify`): If the owner attacks a marked target, applies a `counter_bda_bonus` to `attack_load.bda`.
-3. `cleanup_bonus_hook` (on `on_attack_end"): Removes the target marking.
+   - If final `GdA <= counter_threshold` (default 0), marks the attacker for a counter-bonus. The engine re-evaluates `attack_load.hit` after this hook, so reducing `GdA` to 0 or below converts the hit into a miss.
+2. `bonus_contra_ataque_hook` (on `on_roll_modify`): If the owner attacks a marked target, applies `counter_bda_bonus` to `attack_load.bda`.
+3. `cleanup_bonus_hook` (on `on_attack_end`): Removes the target marking after the owner attacks.
 
 ##### PosturaBatalha [ARCH.DOC.battle.BattlePassives.PosturaBatalha]
 [DEPENDS: ARCH.DOC.core.Modifiers.EphemeralModifier, GDD.STYLES.MESTRE_ARMAS.POSTURAS, ARCH.DOC.core.Events.AttackLoad, ARCH.DOC.core.Structs.BattlePassiveTemplate]
@@ -1075,8 +1073,8 @@ Method description: Switches the stance on/off and updates actor stats via modif
 `get_hooks() -> Dict[str, Callable]`
 Method description: Implements the reactive logic of the stance using parameters: `offensive_gda_bonus`, `offensive_high_bonus`, `offensive_threshold`, `reroll_cost`.
 1. `on_gda_modify`: While `OFFENSIVE`, successful hits from the owner add `offensive_gda_bonus` to `GdA`. If the attacker's `attack_roll > offensive_threshold`, it adds `offensive_high_bonus` instead.
-2. `on_defense_reaction`: While `DEFENSIVE` and the owner is targeted, prompts the controller for a re-roll reaction.
-   - If approved and `reroll_cost` Focus is spent: rolls `def_die` again, calculates the difference (`new_roll - old_defense_roll`), updates `GdA` and `defense_roll` inside `AttackLoad`, and registers the modification.
+2. `on_defense_reaction`: While `DEFENSIVE` and the owner is targeted, triggered only when the attack is initially a hit. Prompts the controller for a re-roll reaction.
+   - If approved and `reroll_cost` Focus is spent: rolls `def_die` again, calculates the difference (`new_roll - old_defense_roll`), updates `GdA` and `defense_roll` inside `AttackLoad`, and registers the modification. The engine re-evaluates `attack_load.hit` after this hook, so a sufficient re-roll can convert the hit into a miss.
 
 ##### RitmoAcelerado [ARCH.DOC.battle.BattlePassives.RitmoAcelerado]
 [DEPENDS: ARCH.DOC.core.Events.HistoryEmitter, ARCH.DOC.core.Enums.BattleActionType, ARCH.DOC.core.Structs.BattlePassiveTemplate]
