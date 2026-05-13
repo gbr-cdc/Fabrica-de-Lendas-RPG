@@ -219,7 +219,7 @@ The combat style represents how the character fights, what equipment they use, a
 - **Weapon Type:** GREAT_WEAPON
 
 ### Abilities:
-- **Força Bruta [GDD.STYLES.DESTRUIDOR.FORCA_BRUTA]:** Successful hits have their GdA doubled.
+- **Força Bruta [GDD.STYLES.DESTRUIDOR.FORCA_BRUTA]:** Successful hits have their GdA multiplied by 1.5 (rounded down).
 - **Mãos Pesadas [GDD.STYLES.DESTRUIDOR.MAOS_PESADAS]:** If GdA > 3 with a GREAT_WEAPON, the target is ATORDOADO.
 - **Alcance [GDD.STYLES.DESTRUIDOR.ALCANCE]:** While using a GREAT_WEAPON, spend 2 Focus to attack all targets in melee range. [AttackType = AREA]
 - **Postura Defensiva [GDD.STYLES.DESTRUIDOR.POSTURA_DEFENSIVA]:** Switch dice to d10/d10. Alcance cost reduced to 1 Focus. Hits apply a -1 Precision penalty to the target's next action against you.
@@ -234,7 +234,7 @@ The combat style represents how the character fights, what equipment they use, a
 - **Weapon Type:** WEAPON_AND_SHIELD
 
 ### Abilities:
-- **Bloquear [GDD.STYLES.DEFENSOR.BLOQUEAR]:** While shielding, spend 2 Focus to add 1d4 to defense. If defense > attacker's roll and GdA < -3, gain +1 Attack against that opponent.
+- **Bloquear [GDD.STYLES.DEFENSOR.BLOQUEAR]:** While shielding, spend 2 Focus to add 1d4 to defense.
 - **Golpe de Escudo [GDD.STYLES.DEFENSOR.GOLPE_ESCUDO]:** Spend 2 Focus to attack using defense die. GdA treated as 0 for damage calculation. If GdA > 3, target is ATORDOADO.
 - **Pressionar [GDD.STYLES.DEFENSOR.PRESSIONAR]:** Spend 2 Focus to gain advantage on menace tests. Every time you succeed in a menace test you gain advantage to attack that target in your next action.
 - **Proteger [GDD.STYLES.DEFENSOR.PROTEGER]:** Spend 2 Focus to redirect a melee attack from an adjacent ally to yourself. Does not work against SKILL or MAGIC.
@@ -249,7 +249,7 @@ The combat style represents how the character fights, what equipment they use, a
 - **Weapon Type:** LIGHT_WEAPON
 
 ### Abilities:
-- **Graça do Duelista [GDD.STYLES.DUELISTA.GRACA]:** On hit, add 1d6 to GdA. When targeted, can spend 2 Focus to add 1d4 to defense.
+- **Graça do Duelista [GDD.STYLES.DUELISTA.GRACA]:** On hit, add 1d4 to GdA. When targeted, can spend 2 Focus to add 1d4 to defense.
 - **Golpe Baixo [GDD.STYLES.DUELISTA.GOLPE_BAIXO]:** Spend 2 Focus to force a HAB contest against a melee target. Success: target is DESEQUILIBRADO and Golpe Baixo costs a Movement Action. Failure: Golpe Baixo costs a Standard Action.
 - **Contra Ataque [GDD.STYLES.DUELISTA.CONTRA_ATAQUE]:** If GdA < 0, spend 2 Focus to counter-attack.
 - **Pés Ligeiros [GDD.STYLES.DUELISTA.PES_LIGEIROS]:** Spend 2 Focus during movement for +50% distance bonus or advantage on disengage tests. Melee hits gives the target -1 Precision against you on their next action.
@@ -279,7 +279,7 @@ The combat style represents how the character fights, what equipment they use, a
 - **Weapon Type:** SWORD (ANY)
 
 ### Abilities:
-- **Ritmo Acelerado [GDD.STYLES.RETALHADOR.RITMO_ACELERADO]:** Every time you roll 7 or more in attack, that attack counts as a movement action. This can happen 2 times in a roll. If that happens, the third attack is a standard action gain +2 PRE.
+- **Ritmo Acelerado [GDD.STYLES.RETALHADOR.RITMO_ACELERADO]:** Every time you roll 5 or more in attack, that attack counts as a movement action.
 - **Ritmo Crescente [GDD.STYLES.RETALHADOR.RITMO_CRESCENTE]:** +1 PRE on hit (max +2). Reset on miss.
 - **Pressionar [GDD.STYLES.RETALHADOR.PRESSIONAR]:** Spend 2 Focus to gain advantage on menace tests. Success grants advantage on attack against that target on your next action. Every time you hit a target, that target gains (TO BE DONE)
 - **Barreira de Lâminas [GDD.STYLES.RETALHADOR.BARREIRA]:** Attacks apply Precision penalty to target against you. Penalty doubles on hit.
@@ -294,7 +294,7 @@ The combat style represents how the character fights, what equipment they use, a
 - **Weapons:** Gloves/Unarmed
 
 ### Abilities:
-- **Combo [GDD.STYLES.LUTADOR.COMBO]:** Attack action allows two attacks. If both hit, perform a third attack that Stuns.
+- **Combo [GDD.STYLES.LUTADOR.COMBO]:** Attack action allows two attacks. If both hit, perform a third attack that Stuns if hits.
 - **Investida [GDD.STYLES.LUTADOR.INVESTIDA]:** Spend 2 Focus and Attack Action to move up to speed in straight line and attack with +2 GdA.
 - **Balão [GDD.STYLES.LUTADOR.BALAO]:** Replace attack with grapple roll. On hit, FIS contest to throw. Target is Knocked Down and takes PdA damage.
 - **Evasão [GDD.STYLES.LUTADOR.EVASAO]:** Spend 2 Focus to add 1d4 to defense when targeted.
