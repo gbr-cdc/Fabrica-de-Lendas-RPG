@@ -192,7 +192,11 @@ Blueprint for complex actions, defining costs, types, and associated effects.
 - `attack_type: type["AttackType"]` [ARCH.DOC.core.Structs.AttackActionTemplate.attack_type]: Classification for rule-specific interactions.
 - `focus_cost: int` [ARCH.DOC.core.Structs.AttackActionTemplate.focus_cost]: Focus points required to execute the action.
 - `effects: List[AttackEffects]` [ARCH.DOC.core.Structs.AttackActionTemplate.effects]: Collection of effects applied during execution.
+
+##### BattlePassiveTemplate [ARCH.DOC.core.Structs.BattlePassiveTemplate]
+[DEPENDS: ARCH.RULES.BATTLE.PASSIVE_DATA]
 Blueprint for passive abilities, defining their unique parameters and display data.
+
 - Constructor [ARCH.DOC.core.Structs.BattlePassiveTemplate.__init__]: `__init__(id: str, name: str, parameters: Dict[str, Any] = {})`
 - `id: str` [ARCH.DOC.core.Structs.BattlePassiveTemplate.id]: Unique identifier for the passive.
 - `name: str` [ARCH.DOC.core.Structs.BattlePassiveTemplate.name]: Display name of the passive.
