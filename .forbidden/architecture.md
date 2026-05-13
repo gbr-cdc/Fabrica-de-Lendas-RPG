@@ -754,12 +754,13 @@ Method description: Removes a previously registered callback from the Event Bus.
 Method description: Triggers an event, notifying all subscribed listeners. Listeners can modify the `payload` by reference. `[ARCH.RULES.CORE.OBSERVER]`
 
 ###### add_character [ARCH.DOC.battle.BattleManager.BattleManager.add_character]
-`add_character(character: "Character", controller: "CharacterController", start_tick: int = 0) -> None`
+`add_character(character: "Character", controller: "CharacterController", start_tick: int | None = None) -> None`
 Method description: Adds a character to the simulation and schedules their first turn.
 1. Registers the character and its associated controller.
-2. Generates a unique tie-break roll to prevent timeline collisions.
-3. Pushes the character into the timeline heap.
-4. Instantiates and subscribes all character passive abilities via `get_hooks()`. `[ARCH.RULES.CORE.IOC]`
+2. If `start_tick` is `None`, calculates it as `current_tick + character.action_cost_base` to comply with `[GDD.CORE.TIME.INIT]`.
+3. Generates a unique tie-break roll to prevent timeline collisions.
+4. Pushes the character into the timeline heap.
+5. Instantiates and subscribes all character passive abilities via `get_hooks()`. `[ARCH.RULES.CORE.IOC]`
 
 ###### run_battle [ARCH.DOC.battle.BattleManager.BattleManager.run_battle]
 `run_battle() -> None`
@@ -1452,7 +1453,7 @@ Method description: The translation engine that converts technical tags into nar
 - **Invariants [ARCH.TEST_QUALITY.INVARIANTS]:** Assert that attribute modifiers `[ARCH.RULES.CORE.MODIFIER]` are properly used and Character atributes are not corrupted by bad modifications.
 - **Lifecycle Auditing** [ARCH.TEST_QUALITY.LIFECYCLE]: Tests involving the EventBus MUST verify that all ephemeral hooks ([ARCH.RULES.BATTLE.EPHEMERAL_HOOKS]) used by self modifying actions are successfully unsubscribed after the action cycle. Assert that the EventBus subscriber count returns to its baseline.
 - **Battle Context [ARCH.TEST_QUALITY.IBATTLECONTEXT]:** Get a `BattleManager` with `create_test_battle_manager()` from `tests/utils/test_utils.py` when a concrete implementation of `IBattleContext` (or any of its segregated forms like `IActionContext`, `IPassiveContext`) is required for behavioral tests, avoid mocking of the battle state.
-- **Testing Actions [ARCH.TEST_QUALITY.ACTIONS]:** When testing the outcome of an BattleAction, you should: use `BattleManager.add_character()` to add all actors in the battle (use 'start_tick = 1000' to facilitate timeline manipulation), use `BattleManager.set_tick()` to manipulate the timeline if necessary, use `BattleManager.get_next_actor()` to take the actor you want out of the timeline, create a `BattleAction` with that actor and call `BattleManager.run_action` with that action. The actor will be reinserted in the timeline unless you executed a free action. 
+- **Testing Actions [ARCH.TEST_QUALITY.ACTIONS]:** When testing the outcome of a BattleAction, you should: use `BattleManager.add_character()` to add all actors in the battle (pass an explicit `start_tick` if you need immediate or specific scheduling, e.g. `start_tick=1000` to put all characters far away from tick 0 and facilitate `set_tick` manipulation; by default, characters are added at `current_tick + action_cost_base`), use `BattleManager.set_tick()` to manipulate the timeline if necessary, use `BattleManager.get_next_actor()` to take the actor you want out of the timeline, create a `BattleAction` with that actor and call `BattleManager.run_action` with that action. The actor will be reinserted in the timeline unless you executed a free action.
 - **Structured History [ARCH.TEST_QUALITY.STRUCTURED_HISTORY]:** Tests verifying action outcomes MUST assert against structured event tags (`TAG|PARAM1|PARAM2...`) rather than narrative strings or partial substrings of `MSG` tags. This ensures tests remain resilient to localization changes and narrative polish. `[ARCH.RULES.CORE.HISTORY]`
 - **AttackAction Data Loading [ARCH.TEST_QUALITY.ATTACK_ACTION_DATA]:** Integration tests that verify a specific named skill end-to-end (e.g., AoE behaviour, focus cost) MAY load templates via `DataManager` from `data/AttackActions.json`. Effect hook unit tests MUST NOT do this; see `[ARCH.TEST_QUALITY.EFFECT_HOOKS]`.
 - **Effect Hook Testing [ARCH.TEST_QUALITY.EFFECT_HOOKS]:** AttackAction effect hooks MUST be tested by constructing a minimal `AttackActionTemplate` programmatically with only the target effect, rather than loading real skills from `data/AttackActions.json`. This decouples the test from game balance changes and focuses on the hook behavior in isolation. If all possible effect hooks are tested this way, all skills using those hooks are implicitly validated.

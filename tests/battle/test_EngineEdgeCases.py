@@ -142,7 +142,7 @@ def test_battle_manager_move_action_cost():
     bm.add_character(actor, controller)
     bm.run_battle()
     
-    assert bm.timeline[0][0] == 50
+    assert bm.timeline[0][0] == 150
 
 def test_battle_manager_get_methods():
     bm = BattleManager(MagicMock(), MagicMock(), MagicMock())

@@ -67,10 +67,13 @@ class BattleManager:
             if (tick, hab, roll) not in self.timeline_slots:
                 return roll
 
-    def add_character(self, character: 'Character', controller: 'CharacterController', start_tick: int = 0):
+    def add_character(self, character: 'Character', controller: 'CharacterController', start_tick: int | None = None):
         """
         Adiciona um personagem à batalha e o agenda na fila de ação.
+        Se start_tick não for fornecido, usa current_tick + action_cost_base (GDD.CORE.TIME.INIT).
         """
+        if start_tick is None:
+            start_tick = self.current_tick + character.action_cost_base
         self.characters[character.char_id] = character
         self.controllers[character.char_id] = controller
         self.battle_result.action_per_character[character.char_id] = 0
