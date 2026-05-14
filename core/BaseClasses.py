@@ -1,13 +1,14 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Protocol, Callable, List, Dict
-from core.Events import ActionLoad
+from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
+    from typing import Callable
+    from core.Events import ActionLoad
     from entities.Characters import Character
     from battle.BattleManager import BattleManager
     from core.DiceManager import DiceManager
     from core.Enums import BattleActionType, BattleState
-    from core.Structs import AttackActionTemplate, BattleResult
+    from core.Structs import AttackActionTemplate, BattleResult, BattlePassiveTemplate
     from controllers.CharacterController import CharacterController
     from core.Modifiers import EphemeralModifier
 
@@ -17,7 +18,7 @@ class GameAction:
     """
     Representação geral de comandos que podem ser gerados por Controllers
     """
-    def __init__(self, name: str, actor: 'Character'):
+    def __init__(self, name: str, actor: Character):
         self.name = name
         self.actor = actor
 
@@ -37,6 +38,7 @@ class GameAction:
         """
         Wrapper para chamar can_execute antes de execute.
         """
+        from core.Events import ActionLoad
         can, msg = self.can_execute()
         if not can:
             return ActionLoad(character=self.actor, history=[msg], success=False)
@@ -44,31 +46,31 @@ class GameAction:
 
 class IDiceContext(Protocol):
     @property
-    def dice_service(self) -> 'DiceManager': ...
+    def dice_service(self) -> DiceManager: ...
 
 class IEventContext(Protocol):
-    def emit(self, event_name: str, payload: 'ActionLoad') -> None: ...
+    def emit(self, event_name: str, payload: ActionLoad) -> None: ...
 
 class IEffectContext(Protocol):
-    def get_active_passive(self, char_id: str, name: str) -> 'BattlePassive' | None: ...
-    def add_status_effect(self, effect: 'StatusEffect') -> None: ...
-    def remove_status_effect(self, effect: 'StatusEffect') -> None: ...
+    def get_active_passive(self, char_id: str, name: str) -> BattlePassive | None: ...
+    def add_status_effect(self, effect: StatusEffect) -> None: ...
+    def remove_status_effect(self, effect: StatusEffect) -> None: ...
 
 class ITimelineContext(Protocol):
-    def delay_character(self, character: 'Character', extra_ticks: int) -> None: ...
-    def set_tick(self, character: 'Character', tick: int) -> None: ...
+    def delay_character(self, character: Character, extra_ticks: int) -> None: ...
+    def set_tick(self, character: Character, tick: int) -> None: ...
 
 class IRegistryContext(Protocol):
-    def get_characters(self) -> List['Character']: ...
-    def get_graveyard(self) -> List['Character']: ...
-    def get_controller(self, char_id: str) -> 'CharacterController': ...
+    def get_characters(self) -> list[Character]: ...
+    def get_graveyard(self) -> list[Character]: ...
+    def get_controller(self, char_id: str) -> CharacterController: ...
 
 class IDataContext(Protocol):
-    def get_template(self, template_id: str) -> 'AttackActionTemplate': ...
+    def get_template(self, template_id: str) -> AttackActionTemplate: ...
 
 class IActionStateContext(Protocol):
     @property
-    def current_action(self) -> 'BattleAction' | None: ...
+    def current_action(self) -> BattleAction | None: ...
 
 class IPassiveContext(IEventContext, IEffectContext, ITimelineContext, IRegistryContext, IDiceContext, IActionStateContext, Protocol): ...
 
@@ -81,21 +83,21 @@ class IJudgeContext(IRegistryContext, ITimelineContext, Protocol): ...
 class IBattleContext(IEventContext, IEffectContext, ITimelineContext, IRegistryContext, IDiceContext, IDataContext, IActionStateContext, Protocol): ...
 
 class IBattleJudge(Protocol):
-    def rule(self, context: 'IJudgeContext', result: 'BattleResult') -> 'BattleState': ...
+    def rule(self, context: IJudgeContext, result: BattleResult) -> BattleState: ...
 
 class BattleAction(GameAction):
     """
     Comandos executados no contexto de batalha.
     """
     # Parâmetros relevantes recebidos através do construtor, de forma que os métodos não possuam parâmetros em conformidade com o Command Pattern
-    def __init__(self, name: str, actor: 'Character', targets: List['Character'], context: 'IActionContext', action_type: 'BattleActionType'):
+    def __init__(self, name: str, actor: Character, targets: list[Character], context: IActionContext, action_type: BattleActionType):
         super().__init__(name=name, actor=actor)
         self.targets = targets
         self.context = context
         self.action_type = action_type
 
     @property
-    def target(self) -> 'Character' | None:
+    def target(self) -> Character | None:
         return self.targets[0] if self.targets else None
 
     def can_execute(self) -> tuple[bool, str]:
@@ -110,14 +112,15 @@ class BattleAction(GameAction):
         Executa a lógica da ação e retorna um ActionLoad com um histórico do resultado.
         Por padrão, retorna um ActionLoad indicando que a habilidade não pode ser executada, mas habilidades ativas devem sobrescrever para implementar sua lógica.
         """
+        from core.Events import ActionLoad
         return ActionLoad(character=self.actor, history=[f"A abilidade {self.name} não pode ser executada!"], success=False)
     
 class BattlePassive:
     """
-    Representa características estáticas ou passivas que não podem ser conjuradas.
+    Representação características estáticas ou passivas que não podem ser conjuradas.
     Elas apenas alteram regras do motor através do Event Bus.
     """
-    def __init__(self, name: str, owner: 'Character', context: 'IPassiveContext', template: 'BattlePassiveTemplate' | None = None):
+    def __init__(self, name: str, owner: Character, context: IPassiveContext, template: BattlePassiveTemplate | None = None):
         self.name = name
         self.owner = owner
         self.dice_service = context.dice_service
@@ -125,7 +128,7 @@ class BattlePassive:
         self.template = template
 
 
-    def get_hooks(self) -> Dict[str, Callable]:
+    def get_hooks(self) -> dict[str, Callable]:
         """Deve ser implementado pelas classes filhas para criar e inscrever os hooks."""
         raise NotImplementedError
 
@@ -142,13 +145,13 @@ class StatusEffect(BattlePassive):
     Representa um efeito de status aplicado a um personagem, com duração em turnos.
     Pode ser usado para coisas como Atordoado, Envenenado, etc. 
     """
-    def __init__(self, name: str, duration: int, target: 'Character', context: 'IPassiveContext'):
+    def __init__(self, name: str, duration: int, target: Character, context: IPassiveContext):
         super().__init__(name=name, owner=target, context=context)
         self.name = name
         self.duration = duration
         self.character = target
         self.context = context
-        self.modifiers: list['EphemeralModifier'] = []
+        self.modifiers: list[EphemeralModifier] = []
     
     def apply(self):
         """Aplica o efeito. Deve ser sobrescrito por subclasses."""
@@ -161,12 +164,12 @@ class StatusEffect(BattlePassive):
         self.modifiers.clear()
         self.context.remove_status_effect(self)
 
-    def _add_modifier(self, modifier: 'EphemeralModifier'):
+    def _add_modifier(self, modifier: EphemeralModifier):
         """Adiciona um modificador tanto ao efeito quanto ao personagem dono."""
         self.modifiers.append(modifier)
         self.owner.add_modifier(modifier)
 
-    def _remove_modifier(self, modifier: 'EphemeralModifier'):
+    def _remove_modifier(self, modifier: EphemeralModifier):
         """Remove um modificador tanto do efeito quanto do personagem dono."""
         if modifier in self.modifiers:
             self.modifiers.remove(modifier)

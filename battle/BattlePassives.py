@@ -1,21 +1,26 @@
 from __future__ import annotations
-from typing import Callable, Dict, TYPE_CHECKING
-from core.Enums import RollState, AttackType
-from core.Events import AttackLoad, HistoryEmitter
-from core.BaseClasses import IPassiveContext, BattlePassive, ActionLoad
-from core.CharacterSystem import CharacterSystem
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from typing import Callable
+    from core.BaseClasses import IPassiveContext, ActionLoad
+    from core.Events import AttackLoad
     from entities.Characters import Character
+    from core.Structs import BattlePassiveTemplate
+
+from core.Enums import RollState, AttackType
+from core.Events import HistoryEmitter
+from core.BaseClasses import BattlePassive
+from core.CharacterSystem import CharacterSystem
 from battle.StatusEffects import Atordoado
 from battle.BattleActions import AttackAction
 
 class ForçaBruta(BattlePassive):
-    def __init__(self, owner: 'Character', context: 'IPassiveContext', template: 'BattlePassiveTemplate' | None = None):
+    def __init__(self, owner: Character, context: IPassiveContext, template: BattlePassiveTemplate | None = None):
         super().__init__(name="Força Bruta", owner=owner, context=context, template=template)
 
-    def get_hooks(self) -> Dict[str, Callable]:
-        def multiply_hook(attack_load: 'AttackLoad'):
+    def get_hooks(self) -> dict[str, Callable]:
+        def multiply_hook(attack_load: AttackLoad):
             if attack_load.character.char_id == self.owner.char_id:
                 params = self.template.parameters if self.template else {}
                 multiplier = params.get("multiplier", 2)
@@ -30,11 +35,11 @@ class ForçaBruta(BattlePassive):
         return {'on_gda_modify': multiply_hook}
 
 class MãosPesadas(BattlePassive):
-    def __init__(self, owner: 'Character', context: 'IPassiveContext', template: 'BattlePassiveTemplate' | None = None):
+    def __init__(self, owner: Character, context: IPassiveContext, template: BattlePassiveTemplate | None = None):
         super().__init__(name="Mãos Pesadas", owner=owner, context=context, template=template)
 
-    def get_hooks(self) -> Dict[str, Callable]:
-        def effect_hook(attack_load: 'AttackLoad'):
+    def get_hooks(self) -> dict[str, Callable]:
+        def effect_hook(attack_load: AttackLoad):
             if attack_load.target is None:
                 return
             if attack_load.character.char_id == self.owner.char_id:
@@ -50,11 +55,11 @@ class MãosPesadas(BattlePassive):
         return {'on_gda_modify': effect_hook}
 
 class PosturaDefensiva(BattlePassive):
-    def __init__(self, owner: 'Character', context: 'IPassiveContext', template: 'BattlePassiveTemplate' | None = None):
+    def __init__(self, owner: Character, context: IPassiveContext, template: BattlePassiveTemplate | None = None):
         super().__init__(name="Postura Defensiva", owner=owner, context=context, template=template)
         self.is_active = False
         self._dice_modifiers = []
-        self._tracked_targets: Dict[str, bool] = {}  # char_id -> penalty_applied
+        self._tracked_targets: dict[str, bool] = {}  # char_id -> penalty_applied
 
     def toggle(self) -> str:
         from core.Modifiers import EphemeralModifier
@@ -78,7 +83,7 @@ class PosturaDefensiva(BattlePassive):
             self._clear_tracking()
             return f"POSTURA|{self.owner.char_id}|OFF"
 
-    def _start_tracking(self, target: 'Character'):
+    def _start_tracking(self, target: Character):
         if target.char_id not in self._tracked_targets:
             self._tracked_targets[target.char_id] = False
 
@@ -89,16 +94,16 @@ class PosturaDefensiva(BattlePassive):
         else:
             self._tracked_targets.clear()
 
-    def get_hooks(self) -> Dict[str, Callable]:
+    def get_hooks(self) -> dict[str, Callable]:
         from core.Modifiers import EphemeralModifier
         
-        def hit_hook(attack_load: 'AttackLoad'):
+        def hit_hook(attack_load: AttackLoad):
             if self.is_active and attack_load.character.char_id == self.owner.char_id and attack_load.hit:
                 self._start_tracking(attack_load.target)
                 attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
                 attack_load.add_event("POSTURA", self.owner.char_id, "OBSERVE", attack_load.target.char_id)
 
-        def penalty_hook(attack_load: 'AttackLoad'):
+        def penalty_hook(attack_load: AttackLoad):
             cid = attack_load.character.char_id
             if self.is_active and cid in self._tracked_targets and attack_load.target is not None and attack_load.target.char_id == self.owner.char_id:
                 params = self.template.parameters if self.template else {}
@@ -109,13 +114,13 @@ class PosturaDefensiva(BattlePassive):
                 attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
                 attack_load.history.append(HistoryEmitter.atk_load("pre", pre_penalty, attack_load.pre))
 
-        def cleanup_hook(attack_load: 'AttackLoad'):
+        def cleanup_hook(attack_load: AttackLoad):
             cid = attack_load.character.char_id
             if cid in self._tracked_targets:
                 if self._tracked_targets[cid]:
                     self._clear_tracking(cid)
 
-        def turn_end_hook(action_load: 'ActionLoad'):
+        def turn_end_hook(action_load: ActionLoad):
             cid = action_load.character.char_id
             if cid in self._tracked_targets:
                 if not self._tracked_targets[cid]:
@@ -129,23 +134,23 @@ class PosturaDefensiva(BattlePassive):
         }
 
 class GracaDoDuelista(BattlePassive):
-    def __init__(self, owner: 'Character', context: 'IPassiveContext', template: 'BattlePassiveTemplate' | None = None):
+    def __init__(self, owner: Character, context: IPassiveContext, template: BattlePassiveTemplate | None = None):
         super().__init__(name="Graça do Duelista", owner=owner, context=context, template=template)
 
-    def get_hooks(self) -> Dict[str, Callable]:
+    def get_hooks(self) -> dict[str, Callable]:
         params = self.template.parameters if self.template else {}
         bonus_die = params.get("bonus_die", 6)
         reaction_die = params.get("reaction_die", 4)
         reaction_cost = params.get("reaction_cost", 2)
         
-        def passiva_acerto_hook(attack_load: 'AttackLoad') -> None: 
+        def passiva_acerto_hook(attack_load: AttackLoad) -> None: 
             if attack_load.character.char_id == self.owner.char_id:
                 roll = self.dice_service.roll_dice(bonus_die, RollState.NEUTRAL)
                 attack_load.gda += roll.final_roll
                 attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
                 attack_load.history.append(HistoryEmitter.atk_load("gda", roll.final_roll, attack_load.gda))
 
-        def reacao_evasao_hook(attack_load: 'AttackLoad') -> None:
+        def reacao_evasao_hook(attack_load: AttackLoad) -> None:
             if attack_load.target is None:
                 return
             if attack_load.target.char_id == self.owner.char_id:
@@ -167,13 +172,13 @@ class GracaDoDuelista(BattlePassive):
         }
 
 class Combo(BattlePassive):
-    def __init__(self, owner: 'Character', context: 'IPassiveContext', template: 'BattlePassiveTemplate' | None = None):
+    def __init__(self, owner: Character, context: IPassiveContext, template: BattlePassiveTemplate | None = None):
         super().__init__(name="Combo", owner=owner, context=context, template=template)
         self.stage = 0
         self.hit = False
     
-    def get_hooks(self) -> Dict[str, Callable]:
-        def checar_ataque_bonus(attack_load: 'AttackLoad'):
+    def get_hooks(self) -> dict[str, Callable]:
+        def checar_ataque_bonus(attack_load: AttackLoad):
             if attack_load.target is None:
                 return
             if attack_load.character.char_id != self.owner.char_id:
@@ -222,19 +227,18 @@ class Combo(BattlePassive):
         return {'on_attack_end': checar_ataque_bonus}
 
 class Bloquear(BattlePassive):
-    def __init__(self, owner: 'Character', context: 'IPassiveContext', template: 'BattlePassiveTemplate' | None = None):
+    def __init__(self, owner: Character, context: IPassiveContext, template: BattlePassiveTemplate | None = None):
         super().__init__(name="Bloquear", owner=owner, context=context, template=template)
-        self._counter_targets: Dict[str, bool] = {}
+        self._counter_targets: dict[str, bool] = {}
 
-    def get_hooks(self) -> Dict[str, Callable]:
-        from core.Modifiers import EphemeralModifier
+    def get_hooks(self) -> dict[str, Callable]:
         params = self.template.parameters if self.template else {}
         focus_cost = params.get("focus_cost", 2)
         reduction_die = params.get("reduction_die", 4)
         counter_threshold = params.get("counter_threshold", -3)
         counter_bda_bonus = params.get("counter_bda_bonus", 1)
 
-        def reacao_bloqueio_hook(attack_load: 'AttackLoad'):
+        def reacao_bloqueio_hook(attack_load: AttackLoad):
             if attack_load.target is None or attack_load.target.char_id != self.owner.char_id:
                 return
             # on_defense_reaction only fires on a confirmed hit; no GdA check needed.
@@ -252,14 +256,14 @@ class Bloquear(BattlePassive):
                         if attack_load.gda <= counter_threshold:
                             self._counter_targets[attack_load.character.char_id] = True
 
-        def bonus_contra_ataque_hook(attack_load: 'AttackLoad'):
+        def bonus_contra_ataque_hook(attack_load: AttackLoad):
             if attack_load.character.char_id == self.owner.char_id and attack_load.target is not None:
                 if self._counter_targets.get(attack_load.target.char_id):
                     attack_load.bda += counter_bda_bonus
                     attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
                     attack_load.history.append(HistoryEmitter.atk_load("bda", counter_bda_bonus, attack_load.bda))
 
-        def cleanup_bonus_hook(attack_load: 'AttackLoad'):
+        def cleanup_bonus_hook(attack_load: AttackLoad):
             if attack_load.character.char_id == self.owner.char_id:
                 if attack_load.target is not None:
                     self._counter_targets.pop(attack_load.target.char_id, None)
@@ -271,12 +275,12 @@ class Bloquear(BattlePassive):
         }
 
 class PosturaBatalha(BattlePassive):
-    def __init__(self, owner: 'Character', context: 'IPassiveContext', template: 'BattlePassiveTemplate' | None = None):
+    def __init__(self, owner: Character, context: IPassiveContext, template: BattlePassiveTemplate | None = None):
         super().__init__(name="Postura de Batalha", owner=owner, context=context, template=template)
         self.current_postura = None
         self._modifiers = []
 
-    def set_mode(self, mode: str | None, action_load: 'ActionLoad'):
+    def set_mode(self, mode: str | None, action_load: ActionLoad):
         from core.Modifiers import EphemeralModifier
         for mod in self._modifiers:
             self.owner.remove_modifier(mod)
@@ -300,8 +304,8 @@ class PosturaBatalha(BattlePassive):
         else:
             action_load.add_event("POSTURA", self.owner.char_id, "NONE")
 
-    def get_hooks(self) -> Dict[str, Callable]:
-        def on_gda_modify(attack_load: 'AttackLoad'):
+    def get_hooks(self) -> dict[str, Callable]:
+        def on_gda_modify(attack_load: AttackLoad):
             if self.current_postura == "OFFENSIVE" and attack_load.character.char_id == self.owner.char_id and attack_load.hit:
                 params = self.template.parameters if self.template else {}
                 gda_bonus = params.get("offensive_gda_bonus", 2)
@@ -315,7 +319,7 @@ class PosturaBatalha(BattlePassive):
                 attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
                 attack_load.history.append(HistoryEmitter.atk_load("gda", bonus, attack_load.gda))
 
-        def on_defense_reaction(attack_load: 'AttackLoad'):
+        def on_defense_reaction(attack_load: AttackLoad):
             from core.Enums import RollState
             if self.current_postura == "DEFENSIVE" and attack_load.target is not None and attack_load.target.char_id == self.owner.char_id:
                 # on_defense_reaction only fires on a confirmed hit; no GdA check needed.
@@ -344,13 +348,13 @@ class PosturaBatalha(BattlePassive):
         }
 
 class RitmoAcelerado(BattlePassive):
-    def __init__(self, owner: 'Character', context: 'IPassiveContext', template: 'BattlePassiveTemplate' | None = None):
+    def __init__(self, owner: Character, context: IPassiveContext, template: BattlePassiveTemplate | None = None):
         super().__init__(name="Ritmo Acelerado", owner=owner, context=context, template=template)
 
-    def get_hooks(self) -> Dict[str, Callable]:
+    def get_hooks(self) -> dict[str, Callable]:
         from core.Enums import BattleActionType
 
-        def on_attack_end(attack_load: 'AttackLoad'):
+        def on_attack_end(attack_load: AttackLoad):
             if attack_load.character.char_id == self.owner.char_id:
                 current_action = self.context.current_action
                 if current_action and current_action.action_type != BattleActionType.MOVE_ACTION:
