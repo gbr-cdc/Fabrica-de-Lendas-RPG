@@ -59,3 +59,19 @@ class BattlePassiveTemplate:
     id: str
     name: str
     parameters: Dict[str, Any] = field(default_factory=dict)
+
+@dataclass(frozen=True)
+class DecisionNode:
+    priority: int
+    required_state: str
+    target_selector: str
+    filters: List[str]
+    action_id: str | None
+    next_state: str | None
+    parameters: Dict[str, Any] = field(default_factory=dict)
+
+@dataclass(frozen=True)
+class AIBehavior:
+    id: str
+    initial_state: str
+    nodes: List[DecisionNode]

@@ -1,0 +1,26 @@
+{
+    "basic_agressive": {
+        "id": "basic_agressive",
+        "initial_state": "Neutral",
+        "nodes": [
+            {
+                "priority": 10,
+                "required_state": "Neutral",
+                "target_selector": "any_enemy",
+                "filters": ["lowest_hp"],
+                "action_id": "SkillN1",
+                "next_state": null,
+                "parameters": {}
+            },
+            {
+                "priority": 5,
+                "required_state": "Neutral",
+                "target_selector": "any_enemy",
+                "filters": [],
+                "action_id": "GenerateFocus",
+                "next_state": null,
+                "parameters": {}
+            }
+        ]
+    }
+}

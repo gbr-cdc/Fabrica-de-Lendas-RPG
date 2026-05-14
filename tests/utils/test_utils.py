@@ -14,6 +14,7 @@ def create_test_battle_manager():
     data.load_passive_templates('data/BattlePassives.json')
     data.load_combat_styles('data/CombatStyles.json')
     data.load_game_rules('data/Rules.json')
+    data.load_ai_behaviors('data/ai_behaviors.json')
     judge = BattleJudge()
 
     return BattleManager(dice, data, judge)

@@ -382,3 +382,21 @@ class MudarPosturaBatalha(BattleAction):
             passive.set_mode(next_mode, action_load)
             return action_load
         return ActionLoad(character=self.actor, history=["Falha ao alternar postura: passiva não encontrada."], success=False)
+
+class WaitAction(BattleAction):
+    """
+    Fallback action when no other actions can be taken.
+    """
+    def __init__(self, actor: 'Character', context: 'IActionContext'):
+        super().__init__(name="Aguardar", actor=actor, targets=[], context=context, action_type=BattleActionType.FREE_ACTION)
+
+    def can_execute(self) -> tuple[bool, str]:
+        return True, ""
+
+    def get_hooks(self) -> Dict[str, Callable]:
+        return {}
+
+    def execute(self) -> ActionLoad:
+        load = ActionLoad(character=self.actor)
+        load.history.append(HistoryEmitter.exec("Aguardar", self.actor.char_id))
+        return load

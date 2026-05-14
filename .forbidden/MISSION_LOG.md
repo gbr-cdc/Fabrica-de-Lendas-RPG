@@ -2,19 +2,6 @@
 
 ## ACTIVE MISSIONS [MISSION.ACTIVE]
 
-## MISSION: Data-Driven Priority Controller [MISSION.ACTIVE.DATA_DRIVEN_CONTROLLER]
-- **Summary**: Implement a data-driven priority-based CharacterController that uses JSON configuration for decision-making, state management, and refined targeting.
-- **Rule References**: [ARCH.RULES.CORE.DATA], [ARCH.RULES.CORE.MVC], [ARCH.RULES.BATTLE.DECISION], [ARCH.RULES.BATTLE.TARGETING]
-- **Documentation References**: [ARCH.DOC.controllers.CharacterController.CharacterController], [ARCH.DOC.core.DataManager.DataManager]
-- **Definition of Done**: AIPriorityController implemented, DataManager loading behavior JSON, and unit tests verifying priority, state transitions, and targeting logic.
-- **Plan**: docs/plans/priority_controller.md
-- **Steps**:
-    - [RED] [DataManager AI Loading]: Verify AIBehavior and DecisionNode can be instantiated and DataManager can load them from JSON. | Files: tests/core/test_data_manager_ai.py
-    - [GREEN] [AI Data Structures]: Implement DecisionNode and AIBehavior in core/Structs.py and update DataManager with loading logic. | Files: core/Structs.py, core/DataManager.py
-    - [RED] [Controller Targeting & Logic]: Verify AIPriorityController correctly resolves targeting groups and filters based on a mock behavior, including state transitions. | Files: tests/controllers/test_ai_priority_controller.py
-    - [GREEN] [AIPriorityController Implementation]: Implement AIPriorityController with decision loop, state management, and targeting registry. | Files: controllers/CharacterController.py
-    - [BLUE] [Registration & Data]: Create initial AI behaviors JSON and register the new controller in the registry. | Files: data/ai_behaviors.json, controllers/CharacterController.py
-
 ## ARCHIVED MISSIONS [MISSION.ARCHIVE]
 
 ### 2026-04-23 00:18: Area Attacks Implementation [PART 2] [MISSION.ARCHIVE.AREA_ATTACKS_IMPLEMENTATION_PART_2]
@@ -218,6 +205,16 @@ Refactor the `history` field in `ActionLoad` and `AttackLoad` to use structured 
 - [x] [GREEN] Implement 'Bloquear' class in 'BattlePassives.py' with 'on_defensive_reaction' hook. | Files: battle/BattlePassives.py
 - [x] [RED] Create test verifying the +1 BDA counter-bonus application against the specific attacker after a successful block (GdA < -3). | Files: tests/battle/test_BattlePassives.py
 - [x] [GREEN] Implement counter-bonus tracking and 'on_roll_modify' hook in 'Bloquear'. | Files: battle/BattlePassives.py
+
+## 2026-05-14 07:02: Data-Driven Priority Controller (Completed) [MISSION.ARCHIVE.DATA_DRIVEN_CONTROLLER]
+- **Summary**: Implement a data-driven priority-based CharacterController that uses JSON configuration for decision-making, state management, and refined targeting.
+- **Plan**: docs/plans/priority_controller.md
+- **Steps**:
+    - [RED] [DataManager AI Loading]
+    - [GREEN] [AI Data Structures]
+    - [RED] [Controller Targeting & Logic]
+    - [GREEN] [AIPriorityController Implementation]
+    - [BLUE] [Registration & Data]
 
 ## 2026-05-06 20:20: MVC Refactor for Simulator and BattleView (COMPLETE)
 - **Summary**: Refactor the pvp_simulator and views modules to strictly follow MVC. Simulator (Controller) handles data; BattleView (View) handles presentation.

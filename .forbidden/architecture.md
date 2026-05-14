@@ -203,6 +203,23 @@ Blueprint for passive abilities, defining their unique parameters and display da
 - `name: str` [ARCH.DOC.core.Structs.BattlePassiveTemplate.name]: Display name of the passive.
 - `parameters: Dict[str, Any]` [ARCH.DOC.core.Structs.BattlePassiveTemplate.parameters]: Configuration parameters (e.g., thresholds, dice sizes) used by the concrete passive logic.
 
+##### DecisionNode [ARCH.DOC.core.Structs.DecisionNode]
+Data structure representing a single decision step for AI behaviors.
+
+- `priority: int`: Evaluation priority (higher runs first).
+- `required_state: str`: State required to evaluate this node.
+- `target_selector: str`: Targeting group (e.g., any_enemy, self).
+- `filters: List[str]`: Filters to narrow down targets (e.g., lowest_hp).
+- `action_id: str | None`: Action to execute.
+- `next_state: str | None`: State to transition to if chosen.
+
+##### AIBehavior [ARCH.DOC.core.Structs.AIBehavior]
+Data structure representing a complete priority-based AI routine.
+
+- `id: str`: Unique identifier.
+- `initial_state: str`: Starting state for the state machine.
+- `nodes: List[DecisionNode]`: List of decision nodes to evaluate.
+
 #### Events.py [ARCH.DOC.core.Events]
 Defines payload objects used by the Event Bus to track history and state mutation during actions. 
 
@@ -676,6 +693,22 @@ Method description: Retrieves a cached character template by ID.
 Method description: Retrieves a cached combat style by ID.
 1. Searches `_combat_styles` for the given `style_id`.
 2. Returns the style if found; otherwise, raises a descriptive `KeyError`.
+- `_ai_behaviors: dict[str, AIBehavior]` [ARCH.DOC.core.DataManager.DataManager._ai_behaviors]: Private cache of AI behaviors loaded from JSON.
+
+###### load_ai_behaviors [ARCH.DOC.core.DataManager.DataManager.load_ai_behaviors]
+`load_ai_behaviors(filepath: str) -> None`
+- `filepath: str`: Path to the JSON file containing AI behaviors.
+Method description: Loads AI behaviors from JSON, instantiating `DecisionNode` and `AIBehavior`.
+1. Parses the JSON file.
+2. Iterates through behaviors and their nodes.
+3. Caches them in `_ai_behaviors`.
+
+###### get_ai_behavior [ARCH.DOC.core.DataManager.DataManager.get_ai_behavior]
+`get_ai_behavior(behavior_id: str) -> AIBehavior`
+- `behavior_id: str`: Unique identifier for the requested AI behavior.
+Method description: Retrieves a cached AI behavior by ID.
+1. Searches `_ai_behaviors` for the given `behavior_id`.
+2. Returns the behavior if found; otherwise, raises a descriptive `KeyError`.
 
 #### Modifiers.py [ARCH.DOC.core.Modifiers]
 Implements the Modifier Stack Pattern for dynamic stat calculation.
@@ -967,6 +1000,18 @@ Method description: Switches the stance of the battle passive.
 2. Evaluates the current stance and determines the next in the cycle: `None` -> `OFFENSIVE` -> `DEFENSIVE` -> `None`.
 3. Calls the passive's `set_mode()` method with the next mode and the current action load.
 4. Returns an `ActionLoad` containing the result message or an error if the passive is missing.
+
+##### WaitAction [ARCH.DOC.battle.BattleActions.WaitAction]
+[DEPENDS: ARCH.RULES.CORE.COMMAND]
+A fallback action used when no other actions can be taken by an AI or character.
+
+- Constructor [ARCH.DOC.battle.BattleActions.WaitAction.__init__]: `__init__(actor: Character, context: IActionContext)`
+
+###### execute [ARCH.DOC.battle.BattleActions.WaitAction.execute]
+`execute() -> ActionLoad`
+Method description: Performs a wait action.
+1. Emits a generic execution event for "Aguardar".
+2. Consumes a turn without modifying stats or generating resources.
 
 #### BattlePassives.py [ARCH.DOC.battle.BattlePassives]
 [DEPENDS: ARCH.RULES.CORE.IOC, ARCH.RULES.CORE.OBSERVER, ARCH.DOC.core.BaseClasses.BattlePassive]
@@ -1273,6 +1318,27 @@ Method description: Implements basic aggressive AI logic.
 5. Otherwise, returns a standard `BASIC_ATTACK` (AttackAction with template=None).
 
 ###### choose_reaction [ARCH.DOC.controllers.CharacterController.PvP1v1Controller.choose_reaction]
+`choose_reaction(...) -> bool`
+Method description: Automatically accepts all triggered reactions.
+1. Always returns `True`.
+
+##### AIPriorityController [ARCH.DOC.controllers.CharacterController.AIPriorityController]
+[DEPENDS: ARCH.DOC.core.Structs.AIBehavior, ARCH.DOC.battle.BattleActions.AttackAction, ARCH.DOC.battle.BattleActions.WaitAction]
+Data-driven controller that uses priority-based `DecisionNode` instances from an `AIBehavior` to determine the character's actions and targets.
+
+- Constructor [ARCH.DOC.controllers.CharacterController.AIPriorityController.__init__]: `__init__(behavior: AIBehavior)`
+
+###### choose_action [ARCH.DOC.controllers.CharacterController.AIPriorityController.choose_action]
+`choose_action(actor: Character, context: IControllerContext, action_load: ActionLoad | None = None) -> BattleAction`
+Method description: Evaluates behavior nodes in priority order to select an action and target.
+1. Filters nodes by `current_state`.
+2. Sorts nodes by descending priority.
+3. Evaluates targets according to the node's `target_selector` and `filters`.
+4. If targets are found, changes `current_state` if applicable, and attempts to instantiate the specified `action_id`.
+5. If the action can be executed, returns it; otherwise evaluates the next node.
+6. Returns `WaitAction` if no nodes succeed.
+
+###### choose_reaction [ARCH.DOC.controllers.CharacterController.AIPriorityController.choose_reaction]
 `choose_reaction(...) -> bool`
 Method description: Automatically accepts all triggered reactions.
 1. Always returns `True`.

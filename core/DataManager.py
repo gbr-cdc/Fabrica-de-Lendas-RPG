@@ -1,7 +1,7 @@
 from __future__ import annotations
 import json
 from core.Enums import BattleActionType, ArmorType, AttributeType, WeaponType, AttackType
-from core.Structs import CombatStyle, GameRules, AttackActionTemplate, AttackEffects, BattlePassiveTemplate
+from core.Structs import CombatStyle, GameRules, AttackActionTemplate, AttackEffects, BattlePassiveTemplate, AIBehavior, DecisionNode
 from entities.Items import Armor, Weapon
 from entities.Characters import Character
 from battle.BattlePassives import registry as passives_registry
@@ -15,6 +15,7 @@ class DataManager:
             self._combat_styles: dict[str, CombatStyle] = {}
             self._characters: dict[str, Character] = {}
             self._game_rules: 'GameRules | None' = None
+            self._ai_behaviors: dict[str, AIBehavior] = {}
 
 
     def load_combat_styles(self, filepath: str):
@@ -198,3 +199,35 @@ class DataManager:
             return self._passive_templates[passive_id]
         except KeyError as exc:
             raise KeyError(f"[ERRO FATAL] DataManager: PassiveTemplate '{passive_id}' não foi encontrado!") from exc
+
+    def load_ai_behaviors(self, filepath: str):
+        """Carrega os comportamentos de IA a partir de um arquivo JSON."""
+        with open(filepath, 'r') as f:
+            data = json.load(f)
+            
+        behaviors = {}
+        for key, behavior_data in data.items():
+            nodes = []
+            for n in behavior_data.get("nodes", []):
+                nodes.append(DecisionNode(
+                    priority=n["priority"],
+                    required_state=n["required_state"],
+                    target_selector=n["target_selector"],
+                    filters=n.get("filters", []),
+                    action_id=n.get("action_id"),
+                    next_state=n.get("next_state"),
+                    parameters=n.get("parameters", {})
+                ))
+            behaviors[key] = AIBehavior(
+                id=behavior_data["id"],
+                initial_state=behavior_data["initial_state"],
+                nodes=nodes
+            )
+        self._ai_behaviors = behaviors
+
+    def get_ai_behavior(self, behavior_id: str) -> 'AIBehavior':
+        """Retorna o molde de um comportamento de IA. Estoura um KeyError se o ID não existir."""
+        try:
+            return self._ai_behaviors[behavior_id]
+        except KeyError as exc:
+            raise KeyError(f"[ERRO FATAL] DataManager: AIBehavior '{behavior_id}' não foi encontrado!") from exc
