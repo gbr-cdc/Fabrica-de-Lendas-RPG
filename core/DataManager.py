@@ -172,6 +172,10 @@ class DataManager:
 
         self._passive_templates = templates
     
+    def list_action_templates(self) -> list[str]:
+        """Retorna uma lista com os IDs de todos os templates de ação carregados."""
+        return list(self._action_templates.keys())
+
     def get_action_template(self, action_id: str) -> AttackActionTemplate:
         """Retorna o molde de uma ação. Estoura um KeyError se o ID não existir."""
         try:

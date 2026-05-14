@@ -114,7 +114,7 @@ def test_battle_manager_passive_management():
     assert "actor" not in bm.active_passives
 
 def test_pvp_controller_special_paths():
-    ctrl = PvP1v1Controller()
+    ctrl = PvP1v1Controller(MagicMock())
     actor = create_dummy_character(char_id="actor")
     context = MagicMock()
     
@@ -146,7 +146,6 @@ def test_battle_manager_move_action_cost():
 
 def test_battle_manager_get_methods():
     bm = BattleManager(MagicMock(), MagicMock(), MagicMock())
-    bm.get_template("test")
     actor = create_dummy_character(char_id="actor")
     bm.characters["actor"] = actor
     chars = bm.get_characters()

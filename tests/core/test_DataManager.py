@@ -45,6 +45,17 @@ def test_load_action_templates():
         assert isinstance(template.attack_type, AttackType)
         assert isinstance(template.effects, list)
 
+def test_list_action_templates():
+    dm = DataManager()
+    dm.load_action_templates('data/AttackActions.json')
+    
+    action_ids = dm.list_action_templates()
+    assert isinstance(action_ids, list)
+    assert len(action_ids) > 0
+    
+    expected_keys = get_json_keys('data/AttackActions.json')
+    assert set(action_ids) == set(expected_keys)
+
 def test_get_action_template_key_error():
     dm = DataManager()
     with pytest.raises(KeyError) as excinfo:

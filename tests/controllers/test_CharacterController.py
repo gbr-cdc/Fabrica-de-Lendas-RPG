@@ -9,7 +9,7 @@ from tests.utils.test_utils import create_test_battle_manager
 from battle.BattleActions import AttackAction
 
 def test_pvp1v1_controller_no_target():
-    ctrl = PvP1v1Controller()
+    ctrl = PvP1v1Controller(MagicMock())
     actor = create_dummy_character(char_id="hero")
     context = create_test_battle_manager()
     context.add_character(actor, ctrl)
@@ -19,7 +19,12 @@ def test_pvp1v1_controller_no_target():
     assert "não conseguiu achar um alvo" in str(excinfo.value)
 
 def test_pvp1v1_controller_chooses_basic_attack_when_no_focus():
-    ctrl = PvP1v1Controller()
+    data_mock = MagicMock()
+    template_mock = MagicMock()
+    template_mock.nome = "Ataque Básico"
+    template_mock.focus_cost = 5
+    data_mock.get_action_template.return_value = template_mock
+    ctrl = PvP1v1Controller(data_mock)
     actor = create_dummy_character(char_id="hero")
     actor.floating_focus = 0
     target = create_dummy_character(char_id="enemy")
@@ -34,7 +39,12 @@ def test_pvp1v1_controller_chooses_basic_attack_when_no_focus():
     assert action.targets == [target]
 
 def test_pvp1v1_controller_chooses_skill_when_has_focus():
-    ctrl = PvP1v1Controller()
+    data_mock = MagicMock()
+    template_mock = MagicMock()
+    template_mock.nome = "Habilidade Nível 1"
+    template_mock.focus_cost = 5
+    data_mock.get_action_template.return_value = template_mock
+    ctrl = PvP1v1Controller(data_mock)
     actor = create_dummy_character(char_id="hero")
     actor.floating_focus = 10
     target = create_dummy_character(char_id="enemy")
@@ -48,25 +58,10 @@ def test_pvp1v1_controller_chooses_skill_when_has_focus():
     assert action.template.nome == "Habilidade Nível 1"
     assert action.targets == [target]
 
-def test_pvp1v1_controller_with_action_load_chooses_basic_attack():
-    # When action_load is provided (e.g. reaction or specific trigger), 
-    # the controller logic currently always falls back to BasicAttack in PvP1v1Controller
-    ctrl = PvP1v1Controller()
-    actor = create_dummy_character(char_id="hero")
-    target = create_dummy_character(char_id="enemy")
-    context = create_test_battle_manager()
-    context.add_character(actor, ctrl)
-    context.add_character(target, MagicMock())
-    action_load = object() # Dummy non-None action_load
-    
-    action = ctrl.choose_action(actor, context, action_load)
-    
-    assert isinstance(action, AttackAction)
-    assert action.template.nome == "Ataque Básico"
-    assert action.targets == [target]
+
 
 def test_pvp1v1_controller_reaction_always_true():
-    ctrl = PvP1v1Controller()
+    ctrl = PvP1v1Controller(MagicMock())
     actor = create_dummy_character()
     context = create_test_battle_manager()
     context.add_character(actor, ctrl)

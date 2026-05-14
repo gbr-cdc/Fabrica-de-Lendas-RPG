@@ -61,8 +61,8 @@ class PvPSimulator:
 
     def _setup_battle(self, c1: Character, c2: Character) -> BattleManager:
         bm = BattleManager(self.dice_manager, self.data_manager, self.judge)
-        bm.add_character(c1, PvP1v1Controller(), start_tick=c1.action_cost_base)
-        bm.add_character(c2, PvP1v1Controller(), start_tick=c2.action_cost_base)
+        bm.add_character(c1, PvP1v1Controller(self.data_manager), start_tick=c1.action_cost_base)
+        bm.add_character(c2, PvP1v1Controller(self.data_manager), start_tick=c2.action_cost_base)
         return bm
 
     def run_simulation(self) -> BattleResult:

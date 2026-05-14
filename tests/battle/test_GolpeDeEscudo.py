@@ -63,7 +63,7 @@ def test_swap_atk_def_die_cleanup():
     actor.base_def_die = 12
     
     manager = create_test_battle_manager()
-    template = manager.get_template("GolpeEscudo")
+    template = manager.data_service.get_action_template("GolpeEscudo")
     
     action = AttackAction(template, actor, [create_dummy_character()], manager)
     hooks = action.get_hooks()

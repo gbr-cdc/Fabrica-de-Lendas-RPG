@@ -5,8 +5,42 @@ if TYPE_CHECKING:
     from core.Events import ActionLoad
     from entities.Characters import Character
     from battle.BattleActions import BattleAction
-    from core.BaseClasses import IControllerContext
+    from core.BaseClasses import IControllerContext, IDataContext
     from core.Structs import AIBehavior
+
+def filter_hp_lt(targets: list['Character'], actor: 'Character', context: 'IControllerContext', f: str) -> list['Character']:
+    pct = int(f.split("_")[2])
+    return [c for c in targets if (c.current_hp / max(1, c.max_hp)) * 100 < pct]
+
+def filter_lowest_hp(targets: list['Character'], actor: 'Character', context: 'IControllerContext', f: str) -> list['Character']:
+    if targets:
+        lowest = min(targets, key=lambda c: c.current_hp)
+        return [lowest]
+    return targets
+
+def filter_highest_hp(targets: list['Character'], actor: 'Character', context: 'IControllerContext', f: str) -> list['Character']:
+    if targets:
+        highest = max(targets, key=lambda c: c.current_hp)
+        return [highest]
+    return targets
+
+def filter_is_dead(targets: list['Character'], actor: 'Character', context: 'IControllerContext', f: str) -> list['Character']:
+    from core.CharacterSystem import CharacterSystem
+    return [c for c in targets if not CharacterSystem.is_alive(c)]
+
+def filter_highest_threat(targets: list['Character'], actor: 'Character', context: 'IControllerContext', f: str) -> list['Character']:
+    if targets:
+        threat = max(targets, key=lambda c: getattr(c, 'pda', 0) + getattr(c, 'mda', 0))
+        return [threat]
+    return targets
+
+filters_registry = {
+    "hp_lt_": filter_hp_lt,
+    "lowest_hp": filter_lowest_hp,
+    "highest_hp": filter_highest_hp,
+    "is_dead": filter_is_dead,
+    "highest_threat": filter_highest_threat
+}
 
 class CharacterController:
     """
@@ -14,7 +48,7 @@ class CharacterController:
     Pode ser implementada por um humano (PlayerController) ou por uma máquina (AIController).
     """
     
-    def choose_action(self, actor: Character, context: IControllerContext, action_load: ActionLoad | None = None) -> BattleAction:
+    def choose_action(self, actor: Character, context: IControllerContext) -> BattleAction:
         """
         Chamado no início do turno do personagem.
         Deve analisar o campo de batalha, escolher uma habilidade, um alvo e retornar o Comando instanciado.
@@ -30,8 +64,10 @@ class CharacterController:
         raise NotImplementedError("Reação não implementada pelo Controller.")
 
 class PvP1v1Controller(CharacterController):
+    def __init__(self, data_context: IDataContext):
+        self.data_context = data_context
 
-    def choose_action(self, actor: Character, context: IControllerContext, action_load: ActionLoad | None = None) -> BattleAction:
+    def choose_action(self, actor: Character, context: IControllerContext) -> BattleAction:
         target = None
         for character in context.get_characters():
             if character is not actor:
@@ -41,11 +77,7 @@ class PvP1v1Controller(CharacterController):
         if target is None:
             raise RuntimeError(f"Controller de {actor} não conseguiu achar um alvo")
         
-        if action_load is not None:
-            from battle.BattleActions import AttackAction
-            return AttackAction(None, actor, [target], context)
-
-        skill_template = context.get_template("SkillN1")
+        skill_template = self.data_context.get_action_template("SkillN1")
         cost = skill_template.focus_cost
         if actor.floating_focus >= cost:
             from battle.BattleActions import AttackAction
@@ -58,9 +90,10 @@ class PvP1v1Controller(CharacterController):
         return True
 
 class AIPriorityController(CharacterController):
-    def __init__(self, behavior: AIBehavior):
+    def __init__(self, behavior: AIBehavior, data_context: IDataContext):
         self.behavior = behavior
         self.current_state = behavior.initial_state
+        self.data_context = data_context
 
     def _get_targets(self, actor: Character, context: IControllerContext, selector: str, filters: list[str]) -> list[Character]:
         from core.CharacterSystem import CharacterSystem
@@ -78,15 +111,10 @@ class AIPriorityController(CharacterController):
             targets = []
 
         for f in filters:
-            if f.startswith("hp_lt_"):
-                pct = int(f.split("_")[2])
-                targets = [c for c in targets if (c.current_hp / max(1, c.max_hp)) * 100 < pct]
-            elif f == "lowest_hp":
-                if targets:
-                    lowest = min(targets, key=lambda c: c.current_hp)
-                    targets = [lowest]
-            elif f == "is_dead":
-                targets = [c for c in targets if not CharacterSystem.is_alive(c)]
+            for prefix, func in filters_registry.items():
+                if f.startswith(prefix):
+                    targets = func(targets, actor, context, f)
+                    break
 
         if "is_dead" not in filters:
             targets = [c for c in targets if CharacterSystem.is_alive(c)]
@@ -96,11 +124,7 @@ class AIPriorityController(CharacterController):
         
         return targets
 
-    def choose_action(self, actor: Character, context: IControllerContext, action_load: ActionLoad | None = None) -> BattleAction:
-        if action_load is not None:
-            from battle.BattleActions import AttackAction
-            return AttackAction(None, actor, [], context)
-
+    def choose_action(self, actor: Character, context: IControllerContext) -> BattleAction:
         max_attempts = 10
         attempts = 0
         
@@ -111,23 +135,22 @@ class AIPriorityController(CharacterController):
             
             for node in valid_nodes:
                 targets = self._get_targets(actor, context, node.target_selector, node.filters)
-                if not targets and node.target_selector != "self" and "any" not in node.target_selector and "all" not in node.target_selector and node.target_selector not in ("anyone", "everyone"):
-                    pass
-                if not targets and node.target_selector != "self":
+                if not targets:
                     continue
                 
                 action = None
                 if node.action_id:
-                    if node.action_id == "WaitAction":
-                        from battle.BattleActions import WaitAction
-                        action = WaitAction(actor, context)
-                    elif node.action_id == "GenerateFocus":
-                        from battle.BattleActions import GenerateFocusAction
-                        action = GenerateFocusAction(actor, targets, context)
-                    else:
-                        from battle.BattleActions import AttackAction
-                        template = context.get_template(node.action_id) if hasattr(context, 'get_template') else None
+                    from battle.BattleActions import AttackAction
+                    from battle.BattleActions import registry as action_registry
+                    
+                    if node.action_id == "Attack":
+                        action = AttackAction(None, actor, targets, context)
+                    elif node.action_id in self.data_context.list_action_templates():
+                        template = self.data_context.get_action_template(node.action_id)
                         action = AttackAction(template, actor, targets, context)
+                    elif node.action_id in action_registry:
+                        action_class = action_registry[node.action_id]
+                        action = action_class(actor, targets, context)
 
                 if node.next_state:
                     self.current_state = node.next_state
@@ -144,7 +167,7 @@ class AIPriorityController(CharacterController):
                 break
 
         from battle.BattleActions import WaitAction
-        return WaitAction(actor, context)
+        return WaitAction(actor, [], context)
 
     def choose_reaction(self, actor: Character, reaction_id: str, action_load: ActionLoad, context: IControllerContext) -> bool:
         return True

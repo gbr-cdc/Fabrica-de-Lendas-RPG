@@ -521,7 +521,7 @@ def test_area_attack_one_roll_multiple_targets():
     manager.dice_service.schedule_result(5)   # target1 def
     manager.dice_service.schedule_result(5)   # target2 def
 
-    template = manager.get_template("AreaAttack")
+    template = manager.data_service.get_action_template("AreaAttack")
     action = AttackAction(template, actor, [target1, target2], manager)
     manager.run_action(action)
 
@@ -550,6 +550,6 @@ def test_area_attack_postura_defensiva_no_crash():
     for ev, func in hooks.items():
         manager.subscribe(ev, func)
 
-    template = manager.get_template("AreaAttack")
+    template = manager.data_service.get_action_template("AreaAttack")
     action = AttackAction(template, actor, [owner], manager)
     manager.run_action(action)

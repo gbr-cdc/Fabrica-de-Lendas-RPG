@@ -23,7 +23,7 @@ def test_ritmo_acelerado_consistent_activation(retalhador, target):
     bm = create_test_battle_manager()
     from controllers.CharacterController import CharacterController
     class DummyController(CharacterController):
-        def choose_action(self, actor, context, action_load=None): pass
+        def choose_action(self, actor, context): pass
         def choose_reaction(self, actor, reaction_id, action_load, context): return True
 
     bm.add_character(retalhador, DummyController(), start_tick=100)
@@ -70,7 +70,7 @@ def test_ritmo_acelerado_no_activation_below_threshold(retalhador, target):
     bm = create_test_battle_manager()
     from controllers.CharacterController import CharacterController
     class DummyController(CharacterController):
-        def choose_action(self, actor, context, action_load=None): pass
+        def choose_action(self, actor, context): pass
         def choose_reaction(self, actor, reaction_id, action_load, context): return True
 
     bm.add_character(retalhador, DummyController(), start_tick=100)

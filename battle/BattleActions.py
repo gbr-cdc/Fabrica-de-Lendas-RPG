@@ -386,7 +386,7 @@ class WaitAction(BattleAction):
     """
     Fallback action when no other actions can be taken.
     """
-    def __init__(self, actor: Character, context: IActionContext):
+    def __init__(self, actor: Character, targets: List[Character], context: IActionContext):
         super().__init__(name="Aguardar", actor=actor, targets=[], context=context, action_type=BattleActionType.FREE_ACTION)
 
     def can_execute(self) -> tuple[bool, str]:
@@ -399,3 +399,12 @@ class WaitAction(BattleAction):
         load = ActionLoad(character=self.actor)
         load.history.append(HistoryEmitter.exec("Aguardar", self.actor.char_id))
         return load
+
+registry = {
+    "AttackAction": AttackAction,
+    "GenerateManaAction": GenerateManaAction,
+    "GenerateFocus": GenerateFocusAction,
+    "TogglePosturaDefensiva": TogglePosturaDefensiva,
+    "MudarPosturaBatalha": MudarPosturaBatalha,
+    "WaitAction": WaitAction
+}

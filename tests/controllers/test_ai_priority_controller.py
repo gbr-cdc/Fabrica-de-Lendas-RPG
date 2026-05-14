@@ -17,7 +17,10 @@ def test_ai_priority_controller_targeting():
     )
     behavior = AIBehavior("test_ai", "Neutral", [node])
     
-    ctrl = AIPriorityController(behavior)
+    data_mock = MagicMock()
+    data_mock.list_action_templates.return_value = ["SkillN1"]
+    data_mock.get_action_template.return_value.focus_cost = 0
+    ctrl = AIPriorityController(behavior, data_mock)
     actor = create_dummy_character(char_id="hero")
     actor.floating_focus = 100
     
@@ -65,7 +68,9 @@ def test_ai_priority_state_transition():
     )
     behavior = AIBehavior("test_ai", "Neutral", [node1, node2, node3])
     
-    ctrl = AIPriorityController(behavior)
+    data_mock = MagicMock()
+    data_mock.list_action_templates.return_value = ["attack_basic"]
+    ctrl = AIPriorityController(behavior, data_mock)
     actor = create_dummy_character(char_id="hero")
     actor.current_hp = 40
     actor.max_hp = 100

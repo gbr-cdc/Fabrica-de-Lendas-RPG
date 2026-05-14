@@ -57,8 +57,6 @@ class BattleManager:
             'on_character_death': [] # Quando um personagem morre
         }
     
-    def get_template(self, template_id: str) -> AttackActionTemplate:
-        return self.data_service.get_action_template(template_id)
 
     def _get_unique_roll(self, tick: int, hab: int) -> int:
         """Determina um valor de d10 único para a combinação de tick e HAB."""
@@ -384,7 +382,7 @@ class BattleManager:
                         for event_name, callback in action_hooks.items():
                             self.unsubscribe(event_name, callback)
                         
-                        action = self.controllers[actor.char_id].choose_action(actor, self, action_load)
+                        action = self.controllers[actor.char_id].choose_action(actor, self)
                         final_action = action
                         
                         action_hooks = {}
