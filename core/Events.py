@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import List, TYPE_CHECKING
+from typing import List, TYPE_CHECKING, Any
 from core.Enums import AttackType, RollState
 
 if TYPE_CHECKING:
@@ -10,11 +10,11 @@ if TYPE_CHECKING:
 @dataclass(kw_only=True)
 class ActionLoad:
     """Objeto base para trafegar dados no Event Bus e retornar resultados para a View."""
-    character: 'Character'
+    character: Character
     history: List[str] = field(default_factory=list)
     success: bool = True
 
-    def add_event(self, tag: str, *params: any):
+    def add_event(self, tag: str, *params: Any):
         """Standardizes event insertion into history."""
         event_str = "|".join([tag] + [str(p) for p in params])
         self.history.append(event_str)

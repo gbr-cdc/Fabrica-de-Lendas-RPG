@@ -12,13 +12,13 @@ class CharacterSystem:
     """
 
     @staticmethod
-    def generate_focus(character: 'Character') -> int:
+    def generate_focus(character: Character) -> int:
         max_focus = character.rules.limite_foco * character.men
         character.floating_focus = min(character.floating_focus + character.men, max_focus)
         return character.floating_focus
     
     @staticmethod
-    def generate_mana(character: 'Character') -> int:
+    def generate_mana(character: Character) -> int:
         max_floating = character.rules.limite_mana * character.men
         space_available = max_floating - character.floating_mp
         mana_to_pull = min(character.men, space_available, character.current_mp)
@@ -29,29 +29,29 @@ class CharacterSystem:
         return character.floating_mp
     
     @staticmethod
-    def take_damage(character: 'Character', damage: int):
+    def take_damage(character: Character, damage: int):
         character.current_hp = max(character.current_hp - damage, 0)
 
     @staticmethod
-    def spend_focus(character: 'Character', amount: int) -> bool:
+    def spend_focus(character: Character, amount: int) -> bool:
         if character.floating_focus >= amount:
             character.floating_focus -= amount
             return True
         return False
     
     @staticmethod
-    def spend_mana(character: 'Character', amount: int) -> bool:
+    def spend_mana(character: Character, amount: int) -> bool:
         if character.floating_mp >= amount:
             character.floating_mp -= amount
             return True
         return False
 
     @staticmethod
-    def is_alive(character: 'Character') -> bool:
+    def is_alive(character: Character) -> bool:
         return character.current_hp > 0
     
     @staticmethod
-    def equip_weapon(character: 'Character', new_weapon: 'Weapon') -> Tuple[bool, str, 'Weapon' | None]:
+    def equip_weapon(character: Character, new_weapon: Weapon) -> Tuple[bool, str, Weapon | None]:
         if new_weapon.type != character.combat_style.weapon_type:
             return False, f"{character.name} não pode equipar armas do tipo {new_weapon.type.value}.", None
             
@@ -66,7 +66,7 @@ class CharacterSystem:
         return True, f"{new_weapon.name} equipada com sucesso!", old_weapon
 
     @staticmethod
-    def equip_armor(character: 'Character', new_armor: 'Armor') -> Tuple[bool, str, 'Armor' | None]:
+    def equip_armor(character: Character, new_armor: Armor) -> Tuple[bool, str, Armor | None]:
         if new_armor.type != character.combat_style.armor_type:
             return False, f"{character.name} não pode equipar armaduras do tipo {new_armor.type.value}.", None
         

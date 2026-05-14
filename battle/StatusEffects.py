@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from battle.BattleManager import BattleManager
 
 class Atordoado(StatusEffect):
-    def __init__(self, duration: int, target: 'Character', context: 'IPassiveContext'):
+    def __init__(self, duration: int, target: Character, context: IPassiveContext):
         super().__init__(name="Atordoado", duration=duration, target=target, context=context)
 
     def apply(self):
@@ -20,8 +20,8 @@ class Atordoado(StatusEffect):
         if hasattr(self.context, 'delay_character'):
             self.context.delay_character(self.character, self.character.action_cost_base * 0.5)
 
-    def get_hooks(self) -> Dict[str, 'Callable']:
-        def check_stun_end(action_load: 'ActionLoad'):
+    def get_hooks(self) -> Dict[str, Callable]:
+        def check_stun_end(action_load: ActionLoad):
             if action_load.character.char_id == self.character.char_id:
                 # Efeito expira e manda a ordem de remoção
                 action_load.history.append(HistoryEmitter.status_hook(self.name, self.character.char_id))

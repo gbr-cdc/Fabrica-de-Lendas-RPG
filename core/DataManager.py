@@ -10,11 +10,11 @@ from core.CharacterSystem import CharacterSystem
 class DataManager:
     def __init__(self):
             # O dicionário privado que guarda os moldes na memória
-            self._action_templates: dict[str, 'AttackActionTemplate'] = {}
-            self._passive_templates: dict[str, 'BattlePassiveTemplate'] = {}
+            self._action_templates: dict[str, AttackActionTemplate] = {}
+            self._passive_templates: dict[str, BattlePassiveTemplate] = {}
             self._combat_styles: dict[str, CombatStyle] = {}
             self._characters: dict[str, Character] = {}
-            self._game_rules: 'GameRules | None' = None
+            self._game_rules: GameRules | None = None
             self._ai_behaviors: dict[str, AIBehavior] = {}
 
 
@@ -172,28 +172,28 @@ class DataManager:
 
         self._passive_templates = templates
     
-    def get_action_template(self, action_id: str) -> 'AttackActionTemplate':
+    def get_action_template(self, action_id: str) -> AttackActionTemplate:
         """Retorna o molde de uma ação. Estoura um KeyError se o ID não existir."""
         try:
             return self._action_templates[action_id]
         except KeyError as exc:
             raise KeyError(f"[ERRO FATAL] DataManager: ActionTemplate '{action_id}' não foi encontrado! Verifique se há erros de digitação no JSON.") from exc
 
-    def get_character(self, char_id: str) -> 'Character':
+    def get_character(self, char_id: str) -> Character:
         """Retorna a instância de um personagem. Estoura um KeyError se o ID não existir."""
         try:
             return self._characters[char_id]
         except KeyError as exc:
             raise KeyError(f"[ERRO FATAL] DataManager: Character '{char_id}' não foi encontrado no banco de dados!") from exc
 
-    def get_combat_style(self, style_id: str) -> 'CombatStyle':
+    def get_combat_style(self, style_id: str) -> CombatStyle:
         """Retorna um estilo de combate. Estoura um KeyError se o ID não existir."""
         try:
             return self._combat_styles[style_id]
         except KeyError as exc:
             raise KeyError(f"[ERRO FATAL] DataManager: CombatStyle '{style_id}' não foi encontrado!") from exc
 
-    def get_passive_template(self, passive_id: str) -> 'BattlePassiveTemplate':
+    def get_passive_template(self, passive_id: str) -> BattlePassiveTemplate:
         """Retorna o molde de uma passiva. Estoura um KeyError se o ID não existir."""
         try:
             return self._passive_templates[passive_id]
@@ -225,7 +225,7 @@ class DataManager:
             )
         self._ai_behaviors = behaviors
 
-    def get_ai_behavior(self, behavior_id: str) -> 'AIBehavior':
+    def get_ai_behavior(self, behavior_id: str) -> AIBehavior:
         """Retorna o molde de um comportamento de IA. Estoura um KeyError se o ID não existir."""
         try:
             return self._ai_behaviors[behavior_id]

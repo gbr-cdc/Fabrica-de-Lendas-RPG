@@ -18,30 +18,29 @@ to allow for reactive modifications [ARCH.RULES.CORE.OBSERVER].
 
 if TYPE_CHECKING:
     from entities.Characters import Character
-    from core.Events import AttackLoad
 
 # --- Hook Builders [ARCH.RULES.BATTLE.ATTACK_DATA] ---
 # These functions create ephemeral hooks that modify the AttackAction resolution flow.
 # They are mapped in EFFECT_HOOK_BUILDERS and triggered by AttackAction.get_hooks().
 
-def _build_add_gda(effect, action: 'AttackAction'):
+def _build_add_gda(effect, action: AttackAction):
     """Increases the Hit Grade (GdA) by a fixed amount during damage calculation."""
 
     amount = effect.parameters.get("amount", 0)
-    def add_gda_hook(attack_load: 'AttackLoad'):
+    def add_gda_hook(attack_load: AttackLoad):
         if attack_load.character.char_id == action.actor.char_id:
             attack_load.gda += amount
             attack_load.history.append(HistoryEmitter.action_hook(action.name, attack_load.character.char_id))
             attack_load.history.append(HistoryEmitter.atk_load("gda", amount, attack_load.gda))
     return {'on_damage_calculation': add_gda_hook}
 
-def _build_swap_atk_def_die(effect, action: 'AttackAction'):
+def _build_swap_atk_def_die(effect, action: AttackAction):
     """
     Temporarily swaps the character's attack die with their defense die
     by modifying the attack_load directly.
     """
 
-    def swap_die_hook(attack_load: 'AttackLoad'):
+    def swap_die_hook(attack_load: AttackLoad):
         if attack_load.character.char_id == action.actor.char_id:
             attack_load.atk_die = action.actor.def_die
             attack_load.history.append(HistoryEmitter.action_hook(action.name, attack_load.character.char_id))
@@ -49,28 +48,28 @@ def _build_swap_atk_def_die(effect, action: 'AttackAction'):
 
     return {'on_roll_modify': swap_die_hook}
 
-def _build_add_bda(effect, action: 'AttackAction'):
+def _build_add_bda(effect, action: AttackAction):
     """Increases the action-scoped attack bonus (BdA) by a fixed amount during roll modification."""
 
     amount = effect.parameters.get("amount", 0)
-    def add_bda_hook(attack_load: 'AttackLoad'):
+    def add_bda_hook(attack_load: AttackLoad):
         if attack_load.character.char_id == action.actor.char_id:
             attack_load.bda += amount
             attack_load.history.append(HistoryEmitter.action_hook(action.name, attack_load.character.char_id))
             attack_load.history.append(HistoryEmitter.atk_load("bda", amount, attack_load.bda))
     return {'on_roll_modify': add_bda_hook}
 
-def _build_set_gda_zero_on_dmg(effect, action: 'AttackAction'):
+def _build_set_gda_zero_on_dmg(effect, action: AttackAction):
     """Forces GdA to 0 during damage calculation, usually for non-damaging utility hits."""
 
-    def set_gda_zero_hook(attack_load: 'AttackLoad'):
+    def set_gda_zero_hook(attack_load: AttackLoad):
         if attack_load.character.char_id == action.actor.char_id:
             attack_load.gda = 0
             attack_load.history.append(HistoryEmitter.action_hook(action.name, attack_load.character.char_id))
             attack_load.history.append(HistoryEmitter.atk_load("gda", 0, 0))
     return {'on_damage_calculation': set_gda_zero_hook}
 
-def _build_apply_status_on_hit_threshold(effect, action: 'AttackAction'):
+def _build_apply_status_on_hit_threshold(effect, action: AttackAction):
     """
     Applies a status effect to the target if the hit is successful and GdA exceeds a threshold.
     Validates hit success and GdA before adding the status to the battle context.
@@ -80,7 +79,7 @@ def _build_apply_status_on_hit_threshold(effect, action: 'AttackAction'):
     threshold = effect.parameters.get("threshold", 0)
     duration = effect.parameters.get("duration", 1)
     
-    def apply_status_hook(attack_load: 'AttackLoad'):
+    def apply_status_hook(attack_load: AttackLoad):
         if attack_load.character.char_id == action.actor.char_id and attack_load.hit:
             if attack_load.gda > threshold:
                 if status_name == "Atordoado":
@@ -108,7 +107,7 @@ class AttackAction(BattleAction):
     and special effects that are injected into the attack resolution via hooks.
     Supports Area of Effect (AoE) logic [ARCH.RULES.BATTLE.AREA_ATTACK].
     """
-    def __init__(self, template: 'AttackActionTemplate' | None, actor: 'Character', targets: List['Character'], context: 'IActionContext', attack_type: 'AttackType' = None):
+    def __init__(self, template: AttackActionTemplate | None, actor: Character, targets: List[Character], context: IActionContext, attack_type: AttackType = None):
         if template is None:
             template = AttackActionTemplate(nome="Ataque Básico", action_type=BattleActionType.STANDARD_ACTION, attack_type=AttackType.BASIC_ATTACK, focus_cost=0, effects=[])
         super().__init__(name=template.nome, actor=actor, targets=targets, context=context, action_type=template.action_type)
@@ -287,7 +286,7 @@ class GenerateManaAction(BattleAction):
     Standard Move Action to convert daily Mana into Floating MP.
     Limited by the character's manifest limit (MEN * rules.limite_mana).
     """
-    def __init__(self, actor: 'Character', targets: List['Character'], context: 'IActionContext', action_type: 'BattleActionType' = BattleActionType.MOVE_ACTION):
+    def __init__(self, actor: Character, targets: List[Character], context: IActionContext, action_type: BattleActionType = BattleActionType.MOVE_ACTION):
 
         super().__init__(name="Gerar Mana", actor=actor, targets=targets, context=context, action_type=action_type)
 
@@ -319,7 +318,7 @@ class GenerateFocusAction(BattleAction):
     Limited by the character's focus limit (MEN * rules.limite_foco).
     Used to pay for Skills/Attacks.
     """
-    def __init__(self, actor: 'Character', targets: List['Character'], context: 'IActionContext', action_type: 'BattleActionType' = BattleActionType.MOVE_ACTION):
+    def __init__(self, actor: Character, targets: List[Character], context: IActionContext, action_type: BattleActionType = BattleActionType.MOVE_ACTION):
 
         super().__init__(name="Gerar Foco", actor=actor, targets=targets, context=context, action_type=action_type)
 
@@ -345,7 +344,7 @@ class TogglePosturaDefensiva(BattleAction):
     A Free Action that toggles the state of the 'Postura Defensiva' passive.
     It retrieves the active passive from the context and calls its toggle method.
     """
-    def __init__(self, actor: 'Character', targets: List['Character'], context: 'IActionContext'):
+    def __init__(self, actor: Character, targets: List[Character], context: IActionContext):
 
         super().__init__(name="Alternar Postura Defensiva", actor=actor, targets=targets, context=context, action_type=BattleActionType.FREE_ACTION)
 
@@ -362,7 +361,7 @@ class MudarPosturaBatalha(BattleAction):
     A Free Action that toggles the state of the 'Postura de Batalha' passive.
     It retrieves the active passive from the context and calls its set_mode method.
     """
-    def __init__(self, actor: 'Character', targets: List['Character'], context: 'IActionContext'):
+    def __init__(self, actor: Character, targets: List[Character], context: IActionContext):
         super().__init__(name="Mudar Postura de Batalha", actor=actor, targets=targets, context=context, action_type=BattleActionType.FREE_ACTION)
 
     def execute(self) -> ActionLoad:
@@ -387,7 +386,7 @@ class WaitAction(BattleAction):
     """
     Fallback action when no other actions can be taken.
     """
-    def __init__(self, actor: 'Character', context: 'IActionContext'):
+    def __init__(self, actor: Character, context: IActionContext):
         super().__init__(name="Aguardar", actor=actor, targets=[], context=context, action_type=BattleActionType.FREE_ACTION)
 
     def can_execute(self) -> tuple[bool, str]:

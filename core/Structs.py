@@ -2,7 +2,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Dict, List, TYPE_CHECKING, Any
 from core.Enums import RollState, AttributeType, ArmorType, WeaponType, BattleActionType, AttackType
-from core.BaseClasses import BattleAction
 if TYPE_CHECKING:
     from entities.Characters import Character
 
@@ -49,8 +48,8 @@ class AttackEffects:
 @dataclass
 class AttackActionTemplate:
     nome: str
-    action_type: type['BattleActionType']
-    attack_type: type['AttackType']
+    action_type: BattleActionType
+    attack_type: AttackType
     focus_cost: int
     effects: List[AttackEffects] = field(default_factory=list)
 

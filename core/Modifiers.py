@@ -13,10 +13,10 @@ class StatModifier:
         self.value = value
         self.source = source
 
-    def apply(self, character: 'Character') -> None:
+    def apply(self, character: Character) -> None:
         pass # The attribute computation pulls from the modifier stack, no need to apply directly
         
-    def remove(self, character: 'Character') -> None:
+    def remove(self, character: Character) -> None:
         pass
 
 class EphemeralModifier(StatModifier):

@@ -21,7 +21,7 @@ class BattleManager:
     """
     O Gerenciador Central. Controla o Relógio de Ticks e o Event Bus (Observer Pattern).
     """
-    def __init__(self, dice_service: 'DiceManager', data_service: 'DataManager', judge: 'BattleJudge'):
+    def __init__(self, dice_service: DiceManager, data_service: DataManager, judge: BattleJudge):
         # Min-Heap para o Relógio de Ticks: (tick_number, char_id, character_object)
         self.timeline = []
         self.current_tick = 0
@@ -41,7 +41,7 @@ class BattleManager:
 
         self.battle_result = BattleResult()
         self.battle_state = BattleState.RUNNING
-        self.current_action: 'BattleAction' | None = None
+        self.current_action: BattleAction | None = None
         
         # Event Bus (Observer Pattern) para comandos de habilidades
         self.listeners: Dict[str, List[Callable]] = {
@@ -67,7 +67,7 @@ class BattleManager:
             if (tick, hab, roll) not in self.timeline_slots:
                 return roll
 
-    def add_character(self, character: 'Character', controller: 'CharacterController', start_tick: int | None = None):
+    def add_character(self, character: Character, controller: CharacterController, start_tick: int | None = None):
         """
         Adiciona um personagem à batalha e o agenda na fila de ação.
         Se start_tick não for fornecido, usa current_tick + action_cost_base (GDD.CORE.TIME.INIT).
@@ -122,13 +122,13 @@ class BattleManager:
             characters.append(character)
         return characters
         
-    def get_controller(self, char_id: str) -> 'CharacterController':
+    def get_controller(self, char_id: str) -> CharacterController:
         return self.controllers.get(char_id)
 
     def get_graveyard(self) -> List[Character]:
         return list(self.graveyard.values())
 
-    def get_active_passive(self, char_id: str, name: str) -> 'BattlePassive' | None:
+    def get_active_passive(self, char_id: str, name: str) -> BattlePassive | None:
         if char_id in self.active_passives:
             for passive_instance, hooks in self.active_passives[char_id]:
                 if passive_instance.name == name:
@@ -166,7 +166,7 @@ class BattleManager:
         if event_name in self.listeners:
             self.listeners[event_name].remove(callback)
 
-    def emit(self, event_name: str, payload: 'ActionLoad'):
+    def emit(self, event_name: str, payload: ActionLoad):
         """
         Avisa os ouvintes que o evento ocorreu. 
         Os ouvintes modificam o payload original por referência.
@@ -175,7 +175,7 @@ class BattleManager:
             for callback in self.listeners[event_name]:
                 callback(payload)
 
-    def get_next_actor(self) -> 'Character | None':
+    def get_next_actor(self) -> Character | None:
         """
         Avança o tempo para o próximo personagem na fila.
         Ignora personagens mortos ou que foram removidos da batalha.
@@ -204,7 +204,7 @@ class BattleManager:
         
         heapq.heappush(self.timeline, (next_tick, -character.hab, -roll, character.char_id, character))
     
-    def set_tick(self, character: 'Character', tick: int):
+    def set_tick(self, character: Character, tick: int):
         """
         Modifica o tempo de um personagem na linha do tempo.
         Substitui delay_character (que será mantido por compatibilidade).
@@ -229,7 +229,7 @@ class BattleManager:
                 heapq.heapify(self.timeline)
                 break
 
-    def delay_character(self, character: 'Character', extra_ticks: int):
+    def delay_character(self, character: Character, extra_ticks: int):
         """
         Encontra o personagem na linha do tempo e empurra a ação dele mais para o futuro.
         """
@@ -276,7 +276,7 @@ class BattleManager:
                 # Registra no histórico global
                 self.battle_result.history.append(HistoryEmitter.death(personagem.char_id))
 
-    def run_action(self, action: 'BattleAction') -> ActionLoad:
+    def run_action(self, action: BattleAction) -> ActionLoad:
         """
         Executa uma ação isolada de um personagem, simulando um turno.
         Útil para testes unitários granulares.
