@@ -80,4 +80,4 @@ def test_ai_priority_state_transition():
     action = ctrl.choose_action(actor, context)
     
     assert ctrl.current_state == "Panic"
-    assert action.__class__.__name__ == "GenerateFocusAction"
+    assert isinstance(action, GenerateFocusAction)

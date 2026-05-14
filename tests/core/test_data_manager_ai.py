@@ -2,6 +2,7 @@ import pytest
 import json
 from core.DataManager import DataManager
 from core.Structs import DecisionNode, AIBehavior
+from tests.utils.json_integrity_checker import get_json_keys
 
 def test_ai_behavior_instantiation():
     node = DecisionNode(
@@ -55,3 +56,17 @@ def test_data_manager_ai_loading(tmp_path):
     assert len(behavior.nodes) == 1
     assert behavior.nodes[0].priority == 10
     assert behavior.nodes[0].action_id == "attack_basic"
+
+def test_data_manager_ai_integrity():
+    dm = DataManager()
+    dm.load_ai_behaviors('data/ai_behaviors.json')
+    
+    assert len(dm._ai_behaviors) > 0
+    
+    keys = get_json_keys('data/ai_behaviors.json')
+    for key in keys:
+        behavior = dm.get_ai_behavior(key)
+        assert isinstance(behavior, AIBehavior)
+        assert behavior.id == key
+        assert isinstance(behavior.initial_state, str)
+        assert isinstance(behavior.nodes, list)

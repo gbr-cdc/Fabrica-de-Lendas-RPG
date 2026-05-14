@@ -2,7 +2,7 @@ import pytest
 import json
 from unittest.mock import patch, mock_open
 from core.DataManager import DataManager
-from core.Structs import CombatStyle, GameRules, AttackActionTemplate
+from core.Structs import CombatStyle, GameRules, AttackActionTemplate, BattlePassiveTemplate
 from core.Enums import AttributeType, ArmorType, WeaponType, BattleActionType, AttackType
 from tests.utils.json_integrity_checker import get_json_keys
 
@@ -116,3 +116,22 @@ def test_load_action_templates_invalid_attack_type():
     with patch('builtins.open', mock_open()), patch('json.load', return_value=bad_data):
         with pytest.raises(ValueError, match="Attack type inválido"):
             dm.load_action_templates('dummy.json')
+
+def test_load_passive_templates():
+    dm = DataManager()
+    dm.load_passive_templates('data/BattlePassives.json')
+    
+    assert len(dm._passive_templates) > 0
+    
+    keys = get_json_keys('data/BattlePassives.json')
+    for key in keys:
+        template = dm.get_passive_template(key)
+        assert isinstance(template, BattlePassiveTemplate)
+        assert isinstance(template.id, str)
+        assert isinstance(template.name, str)
+        assert isinstance(template.parameters, dict)
+
+def test_get_passive_template_key_error():
+    dm = DataManager()
+    with pytest.raises(KeyError, match="PassiveTemplate 'Invalido' não foi encontrado"):
+        dm.get_passive_template("Invalido")
