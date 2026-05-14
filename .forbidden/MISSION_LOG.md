@@ -2,6 +2,19 @@
 
 ## ACTIVE MISSIONS [MISSION.ACTIVE]
 
+## MISSION: Data-Driven Priority Controller [MISSION.ACTIVE.DATA_DRIVEN_CONTROLLER]
+- **Summary**: Implement a data-driven priority-based CharacterController that uses JSON configuration for decision-making, state management, and refined targeting.
+- **Rule References**: [ARCH.RULES.CORE.DATA], [ARCH.RULES.CORE.MVC], [ARCH.RULES.BATTLE.DECISION], [ARCH.RULES.BATTLE.TARGETING]
+- **Documentation References**: [ARCH.DOC.controllers.CharacterController.CharacterController], [ARCH.DOC.core.DataManager.DataManager]
+- **Definition of Done**: AIPriorityController implemented, DataManager loading behavior JSON, and unit tests verifying priority, state transitions, and targeting logic.
+- **Plan**: docs/plans/priority_controller.md
+- **Steps**:
+    - [RED] [DataManager AI Loading]: Verify AIBehavior and DecisionNode can be instantiated and DataManager can load them from JSON. | Files: tests/core/test_data_manager_ai.py
+    - [GREEN] [AI Data Structures]: Implement DecisionNode and AIBehavior in core/Structs.py and update DataManager with loading logic. | Files: core/Structs.py, core/DataManager.py
+    - [RED] [Controller Targeting & Logic]: Verify AIPriorityController correctly resolves targeting groups and filters based on a mock behavior, including state transitions. | Files: tests/controllers/test_ai_priority_controller.py
+    - [GREEN] [AIPriorityController Implementation]: Implement AIPriorityController with decision loop, state management, and targeting registry. | Files: controllers/CharacterController.py
+    - [BLUE] [Registration & Data]: Create initial AI behaviors JSON and register the new controller in the registry. | Files: data/ai_behaviors.json, controllers/CharacterController.py
+
 ## ARCHIVED MISSIONS [MISSION.ARCHIVE]
 
 ### 2026-04-23 00:18: Area Attacks Implementation [PART 2] [MISSION.ARCHIVE.AREA_ATTACKS_IMPLEMENTATION_PART_2]

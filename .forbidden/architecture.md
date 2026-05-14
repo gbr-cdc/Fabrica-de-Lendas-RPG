@@ -1238,6 +1238,7 @@ Defines the "Decision Loop" interface that separates character behavior (AI or P
 - `registry: Dict[str, Type[CharacterController]]` [ARCH.DOC.controllers.CharacterController.registry]: Mapping of controller IDs to their concrete class implementations, used for character assignment.
 
 ##### CharacterController [ARCH.DOC.controllers.CharacterController.CharacterController]
+[DEPENDS: ARCH.RULES.CORE.MVC, ARCH.DOC.core.BaseClasses.IControllerContext, ARCH.DOC.core.Events.ActionLoad]
 Abstract base class defining the mandatory interface for tactical decision-making and reactive choices.
 
 ###### choose_action [ARCH.DOC.controllers.CharacterController.CharacterController.choose_action]
@@ -1265,7 +1266,7 @@ Reference implementation for automated 1v1 combat.
 ###### choose_action [ARCH.DOC.controllers.CharacterController.PvP1v1Controller.choose_action]
 `choose_action(actor: Character, context: IControllerContext, action_load: ActionLoad | None = None) -> BattleAction`
 Method description: Implements basic aggressive AI logic.
-1. Identifies the first character in the context that is not the actor.
+1. Identifies the first character in the context that is not the actor to use as target.
 2. **Re-decision Handling**: If `action_load` is present (indicating a previous failure), defaults to a `BASIC_ATTACK` to prevent infinite loops.
 3. **Skill Prioritization**: Checks `floating_focus` against the cost of the "SkillN1" template.
 4. If focus is sufficient, returns an `AttackAction` using the skill template.
