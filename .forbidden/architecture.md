@@ -1539,7 +1539,7 @@ Method description: The translation engine that converts technical tags into nar
 #### ENTRY FORMAT [ARCH.DOC_STANDARDS.MISSION.ENTRY]
 
 ```
-- **Header:** ## MISSION: [Title] [PART X] [MISSION.ACTIVE.TITLE_OF_MISSION]. Add `[PART X]` only if mission have more parts.
+- **Header:** ### MISSION: [Title] [PART X] [MISSION.ACTIVE.TITLE_OF_MISSION]. Add `[PART X]` only if mission have more parts.
 - **Summary**: Concise technical overview of the goal. Provide enough context to guide execution.
 - **Rule References**: Comma-separated list ARCH.RULES tags of architectural rules relevant to the mission`.
 - **Documentation References**: Comma-separated list ARCH.DOC.module_name.FileName.ClassName tags for relevant classes documentation.
@@ -1556,10 +1556,10 @@ Method description: The translation engine that converts technical tags into nar
 #### ARCHIVED FORMAT [ARCH.DOC_STANDARDS.MISSION.ARCHIVED]
 
 ```
-- **Header:** `## YYYY-MM-DD HH:MM: [Title] ([Status]) [PART X]`. Add `[PART X]` only if mission have more parts.
+- **Header:** `### YYYY-MM-DD HH:MM: Title [PART X] [MISSION.ARCHIVE.TITLE_OF_MISSION]`. Add `[PART X]` only if mission have more parts.
 - **Summary**: Mission summary.
 - **Plan**: Link to the approved `docs/plans/[mission].md`.
-- **Steps**: List of completed steps.
+- **Steps**: List of completed steps. Detail the step description and what was done. Add a lit of modified files in the step.
 ```
 
 #### Rules [ARCH.DOC_STANDARDS.MISSION.RULES]
