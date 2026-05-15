@@ -243,7 +243,7 @@ class AttackAction(BattleAction):
                 attack_load.hit = True
                 self.context.emit('on_defense_reaction', attack_load)
                 # Re-evaluate hit after reactions: a reaction can turn a hit into a miss.
-                if attack_load.gda <= (attack_load.grd - attack_load.pre):
+                if attack_load.gda < (attack_load.grd - attack_load.pre):
                     attack_load.hit = False
 
             if attack_load.hit:

@@ -241,7 +241,7 @@ class Bloquear(BattlePassive):
         def reacao_bloqueio_hook(attack_load: AttackLoad):
             if attack_load.target is None or attack_load.target.char_id != self.owner.char_id:
                 return
-            # on_defense_reaction only fires on a confirmed hit; no GdA check needed.
+            
             if self.owner.floating_focus >= focus_cost:
                 controller = self.context.get_controller(self.owner.char_id)
                 if controller.choose_reaction(self.owner, "Bloquear", attack_load, self.context):
@@ -249,12 +249,18 @@ class Bloquear(BattlePassive):
                         attack_load.history.append(HistoryEmitter.focus(self.owner.char_id, -focus_cost, self.owner.floating_focus))
                         
                         roll = self.dice_service.roll_dice(reduction_die, RollState.NEUTRAL)
-                        attack_load.gda -= roll.final_roll
+                        bonus = roll.final_roll
+                        attack_load.defense_roll += bonus
+                        attack_load.gda -= bonus
                         attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
-                        attack_load.history.append(HistoryEmitter.atk_load("gda", -roll.final_roll, attack_load.gda))
-
-                        if attack_load.gda <= counter_threshold:
-                            self._counter_targets[attack_load.character.char_id] = True
+                        attack_load.history.append(HistoryEmitter.atk_load("defense_roll", bonus, attack_load.defense_roll))
+                        attack_load.history.append(HistoryEmitter.atk_load("gda", -bonus, attack_load.gda))
+        
+        def bloqueio_ofensivo_hook(attack_load: AttackLoad):
+            if attack_load.target is None or attack_load.target.char_id != self.owner.char_id:
+                return
+            if attack_load.gda <= counter_threshold:
+                self._counter_targets[attack_load.character.char_id] = True
 
         def bonus_contra_ataque_hook(attack_load: AttackLoad):
             if attack_load.character.char_id == self.owner.char_id and attack_load.target is not None:
@@ -263,15 +269,18 @@ class Bloquear(BattlePassive):
                     attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
                     attack_load.history.append(HistoryEmitter.atk_load("bda", counter_bda_bonus, attack_load.bda))
 
-        def cleanup_bonus_hook(attack_load: AttackLoad):
-            if attack_load.character.char_id == self.owner.char_id:
-                if attack_load.target is not None:
-                    self._counter_targets.pop(attack_load.target.char_id, None)
+        def turn_end_hook(action_load: ActionLoad):
+            if action_load.character.char_id == self.owner.char_id:
+                from core.Enums import BattleActionType
+                current_action = self.context.current_action
+                if current_action and current_action.action_type != BattleActionType.FREE_ACTION:
+                    self._counter_targets.clear()
 
         return {
             "on_defense_reaction": reacao_bloqueio_hook,
+            "on_hit_check": bloqueio_ofensivo_hook,
             "on_roll_modify": bonus_contra_ataque_hook,
-            "on_attack_end": cleanup_bonus_hook
+            "on_turn_end": turn_end_hook
         }
 
 class PosturaBatalha(BattlePassive):

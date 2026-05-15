@@ -34,12 +34,26 @@ def filter_highest_threat(targets: list['Character'], actor: 'Character', contex
         return [threat]
     return targets
 
+def filter_requires_posture(targets: list['Character'], actor: 'Character', context: 'IControllerContext', f: str) -> list['Character']:
+    """
+    Returns targets (self) if the actor does not have the required posture.
+    Format: 'requires_posture_OFFENSIVE'
+    """
+    required_posture = f.split("requires_posture_")[1]
+    
+    passive = context.get_active_passive(actor.char_id, "Postura de Batalha")
+    if passive and hasattr(passive, 'current_postura'):
+        if str(passive.current_postura) != required_posture:
+            return targets
+    return []
+
 filters_registry = {
     "hp_lt_": filter_hp_lt,
     "lowest_hp": filter_lowest_hp,
     "highest_hp": filter_highest_hp,
     "is_dead": filter_is_dead,
-    "highest_threat": filter_highest_threat
+    "highest_threat": filter_highest_threat,
+    "requires_posture_": filter_requires_posture
 }
 
 class CharacterController:

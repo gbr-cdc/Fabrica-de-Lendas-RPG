@@ -1,100 +1,90 @@
+
 import pytest
-from unittest.mock import MagicMock
 from tests.utils.test_utils import create_test_battle_manager
 from tests.utils.entity_factory import create_dummy_character
-from battle.BattleActions import AttackAction
+from core.Enums import RollState, AttackType
+from battle.BattleActions import AttackAction, WaitAction, GenerateFocusAction
+from core.Structs import BattlePassiveTemplate
 
-def test_bloquear_reaction_trigger():
-    """
-    Test that Bloquear correctly triggers a defensive reaction using focus.
-    """
-    manager = create_test_battle_manager()
-    defensor = create_dummy_character(char_id="defensor")
-    defensor.passive_abilities.append("Bloquear")
-    defensor.floating_focus = 10
+def test_bloquear_reacao_and_counter():
+    bm = create_test_battle_manager()
     
-    attacker = create_dummy_character(char_id="attacker")
+    # Character B has Bloquear
+    passive_template = BattlePassiveTemplate(
+        id="Bloquear",
+        name="Bloquear",
+        parameters={
+            "focus_cost": 2,
+            "reduction_die": 4,
+            "counter_threshold": -3,
+            "counter_bda_bonus": 1
+        }
+    )
     
-    ctrl_defensor = MagicMock()
-    ctrl_defensor.choose_reaction.return_value = True
+    char_a = create_dummy_character(char_id="A", name="Attacker", team=1)
+    char_b = create_dummy_character(char_id="B", name="Defender", team=2)
+    char_b.passive_abilities = ["Bloquear"]
+    char_b.floating_focus = 10
     
-    manager.add_character(defensor, ctrl_defensor, start_tick=1000)
-    manager.add_character(attacker, MagicMock(), start_tick=1000)
+    bm.add_character(char_a, bm.get_controller(char_a.char_id), start_tick=100)
+    bm.add_character(char_b, bm.get_controller(char_b.char_id), start_tick=200)
     
-    manager.set_tick(attacker, 0)
-    actor = manager.get_next_actor()
+    # Inject template parameters into the active passive
+    passive = bm.get_active_passive("B", "Bloquear")
+    passive.template = passive_template
     
-    # 10 (atk), 5 (def), 3 (bloquear d4)
-    manager.dice_service.queue.clear()
-    manager.dice_service.schedule_result(10)
-    manager.dice_service.schedule_result(5)
-    manager.dice_service.schedule_result(3)
+    # 1. A attacks B. We want B to use reaction and GdA to end up <= -3.
+    # Force rolls: A=6, B=5 -> GdA=1.
+    # With reaction 1d4=4 -> GdA = 1 - 4 = -3.
     
-    # Get parameters
-    params = manager.data_service.get_passive_template("Bloquear").parameters
-    focus_cost = params.get("focus_cost", 2)
+    bm.dice_service.schedule_result(6) # A Atk roll
+    bm.dice_service.schedule_result(5) # B Def roll
+    bm.dice_service.schedule_result(4) # B Reaction roll (d4)
     
-    action = AttackAction(None, actor, [defensor], manager)
-    load = manager.run_action(action)
+    # Mock reaction choice
+    controller_b = bm.get_controller("B")
+    def mock_choose_reaction(char, name, attack_load, context):
+        return True
+    controller_b.choose_reaction = mock_choose_reaction
     
-    assert any("PASSIVE|Bloquear|defensor" in h for h in load.history)
-    assert any("ATK_LOAD|gda|-3|" in h for h in load.history)
-    assert defensor.floating_focus == 10 - focus_cost
+    atk = AttackAction(None, char_a, [char_b], bm)
+    res = bm.run_action(atk)
+    
+    # Check if reaction was used
+    assert char_b.floating_focus == 8 # 10 - 2
+    # GdA should be -3
+    assert passive._counter_targets.get("A") is True
+    
+    # 2. B takes a turn and generates focus (MOVE_ACTION).
+    gen_focus = GenerateFocusAction(char_b, [], bm)
+    bm.run_action(gen_focus)
+    
+    # Bonus should be lost
+    assert "A" not in passive._counter_targets
 
-def test_bloquear_counter_bonus():
-    """
-    Test the counter-bonus mechanism: +BDA on the next attack against the same target.
-    Scenario: attacker hits (GdA=1 with atk=6, def=5), defensor blocks (rolls 1 → GdA=0),
-    GdA=0 <= counter_threshold(0) so counter is set. Defensor then attacks back.
-    """
-    manager = create_test_battle_manager()
-    defensor = create_dummy_character(char_id="defensor")
-    defensor.passive_abilities.append("Bloquear")
-    defensor.floating_focus = 10
-
-    attacker = create_dummy_character(char_id="attacker")
-
-    ctrl_defensor = MagicMock()
-    ctrl_defensor.choose_reaction.return_value = True
-
-    manager.add_character(defensor, ctrl_defensor, start_tick=1000)
-    manager.add_character(attacker, MagicMock(), start_tick=1000)
-
-    # Get parameters
-    params = manager.data_service.get_passive_template("Bloquear").parameters
-    focus_cost = params.get("focus_cost", 2)
-    counter_bda_bonus = params.get("counter_bda_bonus", 1)
-    counter_threshold = params.get("counter_threshold", 0)
-
-    # 1. Attacker attacks defensor: atk=6, def=5 → GdA=1 (hit), block_roll=1 → GdA=0 <= threshold
-    manager.set_tick(attacker, 0)
-    actor = manager.get_next_actor()
-
-    manager.dice_service.queue.clear()
-    manager.dice_service.schedule_result(6)  # atk roll
-    manager.dice_service.schedule_result(5)  # def roll
-    manager.dice_service.schedule_result(1)  # block reduction roll → GdA=1-1=0 <= counter_threshold
-
-    action = AttackAction(None, actor, [defensor], manager)
-    manager.run_action(action)
-
-    # Counter must be set (reaction fired and GdA <= threshold)
-    bloquear_passive = manager.get_active_passive(defensor.char_id, "Bloquear")
-    assert bloquear_passive is not None
-    assert attacker.char_id in bloquear_passive._counter_targets
-
-    # 2. Defensor attacks back — counter BDA bonus should apply
-    manager.set_tick(defensor, 0)
-    actor = manager.get_next_actor()
-
-    manager.dice_service.queue.clear()
-    manager.dice_service.schedule_result(5)  # atk roll
-    manager.dice_service.schedule_result(5)  # def roll
-
-    action = AttackAction(None, actor, [attacker], manager)
-    load_counter = manager.run_action(action)
-
-    assert any("PASSIVE|Bloquear|defensor" in h for h in load_counter.history)
-    assert any(f"ATK_LOAD|bda|{counter_bda_bonus}|" in h for h in load_counter.history)
-    # Counter is consumed after the attack
-    assert attacker.char_id not in bloquear_passive._counter_targets
+def test_bloquear_bonus_applied_and_cleared():
+    bm = create_test_battle_manager()
+    
+    char_a = create_dummy_character(char_id="A", name="Attacker", team=1)
+    char_b = create_dummy_character(char_id="B", name="Defender", team=2)
+    char_b.passive_abilities = ["Bloquear"]
+    
+    bm.add_character(char_a, bm.get_controller(char_a.char_id), start_tick=100)
+    bm.add_character(char_b, bm.get_controller(char_b.char_id), start_tick=200)
+    
+    passive = bm.get_active_passive("B", "Bloquear")
+    passive._counter_targets["A"] = True # Force bonus against A
+    
+    # B attacks A
+    bm.dice_service.schedule_result(5) # B Atk roll
+    bm.dice_service.schedule_result(5) # A Def roll
+    
+    atk = AttackAction(None, char_b, [char_a], bm)
+    res = bm.run_action(atk)
+    
+    # Check history for BDA bonus
+    bda_bonus_found = any("ATK_LOAD|bda|1" in msg for msg in res.history)
+    assert bda_bonus_found
+    
+    # Check if bonus was cleared after attack
+    assert "A" not in passive._counter_targets

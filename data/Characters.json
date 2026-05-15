@@ -49,7 +49,7 @@
       "Postura de Batalha"
     ],
     "CombatStyle": "Mestre_das_Armas",
-    "AI_behavior": "basic_agressive"
+    "AI_behavior": "offensive_knight"
   },
   "Duelista": {
     "Nome": "Duelista",

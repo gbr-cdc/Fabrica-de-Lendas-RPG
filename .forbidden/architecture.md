@@ -1051,10 +1051,10 @@ Data-driven defensive passive that allows focus-based reactions and grants count
 Method description: Registers defensive reaction and counter-bonus hooks using `focus_cost`, `reduction_die`, `counter_threshold`, and `counter_bda_bonus`.
 1. `reacao_bloqueio_hook` (on `on_defense_reaction`): Triggered only when the owner is targeted and the attack is initially a hit.
    - Checks for `focus_cost` Focus and controller approval.
-   - Spends Focus and subtracts `reduction_die` roll from incoming `GdA`.
-   - If final `GdA <= counter_threshold` (default 0), marks the attacker for a counter-bonus. The engine re-evaluates `attack_load.hit` after this hook, so reducing `GdA` to 0 or below converts the hit into a miss.
-2. `bonus_contra_ataque_hook` (on `on_roll_modify`): If the owner attacks a marked target, applies `counter_bda_bonus` to `attack_load.bda`.
-3. `cleanup_bonus_hook` (on `on_attack_end`): Removes the target marking after the owner attacks.
+   - Spends Focus, adds `reduction_die` roll to `defense_roll` and subtracts it from `GdA`.
+2. `bloqueio_ofensivo_hook` (on `on_hit_check`): Marks the attacker for a counter-bonus if `GdA <= counter_threshold`.
+3. `bonus_contra_ataque_hook` (on `on_roll_modify`): If the owner attacks a marked target, applies `counter_bda_bonus` to `attack_load.bda`.
+4. `turn_end_hook` (on `on_turn_end`): Clears all counter-bonus markings at the end of any non-free action.
 
 ##### PosturaBatalha [ARCH.DOC.battle.BattlePassives.PosturaBatalha]
 [DEPENDS: ARCH.DOC.core.Modifiers.EphemeralModifier, GDD.STYLES.MESTRE_ARMAS.POSTURAS, ARCH.DOC.core.Events.AttackLoad, ARCH.DOC.core.Structs.BattlePassiveTemplate]
