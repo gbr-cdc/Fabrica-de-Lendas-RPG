@@ -6,7 +6,7 @@ from core.Enums import BattleState, RollState, BattleActionType
 from core.Structs import BattleResult
 from core.Events import ActionLoad
 from core.BaseClasses import StatusEffect
-from controllers.CharacterController import PvP1v1Controller
+from controllers.CharacterController import AIPriorityController
 from tests.utils.entity_factory import create_dummy_character
 
 def test_battle_judge_defeat():
@@ -113,14 +113,16 @@ def test_battle_manager_passive_management():
     bm.remove_character("actor")
     assert "actor" not in bm.active_passives
 
-def test_pvp_controller_special_paths():
-    ctrl = PvP1v1Controller(MagicMock())
+def test_ai_priority_controller_special_paths():
+    ctrl = AIPriorityController(MagicMock(), MagicMock())
     actor = create_dummy_character(char_id="actor")
     context = MagicMock()
     
     context.get_characters.return_value = [actor]
-    with pytest.raises(RuntimeError):
-        ctrl.choose_action(actor, context)
+    # AIPriorityController returns WaitAction if no targets found
+    from battle.BattleActions import WaitAction
+    action = ctrl.choose_action(actor, context)
+    assert isinstance(action, WaitAction)
         
     assert ctrl.choose_reaction(actor, "any", MagicMock(), context) is True
 

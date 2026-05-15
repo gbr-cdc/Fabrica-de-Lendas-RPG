@@ -1152,10 +1152,13 @@ Data container representing a character's traits, equipment, and current vitals.
 - Constructor [ARCH.DOC.entities.Characters.Character.__init__]: `__init__(char_id: str, name: str, attributes: List[int], combat_style: CombatStyle, rules: GameRules, team: int = 0)`
 - `char_id: str` [ARCH.DOC.entities.Characters.Character.char_id]: Unique identifier for the character.
 - `team: int` [ARCH.DOC.entities.Characters.Character.team]: Alliance identifier used by `BattleJudge`.
+- `max_hp: int` [ARCH.DOC.entities.Characters.Character.max_hp]: Maximum health points.
 - `current_hp: int` [ARCH.DOC.entities.Characters.Character.current_hp]: Current health points.
+- `max_mp: int` [ARCH.DOC.entities.Characters.Character.max_mp]: Maximum daily mana reserve.
 - `current_mp: int` [ARCH.DOC.entities.Characters.Character.current_mp]: Daily mana reserve.
 - `floating_mp: int` [ARCH.DOC.entities.Characters.Character.floating_mp]: Manifested mana available for immediate use.
 - `floating_focus: int` [ARCH.DOC.entities.Characters.Character.floating_focus]: Current focus points pool.
+- `action_cost_base: int` [ARCH.DOC.entities.Characters.Character.action_cost_base]: Base tick cost for actions.
 - `modifiers: List[StatModifier]` [ARCH.DOC.entities.Characters.Character.modifiers]: Stack of active attribute modifiers.
 - `status_effects: List[StatusEffect]` [ARCH.DOC.entities.Characters.Character.status_effects]: Collection of active temporary conditions.
 
@@ -1228,7 +1231,8 @@ The `controllers` module implements the "Decision Loop" for characters, separati
 [DEPENDS: ARCH.RULES.CORE.MVC, ARCH.DOC.core.BaseClasses.IControllerContext, ARCH.DOC.core.Events.ActionLoad]
 Defines the "Decision Loop" interface that separates character behavior from engine mechanics.
 
-`filters_registry: Dict[str, Callable]` [ARCH.DOC.controllers.CharacterController.filters_registry]: Registry of target filter functions used by the data-driven AI.
+- `filters_registry: Dict[str, Callable]` [ARCH.DOC.controllers.CharacterController.filters_registry]: Registry of target filter functions used by the data-driven AI.
+- `registry: Dict[str, Type[CharacterController]]` [ARCH.DOC.controllers.CharacterController.registry]: Mapping of controller IDs to their concrete class implementations.
 
 ##### CharacterController [ARCH.DOC.controllers.CharacterController.CharacterController]
 [DEPENDS: ARCH.RULES.CORE.MVC, ARCH.DOC.core.BaseClasses.IControllerContext, ARCH.DOC.core.Events.ActionLoad]
@@ -1236,41 +1240,37 @@ Abstract base class defining the mandatory interface for tactical decision-makin
 
 ###### choose_action [ARCH.DOC.controllers.CharacterController.CharacterController.choose_action]
 `choose_action(actor: Character, context: IControllerContext) -> BattleAction`
-- Description: Triggered at the beginning of a character"s turn to determine their maneuver.
+- Description: Triggered at the beginning of a character's turn to determine their maneuver.
 
 ###### choose_reaction [ARCH.DOC.controllers.CharacterController.CharacterController.choose_reaction]
 `choose_reaction(actor: Character, reaction_id: str, action_load: ActionLoad, context: IControllerContext) -> bool`
 - Description: Triggered during action resolution for conditional effects.
 
-##### PvP1v1Controller [ARCH.DOC.controllers.CharacterController.PvP1v1Controller]
-[DEPENDS: ARCH.DOC.battle.BattleActions.AttackAction, ARCH.DOC.core.BaseClasses.IDataContext]
-Reference implementation for automated 1v1 combat.
-
-- Constructor [ARCH.DOC.controllers.CharacterController.PvP1v1Controller.__init__]: `__init__(data_context: IDataContext)`
-
-###### choose_action [ARCH.DOC.controllers.CharacterController.PvP1v1Controller.choose_action]
-`choose_action(actor: Character, context: IControllerContext) -> BattleAction`
-- Description: Implements basic aggressive AI logic.
-1. Identifies the first enemy character.
-2. Checks `floating_focus` for "SkillN1" template.
-3. Returns `AttackAction` with skill template or Basic Attack.
-
 ##### AIPriorityController [ARCH.DOC.controllers.CharacterController.AIPriorityController]
 [DEPENDS: ARCH.DOC.core.Structs.AIBehavior, ARCH.DOC.battle.BattleActions.AttackAction, ARCH.DOC.battle.BattleActions.WaitAction, ARCH.DOC.core.BaseClasses.IDataContext]
-Data-driven controller that uses priority-based Decision Nodes.
+Data-driven controller that uses priority-based Decision Nodes to determine actions.
 
 - Constructor [ARCH.DOC.controllers.CharacterController.AIPriorityController.__init__]: `__init__(behavior: AIBehavior, data_context: IDataContext)`
+- `behavior: AIBehavior` [ARCH.DOC.controllers.CharacterController.AIPriorityController.behavior]: The data-driven behavior definition.
+- `current_state: str` [ARCH.DOC.controllers.CharacterController.AIPriorityController.current_state]: The current tactical state of the AI.
+
+###### _get_targets [ARCH.DOC.controllers.CharacterController.AIPriorityController._get_targets]
+`_get_targets(actor: Character, context: IControllerContext, selector: str, filters: list[str]) -> list[Character]`
+- Description: Internal method to resolve targets based on a selector and a list of filters.
+1. Identifies initial candidates based on `selector` (self, any_ally, any_enemy, etc.).
+2. Applies each filter in `filters` sequentially using `filters_registry`.
+3. Ensures target is alive unless `is_dead` filter is present.
+4. Returns the final list of filtered targets.
 
 ###### choose_action [ARCH.DOC.controllers.CharacterController.AIPriorityController.choose_action]
 `choose_action(actor: Character, context: IControllerContext) -> BattleAction`
-- Description: Evaluates behavior nodes in priority order.
-1. Loops through valid nodes for current state, sorted by priority.
-2. Retrieves targets via `_get_targets` using selectors and filters.
-3. If targets found, instantiates action via `AttackAction` (template or basic) or `action_registry`.
-4. Changes `current_state` and returns the action if executable.
-5. Returns `WaitAction` as fallback.
-
-`registry: Dict[str, Type[CharacterController]]` [ARCH.DOC.controllers.CharacterController.registry]: Mapping of controller IDs to their concrete class implementations.
+- Description: Evaluates behavior nodes in priority order to choose the best action.
+1. Loops through nodes valid for `current_state`, sorted by `priority`.
+2. Resolves targets for each node using `_get_targets`.
+3. If targets found, identifies the action to instantiate (Attack, Template-based, or Registered Action).
+4. Updates `current_state` if `next_state` is defined in the node.
+5. Validates the action via `can_execute()`.
+6. Returns the first valid action or falls back to `WaitAction`.
 
 ### MODULE: Data [ARCH.DOC.data]
 The `data` module stores external JSON definitions that drive engine behavior and character scaling. `[ARCH.RULES.CORE.DATA]`
@@ -1289,11 +1289,12 @@ JSON-based blueprints for combat maneuvers. These templates are loaded by `DataM
 [DEPENDS: ARCH.RULES.CORE.DATA, ARCH.DOC.core.Enums.AttributeType, ARCH.DOC.entities.Items.Weapon, ARCH.DOC.entities.Items.Armor, ARCH.DOC.core.Structs.CombatStyle]
 JSON-based hydration templates for characters. Defines the starting state, equipment, and abilities for specific character archetypes.
 
-- `Nome: str`: Display name of the character.
-- `FIS / HAB / MEN: int`: Base attribute scores used for pool calculations and damage.
-- `Weapon / Armor: Dict`: Defines the starting equipment name, stats, and types.
-- `Abilities / Passives: List[str]`: Identifiers for the actions and reactive components assigned to the character at start.
-- `CombatStyle: str`: Reference to the archetype definition in `CombatStyles.json`.
+- : Display name of the character.
+- : Base attribute scores used for pool calculations and damage.
+- : Defines the starting equipment name, stats, and types.
+- : Identifiers for the actions and reactive components assigned to the character at start.
+- : Reference to the archetype definition in `CombatStyles.json`.
+- : ID of the behavior defined in `ai_behaviors.json` to be used by the `AIPriorityController`.
 
 #### Combat Styles [ARCH.DOC.data.CombatStyles]
 [DEPENDS: ARCH.RULES.CORE.DATA, ARCH.DOC.core.Enums.WeaponType, ARCH.DOC.core.Enums.ArmorType]
@@ -1309,6 +1310,20 @@ JSON-based configuration for global constants and progression tables. Defines th
 
 - `limite_foco / limite_mana: int`: Multipliers used against the `MEN` attribute to determine maximum manifest pools.
 - `regras_progressao: Dict`: Contains nested tables (`tabela_hp`, `tabela_mp`, `tabela_custos`) mapping attribute scores (0-15) to their corresponding derived pool sizes or tick costs.
+
+#### AI Behaviors [ARCH.DOC.data.ai_behaviors]
+[DEPENDS: ARCH.RULES.CORE.DATA]
+JSON-based configuration for AI decision logic. Defines states, priorities, and action selection criteria.
+
+- `id: str`: Unique identifier for the behavior.
+- `initial_state: str`: The starting state for the AI.
+- `nodes: List[Dict]`: Priority-ordered list of decision criteria.
+    - `priority: int`: Evaluation order (higher first).
+    - `required_state: str`: Tactical state required to evaluate this node.
+    - `target_selector: str`: Broad target category (e.g., `any_enemy`, `self`).
+    - `filters: List[str]`: Refinement criteria (e.g., `lowest_hp`, `highest_threat`).
+    - `action_id: str`: The ID of the action to execute if targets are found.
+    - `next_state: str | null`: Transition state after choosing this action.
 
 ### MODULE: Utilities [ARCH.DOC.utilities]
 The `utilities` module provides cross-cutting tools for documentation management, system operations, and agent assistance.
@@ -1450,39 +1465,25 @@ Method description: The translation engine that converts technical tags into nar
 Provides high-level orchestration for running automated battle simulations between characters.
 
 #### Simulator.py [ARCH.DOC.pvp_simulator.Simulator]
-[DEPENDS: ARCH.DOC.core.DataManager.DataManager, ARCH.DOC.battle.BattleManager.BattleManager, ARCH.DOC.controllers.CharacterController.PvP1v1Controller]
-Entry point for executing PvP combat simulations. Handles data loading, environment setup, and multi-run orchestration.
+[DEPENDS: ARCH.DOC.battle.BattleManager.BattleManager, ARCH.DOC.core.DataManager.DataManager, ARCH.DOC.battle.Judges.BattleJudge]
+Provides a high-level interface for running PvP combat simulations, either as single matches or in batch for balance analysis.
 
 ##### PvPSimulator [ARCH.DOC.pvp_simulator.Simulator.PvPSimulator]
-High-level simulator for 1v1 combat.
+[DEPENDS: ARCH.DOC.battle.BattleManager.BattleManager, ARCH.DOC.core.DiceManager.DiceManager, ARCH.DOC.core.DataManager.DataManager, ARCH.DOC.battle.Judges.BattleJudge]
+Encapsulates the setup and execution of a 1v1 battle between two characters.
 
 - Constructor [ARCH.DOC.pvp_simulator.Simulator.PvPSimulator.__init__]: `__init__(dice_manager: DiceManager, data_manager: DataManager, judge: BattleJudge, character1: Character, character2: Character)`
-
-###### from_data_files [ARCH.DOC.pvp_simulator.Simulator.PvPSimulator.from_data_files]
-`from_data_files(...) -> PvPSimulator`
-- Description: Factory method to instantiate a simulator using JSON data paths.
-1. Initializes `DataManager` and loads rules, styles, actions, passives, and characters.
-2. Retrieves character instances and assigns teams.
-3. Returns a new `PvPSimulator` instance.
-
-###### run_simulation [ARCH.DOC.pvp_simulator.Simulator.PvPSimulator.run_simulation]
-`run_simulation() -> BattleResult`
-- Description: Executes a single battle run using deep-copied character templates.
-1. Clones characters to ensure fresh state.
-2. Initializes `BattleManager` with `PvP1v1Controller`.
-3. Runs the battle and returns the result.
+- `from_data_files` [ARCH.DOC.pvp_simulator.Simulator.PvPSimulator.from_data_files]: Factory method to instantiate the simulator from JSON data files.
+- `run_simulation` [ARCH.DOC.pvp_simulator.Simulator.PvPSimulator.run_simulation]: Executes a single simulation match and returns the `BattleResult`.
 
 ##### simulate_multiple_battles [ARCH.DOC.pvp_simulator.Simulator.simulate_multiple_battles]
-`simulate_multiple_battles(num_simulations: int, ...) -> list[BattleResult]`
+`simulate_multiple_battles(num_simulations: int, ...)`
 - Description: Orchestrates a batch of simulations for statistical analysis.
 
-##### mono [ARCH.DOC.pvp_simulator.Simulator.mono]
-`mono(char1_id: str, char2_id: str)`
-- Description: CLI entry point for a single detailed battle simulation.
-
-##### multy [ARCH.DOC.pvp_simulator.Simulator.multy]
-`multy(char1_id: str, char2_id: str)`
-- Description: CLI entry point for mass simulation runs (default 10k).
+##### CLI Usage [ARCH.DOC.pvp_simulator.Simulator.CLI]
+The module provides utility functions for CLI-based execution:
+- `mono(char1_id: str, char2_id: str)`: Runs a single detailed simulation and presents it via `BattleView`.
+- `multy(char1_id: str, char2_id: str)`: Runs 10,000 simulations and presents a statistical summary.
 
 ## Test Quality Standards [ARCH.TEST_QUALITY]
 

@@ -65,11 +65,16 @@ class BattleManager:
             if (tick, hab, roll) not in self.timeline_slots:
                 return roll
 
-    def add_character(self, character: Character, controller: CharacterController, start_tick: int | None = None):
+    def add_character(self, character: Character, controller: CharacterController | None = None, start_tick: int | None = None):
         """
         Adiciona um personagem à batalha e o agenda na fila de ação.
         Se start_tick não for fornecido, usa current_tick + action_cost_base (GDD.CORE.TIME.INIT).
         """
+        if controller is None:
+            from controllers.CharacterController import AIPriorityController
+            behavior = self.data_service.get_ai_behavior(character.ai_behavior)
+            controller = AIPriorityController(behavior, self.data_service)
+
         if start_tick is None:
             start_tick = self.current_tick + character.action_cost_base
         self.characters[character.char_id] = character

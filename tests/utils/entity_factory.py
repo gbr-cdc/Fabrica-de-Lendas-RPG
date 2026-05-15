@@ -60,7 +60,8 @@ def create_dummy_character(
     team: int = 0,
     weapon: Optional[Weapon] = None,
     armor: Optional[Armor] = None,
-    equipped: bool = False
+    equipped: bool = False,
+    ai_behavior: str = "basic_agressive"
 ) -> Character:
     """
     Creates a Character instance for testing. 
@@ -85,7 +86,7 @@ def create_dummy_character(
             weapon_type=WeaponType.MEDIUM_WEAPON
         )
         
-    char = Character(char_id, name, attributes, combat_style, rules, team)
+    char = Character(char_id, name, attributes, combat_style, rules, team, ai_behavior)
 
     if equipped or weapon or armor:
         equip_dummy_character(char, weapon, armor)

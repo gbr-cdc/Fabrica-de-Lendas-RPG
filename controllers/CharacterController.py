@@ -63,31 +63,6 @@ class CharacterController:
         """
         raise NotImplementedError("Reação não implementada pelo Controller.")
 
-class PvP1v1Controller(CharacterController):
-    def __init__(self, data_context: IDataContext):
-        self.data_context = data_context
-
-    def choose_action(self, actor: Character, context: IControllerContext) -> BattleAction:
-        target = None
-        for character in context.get_characters():
-            if character is not actor:
-                target = character
-                break
-        
-        if target is None:
-            raise RuntimeError(f"Controller de {actor} não conseguiu achar um alvo")
-        
-        skill_template = self.data_context.get_action_template("SkillN1")
-        cost = skill_template.focus_cost
-        if actor.floating_focus >= cost:
-            from battle.BattleActions import AttackAction
-            return AttackAction(skill_template, actor, [target], context)
-            
-        from battle.BattleActions import AttackAction
-        return AttackAction(None, actor, [target], context)
-    
-    def choose_reaction(self, actor: Character, reaction_id: str, action_load: ActionLoad, context: IControllerContext) -> bool:
-        return True
 
 class AIPriorityController(CharacterController):
     def __init__(self, behavior: AIBehavior, data_context: IDataContext):
@@ -172,4 +147,4 @@ class AIPriorityController(CharacterController):
     def choose_reaction(self, actor: Character, reaction_id: str, action_load: ActionLoad, context: IControllerContext) -> bool:
         return True
 
-registry = {"1v1Controller": PvP1v1Controller, "AIPriorityController": AIPriorityController}
+registry = {"AIPriorityController": AIPriorityController}

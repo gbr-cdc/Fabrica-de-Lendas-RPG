@@ -4,7 +4,6 @@ import copy
 from entities.Characters import Character
 from battle.BattleManager import BattleManager
 from core.CharacterSystem import CharacterSystem
-from controllers.CharacterController import PvP1v1Controller
 from core.DiceManager import DiceManager
 from core.DataManager import DataManager
 from battle.Judges import BattleJudge
@@ -15,6 +14,7 @@ COMBAT_STYLES_FILE = "data/CombatStyles.json"
 RULES_FILE = "data/Rules.json"
 BATTLE_PASSIVES_FILE = "data/BattlePassives.json"
 ATTACK_ACTIONS_FILE = "data/AttackActions.json"
+AI_BEHAVIORS_FILE = "data/ai_behaviors.json"
 
 class PvPSimulator:
     def __init__(self, dice_manager: DiceManager, data_manager: DataManager, judge: BattleJudge, character1: Character, character2: Character):
@@ -42,6 +42,7 @@ class PvPSimulator:
         dm.load_combat_styles(combat_styles_filepath)
         dm.load_action_templates(ATTACK_ACTIONS_FILE)
         dm.load_passive_templates(BATTLE_PASSIVES_FILE)
+        dm.load_ai_behaviors(AI_BEHAVIORS_FILE)
         dm.load_characters(characters_filepath)
 
         char1 = dm.get_character(char1_id)
@@ -61,8 +62,8 @@ class PvPSimulator:
 
     def _setup_battle(self, c1: Character, c2: Character) -> BattleManager:
         bm = BattleManager(self.dice_manager, self.data_manager, self.judge)
-        bm.add_character(c1, PvP1v1Controller(self.data_manager), start_tick=c1.action_cost_base)
-        bm.add_character(c2, PvP1v1Controller(self.data_manager), start_tick=c2.action_cost_base)
+        bm.add_character(c1, start_tick=c1.action_cost_base)
+        bm.add_character(c2, start_tick=c2.action_cost_base)
         return bm
 
     def run_simulation(self) -> BattleResult:
@@ -93,6 +94,7 @@ def simulate_multiple_battles(
     dm.load_combat_styles(combat_styles_filepath)
     dm.load_action_templates(ATTACK_ACTIONS_FILE)
     dm.load_passive_templates(BATTLE_PASSIVES_FILE)
+    dm.load_ai_behaviors(AI_BEHAVIORS_FILE)
     dm.load_characters(characters_filepath)
     
     char1_template = dm.get_character(char1_id)

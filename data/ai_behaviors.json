@@ -4,20 +4,24 @@
         "initial_state": "Neutral",
         "nodes": [
             {
-                "priority": 10,
+                "priority": 2,
                 "required_state": "Neutral",
                 "target_selector": "any_enemy",
-                "filters": ["lowest_hp"],
+                "filters": [
+                    "lowest_hp"
+                ],
                 "action_id": "SkillN1",
                 "next_state": null,
                 "parameters": {}
             },
             {
-                "priority": 5,
+                "priority": 1,
                 "required_state": "Neutral",
                 "target_selector": "any_enemy",
-                "filters": [],
-                "action_id": "GenerateFocus",
+                "filters": [
+                    "lowest_hp"
+                ],
+                "action_id": "Attack",
                 "next_state": null,
                 "parameters": {}
             }

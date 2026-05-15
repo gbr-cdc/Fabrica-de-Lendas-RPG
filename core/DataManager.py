@@ -91,7 +91,8 @@ class DataManager:
                 name=char_data["Nome"],
                 attributes=[char_data["FIS"], char_data["HAB"], char_data["MEN"]],
                 combat_style=self._combat_styles[combat_style_key],
-                rules=self._game_rules
+                rules=self._game_rules,
+                ai_behavior=char_data.get("AI_behavior", "basic_agressive")
             )
 
             # Cria a arma e armadura a partir de char_data e equipa o personagem

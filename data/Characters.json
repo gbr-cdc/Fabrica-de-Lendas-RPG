@@ -22,7 +22,8 @@
     "Passives": [
       "ForçaBruta"
     ],
-    "CombatStyle": "Destruidor"
+    "CombatStyle": "Destruidor",
+    "AI_behavior": "basic_agressive"
   },
   "Cavaleiro": {
     "Nome": "Cavaleiro",
@@ -47,7 +48,8 @@
     "Passives": [
       "Postura de Batalha"
     ],
-    "CombatStyle": "Mestre_das_Armas"
+    "CombatStyle": "Mestre_das_Armas",
+    "AI_behavior": "basic_agressive"
   },
   "Duelista": {
     "Nome": "Duelista",
@@ -72,7 +74,8 @@
     "Passives": [
       "GraçaDoDuelista"
     ],
-    "CombatStyle": "Duelista"
+    "CombatStyle": "Duelista",
+    "AI_behavior": "basic_agressive"
   },
   "Retalhador": {
     "Nome": "Retalhador",
@@ -97,7 +100,8 @@
     "Passives": [
       "Ritmo Acelerado"
     ],
-    "CombatStyle": "Retalhador"
+    "CombatStyle": "Retalhador",
+    "AI_behavior": "basic_agressive"
   },
   "Defensor": {
     "Nome": "Defensor",
@@ -122,6 +126,7 @@
     "Passives": [
       "Bloquear"
     ],
-    "CombatStyle": "Defensor"
+    "CombatStyle": "Defensor",
+    "AI_behavior": "basic_agressive"
   }
 }
