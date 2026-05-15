@@ -36,9 +36,9 @@
     "id": "Postura de Batalha",
     "name": "Postura de Batalha",
     "parameters": {
-      "offensive_gda_bonus": 2,
-      "offensive_high_bonus": 4,
-      "offensive_threshold": 7,
+      "offensive_gda_bonus": 1,
+      "offensive_high_bonus": 3,
+      "offensive_threshold": 8,
       "reroll_cost": 2
     }
   },

@@ -128,5 +128,31 @@
     ],
     "CombatStyle": "Defensor",
     "AI_behavior": "basic_agressive"
+  },
+  "Lutador": {
+    "Nome": "Lutador",
+    "FIS": 5,
+    "HAB": 3,
+    "MEN": 2,
+    "Weapon": {
+      "name": "Deez Hands",
+      "db": 0,
+      "mda": 1,
+      "type": "light_weapon"
+    },
+    "Armor": {
+      "name": "Armadura Leve",
+      "hp_bonus": 15,
+      "type": "light"
+    },
+    "Abilities": [
+      "SkillN1",
+      "GenerateFocusAction"
+    ],
+    "Passives": [
+      "Combo"
+    ],
+    "CombatStyle": "Lutador",
+    "AI_behavior": "basic_agressive"
   }
 }
