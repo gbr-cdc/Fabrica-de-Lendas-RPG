@@ -27,7 +27,9 @@
     "id": "Ritmo Acelerado",
     "name": "Ritmo Acelerado",
     "parameters": {
-      "threshold_roll": 5
+      "threshold_roll": 5,
+      "pre_bonus_per_hit": 1,
+      "max_pre_bonus": 2
     }
   },
   "Postura de Batalha": {

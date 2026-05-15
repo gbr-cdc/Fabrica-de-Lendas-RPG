@@ -359,9 +359,22 @@ class PosturaBatalha(BattlePassive):
 class RitmoAcelerado(BattlePassive):
     def __init__(self, owner: Character, context: IPassiveContext, template: BattlePassiveTemplate | None = None):
         super().__init__(name="Ritmo Acelerado", owner=owner, context=context, template=template)
+        self.tracked_target_id: str | None = None
+        self.current_bonus: int = 0
 
     def get_hooks(self) -> dict[str, Callable]:
         from core.Enums import BattleActionType
+
+        def on_roll_modify(attack_load: AttackLoad):
+            if attack_load.character.char_id == self.owner.char_id and attack_load.target:
+                if attack_load.target.char_id == self.tracked_target_id:
+                    if self.current_bonus > 0:
+                        attack_load.pre += self.current_bonus
+                        attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
+                        attack_load.history.append(HistoryEmitter.atk_load("pre", self.current_bonus, attack_load.pre))
+                else:
+                    self.current_bonus = 0
+                    self.tracked_target_id = attack_load.target.char_id
 
         def on_attack_end(attack_load: AttackLoad):
             if attack_load.character.char_id == self.owner.char_id:
@@ -375,8 +388,23 @@ class RitmoAcelerado(BattlePassive):
                         attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
                         attack_load.history.append(HistoryEmitter.msg(f"{self.name}: Ação de Movimento!"))
 
+        def on_turn_end(action_load: ActionLoad):
+            if action_load.character.char_id == self.owner.char_id:
+                if self.tracked_target_id:
+                    hit_msg = HistoryEmitter.hit(self.tracked_target_id)
+                    if hit_msg in action_load.history:
+                        params = self.template.parameters if self.template else {}
+                        pre_bonus_per_hit = params.get("pre_bonus_per_hit", 1)
+                        max_pre_bonus = params.get("max_pre_bonus", 2)
+                        self.current_bonus = min(self.current_bonus + pre_bonus_per_hit, max_pre_bonus)
+                    else:
+                        self.current_bonus = 0
+                        self.tracked_target_id = None
+
         return {
-            'on_attack_end': on_attack_end
+            'on_roll_modify': on_roll_modify,
+            'on_attack_end': on_attack_end,
+            'on_turn_end': on_turn_end
         }
 
 registry = {
