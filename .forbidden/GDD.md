@@ -234,7 +234,7 @@ The combat style represents how the character fights, what equipment they use, a
 - **Weapon Type:** WEAPON_AND_SHIELD
 
 ### Abilities:
-- **Bloquear [GDD.STYLES.DEFENSOR.BLOQUEAR]:** While shielding, spend 2 Focus to add 1d4 to defense.
+- **Treinamento com Escudo [GDD.STYLES.DEFENSOR.BLOQUEAR]:** While shielding, spend 2 Focus to add 1d4 to defense. Everytime someone attacks you and it's a miss, if GdA <= -3, you gain +1 BdA if you attack that target on your next action.
 - **Golpe de Escudo [GDD.STYLES.DEFENSOR.GOLPE_ESCUDO]:** Spend 2 Focus to attack using defense die. GdA treated as 0 for damage calculation. If GdA > 3, target is ATORDOADO.
 - **Pressionar [GDD.STYLES.DEFENSOR.PRESSIONAR]:** Spend 2 Focus to gain advantage on menace tests. Every time you succeed in a menace test you gain advantage to attack that target in your next action.
 - **Proteger [GDD.STYLES.DEFENSOR.PROTEGER]:** Spend 2 Focus to redirect a melee attack from an adjacent ally to yourself. Does not work against SKILL or MAGIC.
@@ -249,7 +249,7 @@ The combat style represents how the character fights, what equipment they use, a
 - **Weapon Type:** LIGHT_WEAPON
 
 ### Abilities:
-- **Graça do Duelista [GDD.STYLES.DUELISTA.GRACA]:** On hit, add 1d4 to GdA. When targeted, can spend 2 Focus to add 1d4 to defense.
+- **Graça do Duelista [GDD.STYLES.DUELISTA.GRACA]:** On hit, add 1d4 to GdA. When an attack is gonna hit you, can spend 2 Focus to add 1d4 to defense.
 - **Golpe Baixo [GDD.STYLES.DUELISTA.GOLPE_BAIXO]:** Spend 2 Focus to force a HAB contest against a melee target. Success: target is DESEQUILIBRADO and Golpe Baixo costs a Movement Action. Failure: Golpe Baixo costs a Standard Action.
 - **Contra Ataque [GDD.STYLES.DUELISTA.CONTRA_ATAQUE]:** If GdA < 0, spend 2 Focus to counter-attack.
 - **Pés Ligeiros [GDD.STYLES.DUELISTA.PES_LIGEIROS]:** Spend 2 Focus during movement for +50% distance bonus or advantage on disengage tests. Melee hits gives the target -1 Precision against you on their next action.
@@ -264,7 +264,7 @@ The combat style represents how the character fights, what equipment they use, a
 - **Weapon Type:** MEDIUM_WEAPON
 
 ### Abilities:
-- **Postura de Batalha [GDD.STYLES.MESTRE_ARMAS.POSTURAS]:** Choose at start of turn: **Offensive**:-1 Guard / +1 Precision and +2 GdA on hit. GdA bonus doubles if attack roll > 7; **Defensive**: -1 Precision / +1 Guard. Can spend 2 Focus to re-roll defense (must keep new result).
+- **Postura de Batalha [GDD.STYLES.MESTRE_ARMAS.POSTURAS]:** Choose at start of turn: **Offensive**:-1 Guard / +1 Precision and +1 GdA on hit. GdA bonus is 3 if attack roll > 8; **Defensive**: -1 Precision / +1 Guard. Can spend 2 Focus to re-roll defense (must keep new result).
 - **Ataque Concentrado [GDD.STYLES.MESTRE_ARMAS.CONCENTRADO]:** Spend movement action to prepare. Grants you advantage in attacks on your next action against one target. If in Defensive posture, switch to Offensive before attacking. Grants opportunity attack if target leaves range.
 - **Ataque Desarmante [GDD.STYLES.MESTRE_ARMAS.DESARMANTE]:** Spend 2 Focus. On hit, target has disadvantage on their next action. GdA treated as 0 for damage.
 - **Dança da Batalha [GDD.STYLES.MESTRE_ARMAS.VITAIS]:** Spend 2 Focus to gain +50% movement or gain advnatage in menace tests. Every time you roll a 10 to attack, this attack counts as a movement action.
@@ -294,7 +294,7 @@ The combat style represents how the character fights, what equipment they use, a
 - **Weapons:** Gloves/Unarmed
 
 ### Abilities:
-- **Combo [GDD.STYLES.LUTADOR.COMBO]:** Attack action allows two attacks. If both hit, perform a third attack that Stuns if hits.
+- **Combo [GDD.STYLES.LUTADOR.COMBO]:** Basic attack allows a second attack if hit and attack roll >= 5.
 - **Investida [GDD.STYLES.LUTADOR.INVESTIDA]:** Spend 2 Focus and Attack Action to move up to speed in straight line and attack with +2 GdA.
 - **Balão [GDD.STYLES.LUTADOR.BALAO]:** Replace attack with grapple roll. On hit, FIS contest to throw. Target is Knocked Down and takes PdA damage.
 - **Evasão [GDD.STYLES.LUTADOR.EVASAO]:** Spend 2 Focus to add 1d4 to defense when targeted.

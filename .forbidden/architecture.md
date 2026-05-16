@@ -34,6 +34,7 @@ These rules are context-exclusive and MUST be referenced in `MISSION_LOG.md` whe
 - **Data-Driven Attacks [ARCH.RULES.BATTLE.ATTACK_DATA]:** AttackAction constructor receives an AttackAction template. This template includes list of effects to modify the AttackAction resolution. Each effect have an id and a list of parameters. AttackAction uses the effects ids to find and call hook builders that return returns a tuple {"signal", hook_function}. BattleManager handles those hooks, following [ARCH.RULES.CORE.IOC] and [ARCH.RULES.BATTLE.EPHEMERAL_HOOKS].
 - **Attack Load Modification [ARCH.RULES.BATTLE.ATTACK_LOAD]:** `AttackLoad` holds all character attributes and other parameters involved in the attack resolution. Any `BattlePassive`, `StatusEffect` or effect hook that modifies `AttackAction` must do so by changing `AttackLoad` parameters.
 - **Data-Driven Passives [ARCH.RULES.BATTLE.PASSIVE_DATA]:** BattlePassive constructor receives a `BattlePassiveTemplate` with a dictionary of parameters `parameters: Dict[str, Any]` which allows the passives to be configured with `BattlePassive.json`. BattlePassive should give standard values in case it is instantiated without a template.
+- **Data-Driven CharacterController*[ARCH.RULES.BATTLE.CONTROLLER_DATA]:** Ai behaviour can be defined in 'data/ai_behaviors.json' throug a system of behaviours, states and nodes. Each node have a required state, a priority, a targeting logic, list of filters for targets and an action id and/or change of state. Each behaviour have a id, a group of nodes and an initial state. Nodes are processed by priority order and ignored when they don't return a valid target.
 
 ## Project Structure [ARCH.STRUCT_MAP]
 
@@ -1024,19 +1025,17 @@ Method description: Registers accuracy bonuses and reaction prompts using parame
 2. `reacao_evasao_hook` (on `on_defense_reaction`): Triggered only when the owner is targeted and the attack is initially a hit. Prompts the controller for a choice. If `reaction_cost` Focus is spent, rolls `reaction_die` and subtracts from incoming `GdA`. The engine re-evaluates `attack_load.hit` after this hook, so reducing `GdA` below the threshold converts the hit into a miss.
 
 ##### Combo [ARCH.DOC.battle.BattlePassives.Combo]
-[DEPENDS: ARCH.DOC.battle.BattleActions.AttackAction, ARCH.DOC.battle.StatusEffects.Atordoado, GDD.STYLES.LUTADOR.COMBO]
-Multi-stage passive that triggers recursive extra attacks on successful hits.
+[DEPENDS: ARCH.DOC.battle.BattleActions.AttackAction, GDD.STYLES.LUTADOR.COMBO]
+Passive that triggers a second attack on a successful hit with a high enough roll.
 
 - Constructor [ARCH.DOC.battle.BattlePassives.Combo.__init__]: `__init__(owner: Character, context: IPassiveContext)`
-- `stage: int` [ARCH.DOC.battle.BattlePassives.Combo.stage]: Current progression in the combo chain.
 
 ###### get_hooks [ARCH.DOC.battle.BattlePassives.Combo.get_hooks]
-`get_hooks() -> Dict[str, Callable]`
-Method description: Implements recursive attack logic.
-1. `checar_ataque_bonus` (on `on_attack_end`): 
-   - Stage 0: If hit, executes a secondary `AttackAction`.
-   - Stage 1: If previous and current hits successful, executes a third `AttackAction`.
-   - Stage > 1: Applies `Atordoado` to the target on hit.
+get_hooks() -> Dict[str, Callable]
+Method description: Implements extra attack logic.
+1. checar_ataque_bonus (on on_attack_end):
+   - If hit and attack_roll >= min_roll_for_second (default 5), executes a secondary AttackAction.
+   - The secondary attack is a standard BASIC_ATTACK and generates focus.
    - Merges sub-action histories into the main attack history using pipe-delimited events.
 
 ##### Bloquear [ARCH.DOC.battle.BattlePassives.Bloquear]

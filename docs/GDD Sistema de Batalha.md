@@ -280,7 +280,7 @@ O estilo de combate junto com os atributos principais formam o núcleo do person
 * **Armas:** Espadas, Machados, Maças, Lanças e Escudo
 
 ##### Habilidades
-* **Bloquear:** Enquanto equipar um escudo, quando um ataque for acertá-lo, pode gastar 2 de foco para adicionar 1d4 à sua defesa.
+* **Bloquear:** Enquanto equipar um escudo, quando um ataque for acertá-lo, pode gastar 2 de foco para adicionar 1d4 à sua defesa. Toda vez que você for atacado e o oponente errar, se o valor do GdA for <= -3, você recebe +1 BdA se atacar este oponente na sua próxima ação.
 * **Golpe de Escudo:** Pode gastar 2 de Foco para fazer um ataque usando seu dado de defesa. O dano desse ataque é reduzido pela metade e o GdA é considerado 0 para calcular o dano. Se o GdA desse ataque for maior do que 3, o alvo é atordoado.
 * **Pressionar:** Pode gastar 2 de foco para jogar testes para ameaçar o oponente com vantagem. Toda vez que um teste para deter o oponente for um sucesso, seu próximo ataque contra ele ganha vantagem.
 * **Proteger:** Se um aliado adjacente for receber um ataque, pode gastar 2 de foco para direcionar esse ataque para você. Não funciona contra técnicas ou magias.
@@ -312,7 +312,7 @@ O estilo de combate junto com os atributos principais formam o núcleo do person
 
 ##### Habilidades
 * **Postura de Batalha:** No início do seu turno, você pode escolher uma postura:
-  * Postura Ofensiva: Recebe uma penalidade de guarda para ganhar um bônus de precisão e +2 GdA em seus ataques. Esse bônus dobra se o resultado do dado de ataque for maior que 7.
+  * Postura Ofensiva: Recebe uma penalidade de guarda para ganhar um bônus de precisão e +1 GdA em seus ataques. Esse bônus sobe para +3 se o resultado do dado de ataque for maior que 8.
   * Postura Defensiva: Recebe uma penalidade de Precisão para ganhar um bônus de Guarda. Enquanto estiver nesta postura, pode gastar 2 pontos de Foco para rolar sua defesa novamente. Se o fizer, deve usar o novo resultado.
 * **Proteger Pontos Vitais:** Pode gastar 2 de foco para reduzir um dano tomado pela metade (arredondado para baixo).
 * **Ataque Concentrado:** Você pode gastar uma ação de movimento para preparar um ataque. Se o fizer, você ataca com vantagem, e caso esteja em postura defensiva, você passa para a postura ofensiva antes de atacar. Se o oponente tentar sair do seu alcance, você pode realizar um ataque contra ele.

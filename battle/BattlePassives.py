@@ -174,55 +174,30 @@ class GracaDoDuelista(BattlePassive):
 class Combo(BattlePassive):
     def __init__(self, owner: Character, context: IPassiveContext, template: BattlePassiveTemplate | None = None):
         super().__init__(name="Combo", owner=owner, context=context, template=template)
-        self.stage = 0
-        self.hit = False
+        self._executing_combo = False
     
     def get_hooks(self) -> dict[str, Callable]:
         def checar_ataque_bonus(attack_load: AttackLoad):
-            if attack_load.target is None:
+            if attack_load.target is None or attack_load.character.char_id != self.owner.char_id:
                 return
-            if attack_load.character.char_id != self.owner.char_id:
+            
+            if self._executing_combo:
                 return
 
-            if self.stage == 0:
-                self.stage += 1
-                if attack_load.hit:
-                    self.hit = True
+            params = self.template.parameters if self.template else {}
+            min_roll = params.get("min_roll_for_second", 5)
 
-                response = AttackAction(None, attack_load.character, [attack_load.target], self.context, attack_type=AttackType.EXTRA_ATTACK).execute_if_possible()
-
-                self.stage = 0
-                self.hit = False
-                
-                if response.success:
-                    attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
-                    attack_load.add_event("COMBO", self.owner.char_id, 1)
-                    attack_load.history.extend(response.history)
-
-            elif self.stage == 1:
-                if not self.hit or not attack_load.hit:
-                    self.hit = False
-                    self.stage = 0
-                    return
-                
-                self.stage += 1
-                response = AttackAction(None, attack_load.character, [attack_load.target], self.context, attack_type=AttackType.EXTRA_ATTACK).execute_if_possible()
-                
-                if response.success:
-                    attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
-                    attack_load.add_event("COMBO", self.owner.char_id, 2)
-                    attack_load.history.extend(response.history)
-                else:
-                    self.stage = 0
-                    self.hit = False
-
-            elif self.stage > 1:
-                if attack_load.hit:
-                    effect = Atordoado(0, attack_load.target, self.context)
-                    self.context.add_status_effect(effect)
-                    attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
-                    attack_load.history.append(HistoryEmitter.status(attack_load.target.char_id, "Atordoado", 0, "APPLIED"))
-                    attack_load.add_event("COMBO", self.owner.char_id, self.stage, "FINAL")
+            if attack_load.hit and attack_load.attack_roll >= min_roll:
+                self._executing_combo = True
+                try:
+                    # Executes a standard AttackAction (BASIC_ATTACK) allowing focus generation
+                    response = AttackAction(None, attack_load.character, [attack_load.target], self.context).execute_if_possible()
+                    if response.success:
+                        attack_load.history.append(HistoryEmitter.passive(self.name, self.owner.char_id))
+                        attack_load.add_event("COMBO", self.owner.char_id, 1)
+                        attack_load.history.extend(response.history)
+                finally:
+                    self._executing_combo = False
         
         return {'on_attack_end': checar_ataque_bonus}
 

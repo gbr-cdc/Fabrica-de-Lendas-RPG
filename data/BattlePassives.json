@@ -64,6 +64,8 @@
   "Combo": {
     "id": "Combo",
     "name": "Combo",
-    "parameters": {}
+    "parameters": {
+      "min_roll_for_second": 5
+    }
   }
 }
