@@ -10,6 +10,12 @@
                 "parameters": {
                     "amount": 2
                 }
+            },
+            {
+                "id": "add_gda",
+                "parameters": {
+                    "amount": 5
+                }
             }
         ]
     },

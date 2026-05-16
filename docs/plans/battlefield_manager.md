@@ -1,7 +1,0 @@
-# Battlefield Manager Implementation plan
-
-## General Idea
-- Concepts:
-  - Battlefield: 6x3 grid with 6 lines an 3 columns. First three lines belongs to team A, and the other belongs to team B.
-  - Line: Each line can be occupied at max by 3 characters. Characters can swap their position in the line with a move action, but only between adjacent characters. If there is one one character in the line, he is considered to be in the middle, he can't move left or right. If there is two characters in the line, one is considered to be on the left and the other on he right. Whe only have left, middle and right position when there are three characters on the line. This is important for movement and targeting.
-  - Adjacent positions: In a line, a character is adjacent to the character on his side. If there are three characters in the line, the left and right ones are adjacent to the middle, and te middle is adjacent to both the left and right. If there are two characters in the line, they are both adjacent to each other. The middle character in a line is adjacent to all characters in the line in front an behind him. The character in the left is adjacent to the left and center of adjacent lines and the character on the right is adjacent to the center and the right. Characters on the right and left are adjacent to both left and right characters of a line that have just two characters. 

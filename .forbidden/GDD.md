@@ -134,8 +134,6 @@ List of resources used in the game.
 - **Normal Tests [GDD.CORE.TESTS.NORMAL]:** 1d10 + Attribute vs Difficulty
 - **Resisted Tests [GDD.CORE.TESTS.RESISTED]:** 1d10 + Attribute vs 1d10 + Attribute
 
-### Dificulty tests[GDD.CORE.TESTS.DIFF]
-
 
 # GDD Module: Combat Resolution [GDD.COMBAT]
 
@@ -162,6 +160,17 @@ This module defines how attacks are resolved, damage is calculated, and equipmen
 - **Attack Power (PdA) [GDD.COMBAT.DAMAGE.PDA]:** Weapon Base Damage(DB) + Primary Attribute
 - **Attack Multiplier (MdA) [GDD.COMBAT.DAMAGE.MDA]:** Multiplies GdA in damage formula. Defined by weapon (Default: 1)
 - **Damage Formula [GDD.COMBAT.DAMAGE.FORMULA]:** `PdA + (GdA * MdA)`
+
+## Threat and Engagement [GDD.COMBAT.THREAT]
+[DEPENDS: GDD.CORE.TIME.ACTION_TYPES, GDD.EQUIP.TYPES.WEAPONS, GDD.CORE.TESTS.RESISTED]
+
+The Threat system abstracts spatial positioning, managing how characters engage and lock each other in melee combat.
+
+- **Establishing Threat [GDD.COMBAT.THREAT.ESTABLISH]:** Whenever a character attacks a target using a melee weapon, they begin to threaten that target.
+- **Targeting Restrictions [GDD.COMBAT.THREAT.RESTRICTION]:** A threatened character has restricted focus. They can only freely attack the enemies currently threatening them, or the specific target they were already threatening prior to being engaged.
+- **Disengaging [GDD.COMBAT.THREAT.DISENGAGE]:** To attack a new, unengaged target, a threatened character must perform a Disengage Test. The character rolls `1d10 + Primary Attribute` and must overcome the Threat Rolls (`1d10 + Primary Attribute`) of *all* enemies currently threatening them.
+- **Disengage Failure [GDD.COMBAT.THREAT.FAILURE]:** If the character fails to surpass all Threat Rolls, the Disengage fails and the intended action is lost. However, the attempt is treated as a Movement Action, adding only half of the standard Action Cost to the character's Tick counter.
+- **Ally Assistance [GDD.COMBAT.THREAT.ASSIST]:** If an ally is threatening an enemy that is currently threatening you, they can actively help you break free. The ally can roll their own Threat Test against that enemy to contest their blockade, effectively neutralizing that enemy's Threat Roll against your Disengage attempt.
 
 # GDD Module: Equipments [GDD.EQUIP]
 Informations about equipments in the game like types, progression table by tiers and effects table
@@ -234,7 +243,7 @@ The combat style represents how the character fights, what equipment they use, a
 - **Weapon Type:** WEAPON_AND_SHIELD
 
 ### Abilities:
-- **Treinamento com Escudo [GDD.STYLES.DEFENSOR.BLOQUEAR]:** While shielding, spend 2 Focus to add 1d4 to defense. Everytime someone attacks you and it's a miss, if GdA <= -3, you gain +1 BdA if you attack that target on your next action.
+- **Treinamento com Escudo [GDD.STYLES.DEFENSOR.BLOQUEAR]:** While using a shield, spend 2 Focus to add 1d4 to defense. Everytime someone attacks you and it's a miss, if GdA <= -3, you gain +1 BdA if you attack that target on your next action.
 - **Golpe de Escudo [GDD.STYLES.DEFENSOR.GOLPE_ESCUDO]:** Spend 2 Focus to attack using defense die. GdA treated as 0 for damage calculation. If GdA > 3, target is ATORDOADO.
 - **Pressionar [GDD.STYLES.DEFENSOR.PRESSIONAR]:** Spend 2 Focus to gain advantage on menace tests. Every time you succeed in a menace test you gain advantage to attack that target in your next action.
 - **Proteger [GDD.STYLES.DEFENSOR.PROTEGER]:** Spend 2 Focus to redirect a melee attack from an adjacent ally to yourself. Does not work against SKILL or MAGIC.
@@ -279,8 +288,7 @@ The combat style represents how the character fights, what equipment they use, a
 - **Weapon Type:** SWORD (ANY)
 
 ### Abilities:
-- **Ritmo Acelerado [GDD.STYLES.RETALHADOR.RITMO_ACELERADO]:** Every time you roll 5 or more in attack, that attack counts as a movement action.
-- **Ritmo Crescente [GDD.STYLES.RETALHADOR.RITMO_CRESCENTE]:** +1 PRE on hit (max +2). Reset on miss.
+- **Ritmo Acelerado [GDD.STYLES.RETALHADOR.RITMO_ACELERADO]:** Every time you roll 5 or more in attack, that attack counts as a movement action. Every time you hit an attack, you gain a +1 Precision bonus. The bonus is cumulative up to +2. The bonus resets if you miss or you stop attacking the target.
 - **Pressionar [GDD.STYLES.RETALHADOR.PRESSIONAR]:** Spend 2 Focus to gain advantage on menace tests. Success grants advantage on attack against that target on your next action. Every time you hit a target, that target gains (TO BE DONE)
 - **Barreira de Lâminas [GDD.STYLES.RETALHADOR.BARREIRA]:** Attacks apply Precision penalty to target against you. Penalty doubles on hit.
 
